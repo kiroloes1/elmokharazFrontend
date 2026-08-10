@@ -284,6 +284,9 @@ const Sidebar = ({ role }) => {
       sub: [
         { id: "settingsInfo", label: "إعدادات النظام", roles: ["superadmin", "manager"] },
         { id: "activityLogs", label: "سجل المتابعة للنظام", roles: ["superadmin", "manager"] }
+  ,      { id: "BackupSettings", label: "  نظام النسخ الاحتياطي ", roles: ["superadmin", "manager"] }
+
+        
       ] 
     },
   ];

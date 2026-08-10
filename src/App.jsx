@@ -82,6 +82,7 @@ import CustomersReport from "./pages/advancedReports/customerReports";
 import EquipmentReport from "./pages/advancedReports/EquipmentReport";
 import SuppliersReport from "./pages/advancedReports/SuppliersReport";
 import UserActivityReport from "./pages/advancedReports/UserActivityReport";
+import BackupSettings from "./pages/settings/backupSystem";
 
 function App() {
    const upToTop = () => {
@@ -264,6 +265,7 @@ return (
         {/* settings */}
         <Route path="/settings/info" element={<SettingsPage />} />
         <Route path="/settings/ActivityLogs" element={<ActivityLogs />} />
+        <Route path="/BackupSettings" element={<BackupSettings />} />
 
         
 
