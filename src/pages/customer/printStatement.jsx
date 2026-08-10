@@ -363,7 +363,7 @@ const DeliveryStatement = () => {
   if (loading) return <div className="p-10 text-center  font-bold">جاري التحميل...</div>;
 
   return (
-    <div id='invoice' className="p-4 mx-auto text-right " dir="rtl">
+    <div id='invoice' className="p-4 mx-auto text-right  " dir="rtl">
       <div className="text-lg no-print mb-6 flex flex-col md:flex-row justify-between items-center bg-gray-100 p-4 rounded gap-4">
         <h2 className="font-bold">كشف حساب موحد: {customerData?.name}</h2>
         
@@ -408,7 +408,7 @@ const DeliveryStatement = () => {
         </div>
       </div>
 
-      <div id="invoice-capture"  className="bg-white p-8 border-2 border-black print:border-0 print:p-0" dir="rtl">
+      <div id="invoice-capture"  className="bg-white p-8 border-2  border-black print:border-0 print:p-0" dir="rtl">
         <div className="flex justify-between items-start border-b-4 border-black pb-4 mb-8">
           <div className="text-right">
             <h1 className="text-3xl font-black">

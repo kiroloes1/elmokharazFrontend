@@ -3,7 +3,7 @@ import axios from "axios";
 
 const SERVERS = [
   "https://elmokharaz.vercel.app/v1",
-  // "https://elmokharaz.vercel.app/v1",
+   "https://elmokharaz-sand.vercel.app/v1",
 ];
 let currentServer = 0;
 

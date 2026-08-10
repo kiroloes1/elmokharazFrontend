@@ -305,7 +305,7 @@ const CustomerList = () => {
     if (method === "cheque") {
       return (
         <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3 mt-3">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="text-right">
               <label className="text-[11px] font-black text-slate-500 block mb-1">
                 <Hash size={12} className="inline ml-1" /> رقم الشيك
@@ -337,7 +337,7 @@ const CustomerList = () => {
               />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="text-right">
               <label className="text-[11px] font-black text-slate-500 block mb-1">
                 <Calendar size={12} className="inline ml-1" /> تاريخ الاستلام
@@ -367,7 +367,7 @@ const CustomerList = () => {
               />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="text-right">
               <label className="text-[11px] font-black text-slate-500 block mb-1">نوع الشيك</label>
               <select
@@ -407,7 +407,7 @@ const CustomerList = () => {
     if (method === "bank" || method === "instapay") {
       return (
         <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3 mt-3">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="text-right">
               <label className="text-[11px] font-black text-slate-500 block mb-1">
                 <Building size={12} className="inline ml-1" /> اسم البنك / المنصة
@@ -462,7 +462,7 @@ const CustomerList = () => {
             </label>
           </div> */}
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="text-right">
               <label className="text-[11px] font-black text-slate-500 block mb-1">رقم الراسل</label>
               <input
@@ -492,7 +492,7 @@ const CustomerList = () => {
           </div>
 
           {!editData.walletInfo?.linkWallet && (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="text-right">
                 <label className="text-[11px] font-black text-slate-500 block mb-1">رقم المستلم</label>
                 <input
@@ -712,7 +712,7 @@ const CustomerList = () => {
                   </div>
                 </div>
 
-                <div className="flex flex-wrap gap-2 w-full md:w-auto justify-end">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4  w-full md:w-auto justify-end">
                   <button
                     onClick={() => navigate(`/customer/printSupplierDetails/${selectedSupplier?._id}`)}
                     className="flex items-center gap-2 px-4 py-3 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-600 hover:text-white transition-all font-bold text-sm"
@@ -809,12 +809,12 @@ const CustomerList = () => {
                 <table className="w-full text-right border-collapse">
                   <thead className="sticky top-0 bg-white shadow-sm z-10 ">
                     <tr className="text-[10px] font-black text-slate-400 uppercase bg-white">
-                      <th className="p-5">الوحدة</th>
-                      <th className="p-5">المبلغ</th>
-                      <th className="p-5">طريقة الدفع</th>
-                      <th className="p-5">التاريخ</th>
-                      <th className="p-5">ملاحظات</th>
-                      <th className="p-5">الإجراءات</th>
+                      <th className="p-3 sm:p-5">الوحدة</th>
+                      <th className="p-3 sm:p-5">المبلغ</th>
+                      <th className="p-3 sm:p-5">طريقة الدفع</th>
+                      <th className="p-3 sm:p-5">التاريخ</th>
+                      <th className="p-3 sm:p-5">ملاحظات</th>
+                      <th className="p-3 sm:p-5">الإجراءات</th>
                     </tr>
                   </thead>
 
@@ -825,15 +825,15 @@ const CustomerList = () => {
                       .map((t, idx) => (
                         <tr key={t.id || idx} className="hover:bg-slate-50 transition-colors">
                           
-                          <td className="p-5">
+                          <td className="p-3 sm:p-5">
                             {renderModuleBadge(t.module, t.moneyFlow)}
                           </td>
 
-                          <td className="p-5 font-black text-dark">
+                          <td className="p-3 sm:p-5 font-black text-dark">
                             {t.amount?.toLocaleString()} ج.م
                           </td>
 
-                          <td className="p-5 text-sm text-slate-600 font-bold">
+                          <td className="p-3 sm:p-5 text-sm text-slate-600 font-bold">
                             {t.paymentMethod === "cash" && "نقدي"}
                             {t.paymentMethod === "wallet" && "محفظة"}
                             {t.paymentMethod === "bank" && "تحويل بنكي"}
@@ -844,18 +844,18 @@ const CustomerList = () => {
                              {t.paymentMethod  === "wallet"  && t.walletInfo.linkWallet && " | ربط سيستمات" }
                           </td>
 
-                          <td className="p-5 text-sm text-slate-400 font-medium">
+                          <td className="p-3 sm:p-5 text-sm text-slate-400 font-medium">
                             {new Date(t.date).toLocaleString('ar-EG', {
                               dateStyle: 'short',
                               timeStyle: 'short'
                             })}
                           </td>
 
-                          <td className="p-5 text-sm text-slate-500 italic">
+                          <td className="p-3 sm:p-5 text-sm text-slate-500 italic">
                             {t.note || "---"}
                           </td>
 
-                          <td className="p-5">
+                          <td className="p-3 sm:p-5">
                             <div className="flex items-center gap-3">
                               {t.moduleId && (
                                 <Eye
