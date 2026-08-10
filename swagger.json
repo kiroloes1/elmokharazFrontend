@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 {
   "openapi": "3.0.0",
   "info": {
@@ -74,4 +75,82 @@
       }
     }
   }
+=======
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Shopping API",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://api.myshop.com"
+    }
+  ],
+  "paths": {
+    "/login": {
+      "post": {
+        "summary": "User Login",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login Success"
+          },
+          "401": {
+            "description": "Invalid Credentials"
+          }
+        }
+      }
+    },
+
+    "/products": {
+      "get": {
+        "summary": "Get Products",
+        "responses": {
+          "200": {
+            "description": "Products List"
+          }
+        }
+      }
+    },
+
+    "/products/{id}": {
+      "get": {
+        "summary": "Get Product Details",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Product"
+          }
+        }
+      }
+    }
+  }
+>>>>>>> 26278288ef5119cced342d2314ce62b6f108206b
 }
