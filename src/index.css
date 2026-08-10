@@ -1,0 +1,51 @@
+@media print {
+  @page {
+    size: 80mm auto; /* أو 58mm حسب الطابعة */
+    margin: 0;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    font-size: 12px;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  .printable,
+  .printable * {
+    visibility: visible;
+  }
+
+  .printable {
+    width: 80mm;
+    position: absolute;
+    left: 0;
+    top: 0;
+    padding: 5px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  th, td {
+    padding: 4px;
+    font-size: 11px;
+  }
+}
+
+:root {
+  --system-font: "Cairo";
+}
+
+* {
+  font-family: var(--system-font), sans-serif;
+}
