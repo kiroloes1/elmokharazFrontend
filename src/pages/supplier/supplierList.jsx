@@ -728,6 +728,14 @@ const SupplierList = () => {
                     <Printer size={18} /> كشف حساب
                   </button>
 
+                                  <button
+                                      onClick={() => navigate(`/supplier/SupplierAccountSummary/${selectedSupplier?._id}`)}
+                                      className="flex items-center gap-2 px-4 py-3 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-600 hover:text-white transition-all font-bold text-sm"
+                                    >
+                                      <Printer size={18} /> ملخص الحساب
+                                    </button>
+
+
                   <button
                     onClick={() => navigate(`/supplier/CustomerPaymentsPrintPage/${selectedSupplier?._id}`)}
                     className="flex items-center gap-2 px-4 py-3 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-600 hover:text-white transition-all font-bold text-sm"

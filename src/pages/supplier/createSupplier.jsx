@@ -114,7 +114,7 @@ const AddSupplierFormSUP = () => {
 
           {/* حقل الرصيد الافتتاحي */}
           <div className="space-y-1.5">
-            <label className="text-sm font-black text-dark block">الرصيد الافتتاحي أول المدة (EGP)</label>
+            <label className="text-sm font-black text-dark block">المديونية السابقة</label>
             <div className="relative">
               <DollarSign className="absolute right-3 top-3.5 text-brown/50" size={18} />
               <input

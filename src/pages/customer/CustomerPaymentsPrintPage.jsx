@@ -31,8 +31,8 @@ const CustomerPaymentsPrintPage = () => {
 
   const module={
         delivery : "نقلة",
-        pay : "دفع للعميل ",              
-        debt :"استلام من العميل ",              
+        pay : "سداد للتاجر ",              
+        debt :"استلام من التاجر ",              
         equipment_supply :"مستلزمات معدات", 
         maintenance :"صيانه",      
         equipment : "معدات",        
@@ -59,13 +59,13 @@ const CustomerPaymentsPrintPage = () => {
       try {
         setLoading(true);
 
-        // 1. جلب بيانات العميل أول مرة فقط إذا لم تكن موجودة
+        // 1. جلب بيانات التاجر أول مرة فقط إذا لم تكن موجودة
         if (!customer) {
           const customerRes = await api.get(`/customers/${id}`);
           setCustomer(customerRes.data.data || customerRes.data);
         }
 
-        // 2. جلب مدفوعات العميل بالحد المحدد من قبل المستخدم
+        // 2. جلب مدفوعات التاجر بالحد المحدد من قبل المستخدم
         const paymentsRes = await api.get(
           `/customers/allPaymentPerCustomer/${id}?limit=${limit}`
         );
@@ -103,7 +103,7 @@ const CustomerPaymentsPrintPage = () => {
   if (!customer) {
     return (
       <div className="p-10 text-center font-bold text-black">
-        حدث خطأ في تحميل بيانات العميل
+        حدث خطأ في تحميل بيانات التاجر
       </div>
     );
   }
@@ -124,7 +124,7 @@ const CustomerPaymentsPrintPage = () => {
 
   const handleSharePDF = async () => {
     const element = document.getElementById("invoice-capture");
-    const arabicFileName = `كشف_مدفوعات_${customer.name || "عميل"}.pdf`;
+    const arabicFileName = `كشف_مدفوعات_${customer.name || "تاجر"}.pdf`;
 
     const options = {
       margin: 8,
@@ -143,7 +143,7 @@ const CustomerPaymentsPrintPage = () => {
         await navigator.share({
           files: [file],
           title: `كشف حساب تحصيلات - ${customer.name}`,
-          text: `مرفق تقرير المدفوعات والتحصيلات للعميل: ${customer.name}`,
+          text: `مرفق تقرير المدفوعات والتحصيلات للتاجر: ${customer.name}`,
         });
       } else {
         html2pdf().set(options).from(element).save();
@@ -172,7 +172,7 @@ const CustomerPaymentsPrintPage = () => {
             معاينة كشف المقبوضات والمدفوعات للطباعة
           </h2>
           <p className="text-xs text-gray-700 font-bold mt-0.5">
-            العميل: {customer.name} - المعروض: {payments.length} من إجمالي {totalPayments} عملية
+            التاجر: {customer.name} - المعروض: {payments.length} من إجمالي {totalPayments} عملية
           </p>
         </div>
 
@@ -230,17 +230,17 @@ const CustomerPaymentsPrintPage = () => {
                     {settings?.invoiceFactoryName || "مصنع المخرز"}
                   </h1>
                   <h3 className="text-sm font-bold text-gray-800 mt-1 m-0">
-                    تقرير تحصيلات ومدفوعات حساب عميل
+                    تقرير تحصيلات ومدفوعات حساب تاجر
                   </h3>
                   <div className="text-xs font-bold text-black mt-3 space-y-1">
                     <p className="m-0">
-                      اسم العميل: <span className="font-black">{customer.name}</span>
+                      اسم التاجر: <span className="font-black">{customer.name}</span>
                     </p>
                     <p className="m-0">
                       الهاتف: <span className="font-bold">{customer.phone || customer.mobile || "غير محدد"}</span>
                     </p>
                     <p className="m-0">
-                      رصيد العميل الحالي:{" "}
+                      رصيد التاجر الحالي:{" "}
                       <span className="font-black">{customer.balance?.toLocaleString() || 0} ج.م</span>
                     </p>
                   </div>
@@ -316,7 +316,7 @@ const CustomerPaymentsPrintPage = () => {
               ) : payments.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="p-4 text-center font-bold">
-                    لا توجد أي عمليات دفع مسجلة لهذا العميل.
+                    لا توجد أي عمليات دفع مسجلة لهذا التاجر.
                   </td>
                 </tr>
               ) : (
@@ -338,7 +338,7 @@ const CustomerPaymentsPrintPage = () => {
                     <td className="p-2 border-r border-black text-center font-black">
                       {payment.moneyFlow === "incoming"
                         ? "تحصيل (استلام فلوس من العيمل)"
-                        : "مصروف (دفع فلوس للعميل)"}
+                        : "مصروف (دفع فلوس للتاجر)"}
                     </td>
                     
 

@@ -152,7 +152,7 @@ const SupplierPaymentsPrintPage = () => {
       {/* هيدر التحكم - يختفي عند الطباعة */}
       <div className="max-w-4xl mx-auto mb-4 no-print flex flex-col md:flex-row justify-between items-center bg-white p-4 rounded-xl border border-black gap-3 shadow-sm">
         <div>
-          <h2 className="text-base font-black text-black">
+          <h2 className="text-base font-normal text-black">
             معاينة كشف المقبوضات والمدفوعات للطباعة
           </h2>
           <p className="text-xs text-gray-700 font-bold mt-0.5">
@@ -164,7 +164,7 @@ const SupplierPaymentsPrintPage = () => {
         <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
           {/* اختيار عدد العمليات (Limit) */}
           <div className="flex items-center gap-1.5 bg-gray-50 border border-black px-3 py-1.5 rounded-lg">
-            <label htmlFor="limit-select" className="text-xs font-black text-black whitespace-nowrap">
+            <label htmlFor="limit-select" className="text-xs font-normal text-black whitespace-nowrap">
               عرض العمليات:
             </label>
             <select
@@ -210,7 +210,7 @@ const SupplierPaymentsPrintPage = () => {
             <tbody>
               <tr>
                 <td className="align-top">
-                  <h1 className="text-2xl font-black text-black m-0">
+                  <h1 className="text-2xl font-normal text-black m-0">
                     {settings?.invoiceFactoryName || "مصنع المخرز"}
                   </h1>
                   <h3 className="text-sm font-bold text-gray-800 mt-1 m-0">
@@ -218,21 +218,21 @@ const SupplierPaymentsPrintPage = () => {
                   </h3>
                   <div className="text-xs font-bold text-black mt-3 space-y-1">
                     <p className="m-0">
-                      اسم التاجر: <span className="font-black">{customer.name}</span>
+                      اسم التاجر: <span className="font-normal">{customer.name}</span>
                     </p>
                     <p className="m-0">
                       الهاتف: <span className="font-bold">{customer.phone || customer.mobile || "غير محدد"}</span>
                     </p>
                     <p className="m-0">
                       رصيد التاجر الحالي:{" "}
-                      <span className="font-black">{customer.balance?.toLocaleString() || 0} ج.م</span>
+                      <span className="font-normal">{customer.balance?.toLocaleString() || 0} ج.م</span>
                     </p>
                   </div>
                 </td>
 
                 <td className="text-left align-top min-w-[160px]">
                   <div className="p-3 border-2 border-black inline-block text-right">
-                    <p className="font-black text-xs text-black m-0">تاريخ التقرير:</p>
+                    <p className="font-normal text-xs text-black m-0">تاريخ التقرير:</p>
                     <p className="text-black text-[11px] font-bold m-0 mt-1">
                       {new Date().toLocaleString("ar-EG", {
                         timeZone: "Africa/Cairo",
@@ -259,13 +259,13 @@ const SupplierPaymentsPrintPage = () => {
             <div className="font-bold text-black text-[10px]">
               إجمالي التحصيلات (استلام فلوس من التاجر)
             </div>
-            <div className="font-black text-black text-sm mt-0.5">
+            <div className="font-normal text-black text-sm mt-0.5">
               {totalIncoming.toLocaleString()} ج.م
             </div>
           </div>
           <div className="border border-black p-2 text-center bg-gray-50">
             <div className="font-bold text-black text-[10px]">إجمالي المخرجات / المصروفات</div>
-            <div className="font-black text-black text-sm mt-0.5">
+            <div className="font-normal text-black text-sm mt-0.5">
               {totalOutgoing.toLocaleString()} ج.م
             </div>
           </div>
@@ -273,12 +273,12 @@ const SupplierPaymentsPrintPage = () => {
 
         {/* جدول عمليات التحصيل والدفع */}
         <div className="mb-4">
-          <h3 className="text-xs font-black text-black mb-2 border-r-4 border-black pr-2 uppercase">
+          <h3 className="text-xs font-normal text-black mb-2 border-r-4 border-black pr-2 uppercase">
             سجل حركة المعاملات المالية
           </h3>
           <table className="w-full text-right border-collapse border-2 border-black text-xs">
             <thead>
-              <tr className="bg-gray-100 text-black border-b-2 border-black font-black">
+              <tr className="bg-gray-100 text-black border-b-2 border-black font-normal">
                 <th className="p-2 border-r border-black text-center">#</th>
                 <th className="p-2 border-r border-black text-center">التاريخ</th>
                 <th className="p-2 border-r border-black text-center">نوع الحركة</th>
@@ -317,7 +317,7 @@ const SupplierPaymentsPrintPage = () => {
   }).format(new Date(payment.transactionDate || payment.createdAt))
 }
                     </td>
-                    <td className="p-2 border-r border-black text-center font-black">
+                    <td className="p-2 border-r border-black text-center font-normal">
                       {payment.moneyFlow === "incoming"
                         ? "تحصيل (استلام فلوس من التاجر)"
                         : "مصروف (دفع فلوس للتاجر)"}
@@ -325,7 +325,7 @@ const SupplierPaymentsPrintPage = () => {
                     <td className="p-2 border-r border-black text-center font-bold">
                       {paymentMethodNames[payment.paymentMethod] || payment.paymentMethod}
                     </td>
-                    <td className="p-2 border-r border-black text-center font-black text-sm">
+                    <td className="p-2 border-r border-black text-center font-normal text-sm">
                       {payment.amount?.toLocaleString()} ج.م
                     </td>
 
@@ -334,7 +334,7 @@ const SupplierPaymentsPrintPage = () => {
                       {payment.paymentMethod === "cheque" && payment.cheque ? (
                         <div className="space-y-0.5 text-[10px]">
                           <p className="m-0">
-                            رقم الشيك: <span className="font-black">{payment.cheque.chequeNumber}</span>
+                            رقم الشيك: <span className="font-normal">{payment.cheque.chequeNumber}</span>
                           </p>
                           <p className="m-0">البنك: {payment.cheque.bankName}</p>
                           <p className="m-0">

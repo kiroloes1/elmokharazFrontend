@@ -104,7 +104,7 @@ const PrintSupplyPage = () => {
       {/* هيدر التحكم - يختفي عند الطباعة */}
       <div className="max-w-4xl mx-auto mb-4 no-print flex flex-col sm:flex-row justify-between items-center bg-white p-4 rounded-xl border border-black gap-3">
         <div>
-          <h2 className="text-base font-black text-black">معاينة الفاتورة للطباعة والمشاركة</h2>
+          <h2 className="text-base font-normal text-black">معاينة الفاتورة للطباعة والمشاركة</h2>
           <p className="text-xs text-gray-700 font-bold">فاتورة مشتريات مستلزمات معدات #{invoice.invoiceNumber} - {supplier?.name || invoice.supplier?.name}</p>
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
@@ -136,18 +136,18 @@ const PrintSupplyPage = () => {
             <tbody>
               <tr>
                 <td className="align-top">
-                  <h1 className="text-2xl font-black text-black m-0">{settings?.invoiceFactoryName || "مصنع المخرز"}</h1>
+                  <h1 className="text-2xl font-normal text-black m-0">{settings?.invoiceFactoryName || "مصنع المخرز"}</h1>
                   <div className="text-xs font-bold text-black mt-3 space-y-1">
-                    <p className="m-0">التاجر : <span className="font-black">{supplier?.name || invoice.supplier?.name || "تاجر  عام"}</span></p>
-                                        <p className="m-0">رقم التلفون : <span className="font-black">{supplier?.phone || invoice.supplier?.phone || "غير معرف"}</span></p>
-                    <p className="m-0">رصيد التاجر : <span className="font-black">{supplier?.balance?.toLocaleString() || 0} ج.م</span></p>
-                    <p className="m-0">المعدة: <span className="font-black">{invoice.equipmentName || "غير محدد"}</span></p>
+                    <p className="m-0">التاجر : <span className="font-normal">{supplier?.name || invoice.supplier?.name || "تاجر  عام"}</span></p>
+                                        <p className="m-0">رقم التلفون : <span className="font-normal">{supplier?.phone || invoice.supplier?.phone || "غير معرف"}</span></p>
+                    <p className="m-0">رصيد التاجر : <span className="font-normal">{supplier?.balance?.toLocaleString() || 0} ج.م</span></p>
+                    <p className="m-0">المعدة: <span className="font-normal">{invoice.equipmentName || "غير محدد"}</span></p>
                   </div>
                 </td>
 
                 <td className="text-left align-top min-w-[160px]">
                   <div className="p-3 border-2 border-black inline-block text-right">
-                    <p className="font-black text-xs text-black m-0">فاتورة مشتريات #{invoice.invoiceNumber}</p>
+                    <p className="font-normal text-xs text-black m-0">فاتورة مشتريات #{invoice.invoiceNumber}</p>
                     <p className="text-black text-[11px] font-bold m-0 mt-1">
                       {new Date(invoice.purchaseDate || invoice.createdAt).toLocaleString("ar-EG", {
                         timeZone: "Africa/Cairo",
@@ -173,10 +173,10 @@ const PrintSupplyPage = () => {
 
         {/* جدول المستلزمات الرئيسي */}
         <div className="mb-4">
-          <h3 className="text-xs font-black text-black mb-2 border-r-4 border-black pr-2 uppercase">تفاصيل المستلزمات المشتراة</h3>
+          <h3 className="text-xs font-normal text-black mb-2 border-r-4 border-black pr-2 uppercase">تفاصيل المستلزمات المشتراة</h3>
           <table className="w-full text-right border-collapse border-2 border-black text-xs">
             <thead>
-              <tr className="bg-gray-100 text-black border-b-2 border-black font-black">
+              <tr className="bg-gray-100 text-black border-b-2 border-black font-normal">
                 <th className="p-2 border-r border-black text-right">#</th>
                 <th className="p-2 border-r border-black text-right">اسم الصنف</th>
                 <th className="p-2 border-r border-black text-center">النوع/الفئة</th>
@@ -194,7 +194,7 @@ const PrintSupplyPage = () => {
                 return (
                   <tr key={item._id || idx} className="text-black">
                     <td className="p-2 border-r border-black text-center font-bold">{idx + 1}</td>
-                    <td className="p-2 border-r border-black font-black">
+                    <td className="p-2 border-r border-black font-normal">
                       {item.itemName || "بدون اسم"}
                     </td>
                     <td className="p-2 border-r border-black text-center">
@@ -206,7 +206,7 @@ const PrintSupplyPage = () => {
                     <td className="p-2 border-r border-black text-center font-bold">
                       {unitPrice.toLocaleString()} ج.م
                     </td>
-                    <td className="p-2 text-left font-black">
+                    <td className="p-2 text-left font-normal">
                       {itemTotal.toLocaleString()} ج.م
                     </td>
                   </tr>
@@ -214,7 +214,7 @@ const PrintSupplyPage = () => {
               })}
             </tbody>
             {/* Footer الجدول */}
-            <tfoot className="border-t-2 border-black bg-gray-50 font-black">
+            <tfoot className="border-t-2 border-black bg-gray-50 font-normal">
               <tr>
                 <td colSpan={3} className="p-2 border-r border-black text-right">
                   إجمالي عدد الأصناف: {totalItems}
@@ -223,7 +223,7 @@ const PrintSupplyPage = () => {
                   {totalQuantity}
                 </td>
                 <td className="p-2 border-r border-black text-center">—</td>
-                <td className="p-2 text-left font-black text-lg">
+                <td className="p-2 text-left font-normal text-lg">
                   {totalEquipmentValue.toLocaleString()} ج.م
                 </td>
               </tr>

@@ -10,8 +10,9 @@ import {
   Link, Plus, Trash2
 } from "lucide-react";
 import axios from "axios";
+import BankAutocomplete from "../../services/allBank";
 
-const SupplierBalanceAutocomplete = () => {
+const CustomerChequeAutocomplete = () => {
   const [search, setSearch] = useState("");
   const [allSuppliers, setAllSuppliers] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
@@ -20,17 +21,10 @@ const SupplierBalanceAutocomplete = () => {
   const [payment, setPayment] = useState(null);
 
   
-    
-  const[remainingIncoming,setremainingIncoming]=useState(0);
-  const[remainingOutgoing,setremainingOutgoing]=useState(0);
-
-  
-  const [balance,setBalance]=useState(0);
-
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState("cash");
-  const [transactionType, setTransactionType] = useState("debt");
+  const [paymentMethod, setPaymentMethod] = useState("cheque");
+  const [transactionType, setTransactionType] = useState("payment");
   const [loading, setLoading] = useState(false);
   const [subLoading, setSubLoading] = useState(false);
   const [suggestionWallets, setSuggestionWallets] = useState([]);
@@ -75,7 +69,7 @@ const SupplierBalanceAutocomplete = () => {
   setPaymentData(prev => {
     const walletInfo = { ...prev.walletInfo };
 
-    if (transactionType !== "payment") {
+    if (transactionType === "payment") {
       // التاجر هو الراسل
       walletInfo.senderName = supplier.name || "";
       walletInfo.senderPhone = supplier.phone || "";
@@ -107,7 +101,7 @@ const SupplierBalanceAutocomplete = () => {
 
   const fetchSuggestions = async () => {
     try {
-        const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/wallet/getSugg`, {
+      const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/wallet/getSugg`,{
         headers: {
           "x-api-key": import.meta.env.VITE_API_X_API_KEY,
           "Content-Type": "application/json",
@@ -125,10 +119,10 @@ const SupplierBalanceAutocomplete = () => {
 
   const fetchSuppliers = async () => {
     try {
-      const res = await api.get("/suppliers/getAllSupplierName");
+      const res = await api.get("/customers/getAllSupplierName");
       setAllSuppliers(res.data.data);
     } catch (err) {
-      showAlert({ title: "فشل في تحميل التجار", icon: "error" });
+      showAlert({ title: "فشل في تحميل الموردين", icon: "error" });
     }
   };
 
@@ -162,12 +156,12 @@ const SupplierBalanceAutocomplete = () => {
       setSelectedSupplierId(s._id);
       setSearch(s.name);
       setSuggestions([]);
-      const res = await api.get(`/suppliers/${s._id}`);
+      const res = await api.get(`/customers/${s._id}`);
       setSupplier(res.data.data);
       setPayment(res.data.payment)
     } catch (err) {
       showAlert({
-        title: "فشل تحميل بيانات التاجر",
+        title: "فشل تحميل بيانات المورد",
         icon: "error"
       });
     } finally {
@@ -243,7 +237,7 @@ const SupplierBalanceAutocomplete = () => {
     if (!validatePaymentData()) return;
 
     const confirmed = await showAlertConfirm({
-      title: transactionType === "debt" ? "  اضافه  مديونيه (+)" : " دفع للتاجر (-)",
+      title: transactionType === "debt" ? " سداد للتاجر؟" : "تسجيل دفع؟",
       text: `المبلغ: ${amount} ج.م للتاجر: ${supplier.name}`,
       icon: "question"
     });
@@ -274,21 +268,19 @@ const SupplierBalanceAutocomplete = () => {
 
       const endpoint = transactionType === "debt" ? "addDebt" : "paySupplier";
       
-      await api.patch(`/suppliers/${endpoint}/${supplier._id}`, payload);
+      await api.patch(`/customers/${endpoint}/${supplier._id}`, payload);
       
       showAlert({ title: "تمت العملية بنجاح", icon: "success" });
 
-      const updatedSupplier = await api.get(`/suppliers/${supplier._id}`);
+      const updatedSupplier = await api.get(`/customers/${supplier._id}`);
       setSupplier(updatedSupplier.data.data);
       fetchSuppliers();
-       setPayment(updatedSupplier.data.payment || []);
-
+      setPayment(updatedSupplier.data.payment || []);
 
       setAmount("");
       setNote("");
-      setDate(    new Date().toLocaleString("sv-SE", {
-      timeZone: "Africa/Cairo",
-    }).slice(0, 16));
+      setDate(  new Date().toLocaleString("sv-SE", {
+      timeZone: "Africa/Cairo" }));
       setPaymentData({
         paidAmount: 0,
         paymentMethod: "cash",
@@ -315,7 +307,7 @@ const SupplierBalanceAutocomplete = () => {
       });
     } catch (err) {
       showAlert({ 
-        title: err.response?.data.error || err.message || "حدث خطأ", 
+        title: err.response?.data?.error || err.message || "حدث خطأ", 
         icon: "error" 
       });
     } finally {
@@ -348,12 +340,17 @@ const SupplierBalanceAutocomplete = () => {
               <label className="text-[11px] font-black text-slate-500 block mb-1">
                 <Building size={12} className="inline ml-1" /> البنك المسحوب عليه
               </label>
-              <input 
-                type="text" 
-                className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm font-bold focus:border-brown -500 outline-none"
-                placeholder="اسم البنك"
-                value={paymentData.cheque?.bankName || ""} 
-                onChange={(e) => handlePaymentChange("cheque", e.target.value, "bankName")} 
+              <BankAutocomplete
+                value={paymentData.cheque?.bankName || ""}
+                placeholder="اكتب اسم البنك..."
+                onChange={(value) =>
+                  handlePaymentChange(
+                    
+                    "cheque",
+                    value,
+                    "bankName"
+                  )
+                }
               />
             </div>
           </div>
@@ -424,381 +421,7 @@ const SupplierBalanceAutocomplete = () => {
       );
     }
 
-    // حقل البنك / إنستا باي
-    if (method === "bank" || method === "instapay") {
-      return (
-        <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3 mt-3">
-          <div className="grid grid-cols-2 gap-3">
-            <div className="text-right">
-              <label className="text-[11px] font-black text-slate-500 block mb-1">
-                <Building size={12} className="inline ml-1" /> اسم البنك / المنصة
-              </label>
-              <input 
-                type="text" 
-                className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm font-bold focus:border-brown -500 outline-none"
-                placeholder={method === "instapay" ? "إنستا باي" : "اسم البنك"}
-                value={paymentData.bankInfo?.bankName || ""} 
-                onChange={(e) => handlePaymentChange("bankInfo", e.target.value, "bankName")} 
-              />
-            </div>
-            <div className="text-right">
-              <label className="text-[11px] font-black text-slate-500 block mb-1">
-                <FileText size={12} className="inline ml-1" /> رقم مرجع المعاملة
-              </label>
-              <input 
-                type="text" 
-                className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm font-bold focus:border-brown -500 outline-none"
-                placeholder="رقم التحويل أو العملية"
-                value={paymentData.bankInfo?.transactionReference || ""} 
-                onChange={(e) => handlePaymentChange("bankInfo", e.target.value, "transactionReference")} 
-              />
-            </div>
-          </div>
-        </div>
-      );
-    }
 
-    // حقل المحفظة الإلكترونية
-    if (method === "wallet") {
-      const isDebt = transactionType != "debt";
-      
-      return (
-        <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3 mt-3">
-          {/* ربط العملية */}
-          <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-slate-200">
-            <input
-              type="checkbox"
-              id="linkWallet"
-              checked={paymentData.walletInfo?.linkWallet || false}
-              onChange={(e) => handlePaymentChange("walletInfo", e.target.checked, "linkWallet")}
-              className="w-4 h-4 text-orange-500 rounded focus:ring-orange-500"
-            />
-            <label htmlFor="linkWallet" className="text-sm font-bold text-dark">
-              <Link size={14} className="inline ml-1" /> 
-              {isDebt ? "ربط محفظة  (المرسل)" : "ربط محفظة المستلم"}
-            </label>
-          </div>
-
-          {isDebt ? (
-            // ======== حالة المديونية ========
-            //  هو الراسل (بيحول فلوس للشركة)
-            // البحث عن محفظة الراسل
-            <>
-              {/* بيانات المستلم - تظهر دائمًا في المديونية */}
-              <div className="grid grid-cols-2 gap-3">
-                <div className="text-right">
-                  <label className="text-[11px] font-black text-slate-500 block mb-1">رقم مستلم المبلغ</label>
-                  <input
-                    type="text"
-                    className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm font-bold focus:border-brown -500 outline-none"
-                    placeholder="رقم هاتف  المستلم"
-                    value={paymentData.walletInfo?.receiverPhone || ""}
-                    onChange={(e) => handlePaymentChange("walletInfo", e.target.value, "receiverPhone")}
-                  />
-                </div>
-                <div className="text-right">
-                  <label className="text-[11px] font-black text-slate-500 block mb-1">اسم مستلم المبلغ</label>
-                  <input
-                    type="text"
-                    className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm font-bold focus:border-brown -500 outline-none"
-                    placeholder="اسم  المستلم"
-                    value={paymentData.walletInfo?.receiverName || ""}
-                    onChange={(e) => handlePaymentChange("walletInfo", e.target.value, "receiverName")}
-                  />
-                </div>
-
-{ !paymentData.walletInfo?.linkWallet &&
-
-<>
-
-                               <div className="text-right">
-                  <label className="text-[11px] font-black text-slate-500 block mb-1">رقم راسل المبلغ</label>
-                  <input
-                    type="text"
-                    className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm font-bold focus:border-brown -500 outline-none"
-                    placeholder="رقم هاتف  الراسل"
-                    value={paymentData.walletInfo?.senderPhone || ""}
-                    onChange={(e) => handlePaymentChange("walletInfo", e.target.value, "senderPhone")}
-                  />
-                </div>
-                <div className="text-right">
-                  <label className="text-[11px] font-black text-slate-500 block mb-1">اسم راسل المبلغ</label>
-                  <input
-                    type="text"
-                    className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm font-bold focus:border-brown -500 outline-none"
-                    placeholder="اسم  الراسل"
-                    value={paymentData.walletInfo?.senderName || ""}
-                    onChange={(e) => handlePaymentChange("walletInfo", e.target.value, "senderName")}
-                  />
-                </div>
-</>
-
-                }
-              </div>
-
-              {/* البحث عن محفظة الراسل - يظهر عند تفعيل الربط */}
-              {paymentData.walletInfo?.linkWallet && (
-                <div className="relative text-right">
-                  <label className="text-[11px] font-black text-slate-500 block mb-1">محفظة  (الراسل)</label>
-                  <input
-                    type="text"
-                    className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm font-bold focus:border-brown -500 outline-none"
-                    placeholder="ابحث عن محفظة ..."
-                    value={walletSearch}
-                    onFocus={() => setShowWalletList(true)}
-                    onChange={(e) => {
-                      setWalletSearch(e.target.value);
-                      setShowWalletList(true);
-                    }}
-                  />
-                  {showWalletList && walletSearch.length > 0 && (
-                    <div className="absolute z-50 mt-1 w-full max-h-56 overflow-y-auto bg-white rounded-xl border shadow-xl">
-                      {suggestionWallets
-                        .filter((w) =>
-                          w.walletName?.toLowerCase().includes(walletSearch.toLowerCase()) ||
-                          w.phoneNumber?.includes(walletSearch)
-                        )
-                        .map((wallet) => (
-                          <div
-                            key={wallet._id}
-                            className="p-3 border-b hover:bg-slate-50 cursor-pointer transition"
-                            onClick={() => {
-                              // في المديونية: المحفظة دي بتاعت الراسل
-                              handlePaymentChange("walletInfo", wallet._id, "walletId");
-                              handlePaymentChange("walletInfo", wallet.walletName, "senderName");
-                              handlePaymentChange("walletInfo", wallet.phoneNumber, "senderPhone");
-                              handlePaymentChange("walletInfo", wallet.walletProvider, "provider");
-                              setWalletSearch(wallet.walletName);
-                              setShowWalletList(false);
-                              setremainingIncoming(wallet.remainingIncoming )
-                              setremainingOutgoing(wallet?.remainingOutgoing)
-                              setBalance(wallet?.balance)
-                            }}
-                          >
-                            <div className="font-black text-dark">{wallet.walletName}</div>
-                            <div className="text-xs text-slate-500">{wallet.phoneNumber}</div>
-                            <div className="text-xs text-green-600">{wallet.walletProvider}</div>
-                          </div>
-                        ))}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* عرض بيانات محفظة الراسل المختارة */}
-              {paymentData.walletInfo?.walletId && paymentData.walletInfo?.linkWallet && (
-                <div className="grid grid-cols-3 gap-3 bg-white p-3 rounded-lg border border-slate-200">
-                  <div className="text-right">
-                    <label className="text-[10px] font-black text-slate-400 block">اسم الراسل</label>
-                    <input
-                      readOnly
-                      value={paymentData.walletInfo.senderName || ""}
-                      className="w-full p-2 bg-slate-50 rounded-lg text-sm font-bold border border-slate-100"
-                    />
-                  </div>
-                  <div className="text-right">
-                    <label className="text-[10px] font-black text-slate-400 block">رقم الراسل</label>
-                    <input
-                      readOnly
-                      value={paymentData.walletInfo.senderPhone || ""}
-                      className="w-full p-2 bg-slate-50 rounded-lg text-sm font-bold border border-slate-100"
-                    />
-                  </div>
-                  <div className="text-right">
-                    <label className="text-[10px] font-black text-slate-400 block">شركة المحفظة</label>
-                    <input
-                      readOnly
-                      value={paymentData.walletInfo.provider || ""}
-                      className="w-full p-2 bg-slate-50 rounded-lg text-sm font-bold border border-slate-100"
-                    />
-                  </div>
-
-                  
-                    <div>
-    <label className="block mb-1 text-[11px] font-black text-brown">
-      رصيد المحفظة
-    </label>
-    <input
-      readOnly
-      value={balance || ""}
-      className="p-2 w-full text-xs font-bold bg-gray-100 rounded-lg border"
-    />
-  </div>
-
-  <div>
-    <label className="block mb-1 text-[11px] font-black text-brown">
-      المتبقي للارسال
-    </label>
-    <input
-      readOnly
-      value={remainingOutgoing || ""}
-      className="p-2 w-full text-xs font-bold bg-gray-100 rounded-lg border"
-    />
-  </div>
-                </div>
-              )}
-            </>
-          ) : (
-            // ======== حالة السداد ========
-            //  هو المستلم (بيستلم فلوس من )
-            // البحث عن محفظة المستلم
-            <>
-              {/* بيانات الراسل - تظهر دائمًا في السداد */}
-             <div className="grid grid-cols-2 gap-3">
-{   !paymentData.walletInfo?.linkWallet &&
-             <>
-                          <div className="text-right">
-                  <label className="text-[11px] font-black text-slate-500 block mb-1">رقم مستلم المبلغ</label>
-                  <input
-                    type="text"
-                    className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm font-bold focus:border-brown -500 outline-none"
-                    placeholder="رقم هاتف  المستلم"
-                    value={paymentData.walletInfo?.receiverPhone || ""}
-                    onChange={(e) => handlePaymentChange("walletInfo", e.target.value, "receiverPhone")}
-                  />
-                </div>
-                <div className="text-right">
-                  <label className="text-[11px] font-black text-slate-500 block mb-1">اسم مستلم المبلغ</label>
-                  <input
-                    type="text"
-                    className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm font-bold focus:border-brown -500 outline-none"
-                    placeholder="اسم  المستلم"
-                    value={paymentData.walletInfo?.receiverName || ""}
-                    onChange={(e) => handlePaymentChange("walletInfo", e.target.value, "receiverName")}
-                  />
-                
-                </div>
-             </>
-
-                  }
-
-                                <div className="text-right">
-                  <label className="text-[11px] font-black text-slate-500 block mb-1">رقم راسل المبلغ</label>
-                  <input
-                    type="text"
-                    className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm font-bold focus:border-brown -500 outline-none"
-                    placeholder="رقم هاتف  الراسل"
-                    value={paymentData.walletInfo?.senderPhone || ""}
-                    onChange={(e) => handlePaymentChange("walletInfo", e.target.value, "senderPhone")}
-                  />
-                </div>
-                <div className="text-right">
-                  <label className="text-[11px] font-black text-slate-500 block mb-1">اسم راسل المبلغ</label>
-                  <input
-                    type="text"
-                    className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm font-bold focus:border-brown -500 outline-none"
-                    placeholder="اسم  الراسل"
-                    value={paymentData.walletInfo?.senderName || ""}
-                    onChange={(e) => handlePaymentChange("walletInfo", e.target.value, "senderName")}
-                  />
-                </div>
-              </div>
-
-              {/* البحث عن محفظة المستلم - يظهر عند تفعيل الربط */}
-              {paymentData.walletInfo?.linkWallet && (
-                <div className="relative text-right">
-                  <label className="text-[11px] font-black text-slate-500 block mb-1">محفظة المستلم</label>
-                  <input
-                    type="text"
-                    className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm font-bold focus:border-brown -500 outline-none"
-                    placeholder="ابحث عن محفظة ..."
-                    value={walletSearch}
-                    onFocus={() => setShowWalletList(true)}
-                    onChange={(e) => {
-                      setWalletSearch(e.target.value);
-                      setShowWalletList(true);
-                    }}
-                  />
-                  {showWalletList && walletSearch.length > 0 && (
-                    <div className="absolute z-50 mt-1 w-full max-h-56 overflow-y-auto bg-white rounded-xl border shadow-xl">
-                      {suggestionWallets
-                        .filter((w) =>
-                          w.walletName?.toLowerCase().includes(walletSearch.toLowerCase()) ||
-                          w.phoneNumber?.includes(walletSearch)
-                        )
-                        .map((wallet) => (
-                          <div
-                            key={wallet._id}
-                            className="p-3 border-b hover:bg-slate-50 cursor-pointer transition"
-                            onClick={() => {
-                              // في السداد: المحفظة دي بتاعت المستلم
-                              handlePaymentChange("walletInfo", wallet._id, "walletId");
-                              handlePaymentChange("walletInfo", wallet.walletName, "receiverName");
-                              handlePaymentChange("walletInfo", wallet.phoneNumber, "receiverPhone");
-                              handlePaymentChange("walletInfo", wallet.walletProvider, "provider");
-                              setWalletSearch(wallet.walletName);
-                              setShowWalletList(false);
-                              setremainingIncoming(wallet.remainingIncoming )
-                              setremainingOutgoing(wallet?.remainingOutgoing)
-                              setBalance(wallet?.balance)
-                            }}
-                          >
-                            <div className="font-black text-dark">{wallet.walletName}</div>
-                            <div className="text-xs text-slate-500">{wallet.phoneNumber}</div>
-                            <div className="text-xs text-green-600">{wallet.walletProvider}</div>
-                          </div>
-                        ))}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* عرض بيانات محفظة المستلم المختارة */}
-              {paymentData.walletInfo?.walletId && paymentData.walletInfo?.linkWallet && (
-                <div className="grid grid-cols-3 gap-3 bg-white p-3 rounded-lg border border-slate-200">
-                  <div className="text-right">
-                    <label className="text-[10px] font-black text-slate-400 block">اسم المستلم</label>
-                    <input
-                      readOnly
-                      value={paymentData.walletInfo.receiverName || ""}
-                      className="w-full p-2 bg-slate-50 rounded-lg text-sm font-bold border border-slate-100"
-                    />
-                  </div>
-                  <div className="text-right">
-                    <label className="text-[10px] font-black text-slate-400 block">رقم المستلم</label>
-                    <input
-                      readOnly
-                      value={paymentData.walletInfo.receiverPhone || ""}
-                      className="w-full p-2 bg-slate-50 rounded-lg text-sm font-bold border border-slate-100"
-                    />
-                  </div>
-                  <div className="text-right">
-                    <label className="text-[10px] font-black text-slate-400 block">شركة المحفظة</label>
-                    <input
-                      readOnly
-                      value={paymentData.walletInfo.provider || ""}
-                      className="w-full p-2 bg-slate-50 rounded-lg text-sm font-bold border border-slate-100"
-                    />
-                  </div>
-
-                    <div>
-    <label className="block mb-1 text-[11px] font-black text-brown">
-      رصيد المحفظة
-    </label>
-    <input
-      readOnly
-      value={balance || ""}
-      className="p-2 w-full text-xs font-bold bg-gray-100 rounded-lg border"
-    />
-  </div>
-
-  <div>
-    <label className="block mb-1 text-[11px] font-black text-brown">
-      المتبقي للأستلام
-    </label>
-    <input
-      readOnly
-      value={remainingIncoming || ""}
-      className="p-2 w-full text-xs font-bold bg-gray-100 rounded-lg border"
-    />
-  </div>
-                </div>
-              )}
-            </>
-          )}
-        </div>
-      );
-    }
 
     return null;
   };
@@ -856,7 +479,7 @@ const SupplierBalanceAutocomplete = () => {
                     </div>
                     <div>
                       <h2 className="text-2xl font-black text-ligth">{supplier.name}</h2>
-                      <p className="text-brown -400 text-lg font-bold">حساب تاجر</p>
+                      <p className="text-brown -400 text-lg font-bold">حساب مورد</p>
                     </div>
                   </div>
 
@@ -905,25 +528,30 @@ const SupplierBalanceAutocomplete = () => {
               <div className="space-y-6">
                 {/* نوع العملية */}
                 <div className="flex bg-slate-50 p-1 rounded-2xl">
-                  <button
-                    onClick={() => setTransactionType("debt")}
+                  {/* <button
+                    onClick={() =>{ setTransactionType("debt")
+                        setPaymentMethod("cash")
+                    }}
                     className={`flex-1 py-3 rounded-xl font-black text-lg transition-all ${
                       transactionType === "debt" 
                         ? "bg-dark text-white shadow-lg" 
                         : "text-slate-400 hover:text-dark"
                     }`}
                   >
-                  اضافه مديونيه (+)
-                  </button>
+                   سداد للتاجر(-)
+                  </button> */}
                   <button
-                    onClick={() => setTransactionType("payment")}
+                    onClick={() =>{setPaymentMethod("cash")
+                     
+                        
+                    }}
                     className={`flex-1 py-3 rounded-xl font-black text-lg transition-all ${
                       transactionType === "payment" 
                         ? "bg-green-600 text-white shadow-lg" 
                         : "text-slate-400 hover:text-dark"
                     }`}
                   >
-                     دفع للتاجر(-)
+                     استلام دفعه(+)
                   </button>
                 </div>
 
@@ -932,13 +560,8 @@ const SupplierBalanceAutocomplete = () => {
                   <label className="text-md font-black text-slate-400 uppercase pr-2 mb-3 block">طريقة الدفع</label>
                   <div className="grid grid-cols-3 lg:grid-cols-4 gap-3">
                     {[
-                      { id: 'cash', label: 'نقدي', icon: <Banknote size={18}/> },
-                      { id: 'bank', label: 'بنكي', icon: <Landmark size={18}/> },
-                      { id: 'instapay', label: 'إنستا باي', icon: <Smartphone size={18}/> },
-                      { id: 'wallet', label: 'محفظة', icon: <Wallet size={18}/> },
-                      // { id: 'cheque', label: 'شيك', icon: <Receipt size={18}/> },
-                      { id: 'work', label: 'شغل', icon: <WorkflowIcon size={18}/> },
-                      { id: 'mail', label: 'بريد', icon: <Mail size={18}/> },
+                      { id: 'cheque', label: 'شيك', icon: <Receipt size={18}/> },
+              
                     ].map((method) => (
                       <>
                       {transactionType==="debt" & method.id==="cheque" ? <></>
@@ -1065,7 +688,7 @@ const SupplierBalanceAutocomplete = () => {
                           <p className={`text-md font-black ${
                             t.module === 'debt' ? 'text-red-400' : 'text-green-500'
                           }`}>
-                            {t.module === "debt" ? " اضافه مديوينه (+)" : " دفع للتاحر(-)"}
+                            {t.module === "debt" ? "سداد للتاجر" : "استلام مبلغ"}
                           </p>
                         </div>
                       </div>
@@ -1081,4 +704,4 @@ const SupplierBalanceAutocomplete = () => {
   );
 };
 
-export default SupplierBalanceAutocomplete;
+export default CustomerChequeAutocomplete;

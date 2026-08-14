@@ -4,6 +4,7 @@ import api from "../../services/api";
 import { showAlert } from "../../services/alert";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
+import BankAutocomplete from "../../services/allBank";
 
 const DeliveryEditForm = () => {
   const { id } = useParams(); 
@@ -539,12 +540,18 @@ const [supRes, itemRes, deliveryRes, walletRes] = await Promise.all([
                   <div className="grid grid-cols-2 gap-2 bg-white p-3 rounded-lg border border-brown/10 shadow-inner">
                     <div className="text-right">
                       <label className="text-[11px] font-black text-brown block mb-1">اسم البنك / المنصة</label>
-                      <input 
-                        type="text" 
-                        className="w-full p-2 bg-ligth/20 border rounded-lg text-xs font-bold"
-                        value={pay.bankInfo?.bankName || ""} 
-                        onChange={(e) => handlePaymentChange(pIdx, "bankInfo", e.target.value, "bankName")} 
-                      />
+                    <BankAutocomplete
+                      value={pay.bankInfo?.bankName || ""}
+                      placeholder="اكتب اسم البنك..."
+                      onChange={(value) =>
+                        handlePaymentChange(
+                          pIdx,
+                          "bankInfo",
+                          value,
+                          "bankName"
+                        )
+                      }
+                    />
                     </div>
                     <div className="text-right">
                       <label className="text-[11px] font-black text-brown block mb-1">رقم مرجع المعاملة (Ref)</label>
@@ -819,12 +826,18 @@ const [supRes, itemRes, deliveryRes, walletRes] = await Promise.all([
                       </div>
                       <div className="text-right">
                         <label className="text-[11px] font-black text-brown block mb-1">البنك المسحوب عليه</label>
-                        <input 
-                          type="text" 
-                          className="w-full p-2 bg-ligth/20 border rounded-lg text-xs font-bold"
-                          value={pay.cheque?.bankName || ""} 
-                          onChange={(e) => handlePaymentChange(pIdx, "cheque", e.target.value, "bankName")} 
-                        />
+<BankAutocomplete
+  value={pay.cheque?.bankName || ""}
+  placeholder="البنك المسحوب عليه..."
+  onChange={(value) =>
+    handlePaymentChange(
+      pIdx,
+      "cheque",
+      value,
+      "bankName"
+    )
+  }
+/>
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-2">

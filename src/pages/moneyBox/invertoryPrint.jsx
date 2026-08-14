@@ -214,7 +214,7 @@ const CashBoxAuditPrint = () => {
             {/* الجزء العلوي */}
             <div className="no-print flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
                 <div>
-                    <h2 className="text-2xl font-black">جرد الخزنة</h2>
+                    <h2 className="text-2xl font-normal">جرد الخزنة</h2>
                     <p className="text-gray-500">تحكم كامل في الفلاتر والطباعة</p>
                 </div>
                 <div className="flex gap-3">
@@ -284,7 +284,7 @@ const CashBoxAuditPrint = () => {
                 
                 {/* ترويسة التقرير */}
                 <div className="print-only text-center mb-6">
-                    <h1 className="text-3xl font-black text-black mb-3">{settings.invoiceFactoryName}</h1>
+                    <h1 className="text-3xl font-normal text-black mb-3">{settings.invoiceFactoryName}</h1>
                     <div className='border-b-2 border-black my-3'></div>
                     <h3 className="text-2xl font-bold pb-2">تقرير حركة الخزينة المالي</h3>
                     <div className="flex justify-between mt-4 font-bold">
@@ -298,19 +298,19 @@ const CashBoxAuditPrint = () => {
                     <div className="grid grid-cols-2 md:grid-col-2 lg:grid-cols-4 gap-4 mb-6">
                         <div className="border p-4 rounded-lg text-center bg-blue-50 print:bg-white print:border-black">
                             <p className="text-xs font-bold text-gray-500 print:text-black">الرصيد المرحل السابق</p>
-                            <p className="text-lg font-black text-blue-700 print:text-black">{openingBalance?.toLocaleString()} ج.م</p>
+                            <p className="text-lg font-normal text-blue-700 print:text-black">{openingBalance?.toLocaleString()} ج.م</p>
                         </div>
                         <div className="border p-4 rounded-lg text-center bg-accent-50 print:bg-white print:border-black">
                             <p className="text-xs font-bold text-gray-500 print:text-black">إجمالي الداخل بالفترة</p>
-                            <p className="text-lg font-black text-accent-700 print:text-black">{totalIncome?.toLocaleString()} ج.م</p>
+                            <p className="text-lg font-normal text-accent-700 print:text-black">{totalIncome?.toLocaleString()} ج.م</p>
                         </div>
                         <div className="border p-4 rounded-lg text-center bg-red-50 print:bg-white print:border-black">
                             <p className="text-xs font-bold text-gray-500 print:text-black">إجمالي الخارج بالفترة</p>
-                            <p className="text-lg font-black text-red-700 print:text-black">{totalOutCome?.toLocaleString()} ج.م</p>
+                            <p className="text-lg font-normal text-red-700 print:text-black">{totalOutCome?.toLocaleString()} ج.م</p>
                         </div>
                         <div className="border p-4 rounded-lg text-center bg-gray-800 text-white print:bg-white print:text-black print:border-black ">
                             <p className="text-xs font-bold opacity-80">الرصيد الصافي الحالي</p>
-                            <p className="text-lg font-black">{(openingBalance + totalIncome - totalOutCome)?.toLocaleString()} ج.م</p>
+                            <p className="text-lg font-normal">{(openingBalance + totalIncome - totalOutCome)?.toLocaleString()} ج.م</p>
                         </div>
                     </div>
 
@@ -345,7 +345,7 @@ const CashBoxAuditPrint = () => {
                                                 </span>
                                             </td>
                                             <td className="p-3 border text-sm font-semibold text-gray-900">{tr.displayName}</td>
-                                            <td className="p-3 border text-sm font-black text-blue-900 print:text-black">{tr.amount.toLocaleString()} ج</td>
+                                            <td className="p-3 border text-sm font-normal text-blue-900 print:text-black">{tr.amount.toLocaleString()} ج</td>
                                             <td className="p-3 border text-xs text-gray-600 print:text-black min-w-[150px]">
                                                 {tr.itemTitle && <div className="font-medium">{tr.itemTitle}</div>}
                                                 {tr.note && tr.note !== "مصروفات خارجه من الخزنه" && (

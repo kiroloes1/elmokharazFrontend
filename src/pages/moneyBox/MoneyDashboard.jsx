@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from "react";
-import { 
-  Wallet, Building2, Mail, Calendar, 
+import {
+  Wallet, Building2, Mail, Calendar,
   ArrowUpRight, ArrowDownRight, Banknote,
   Shield, Lock, Unlock,
-  Eye, EyeOff, Search, Filter, Plus, X,
+  Eye, EyeOff, Filter, Plus,
   RefreshCw, AlertCircle,
-  Trash,
   Trash2,
-  Trash2Icon,
   BanknoteIcon,
-  Building
+  Building,
+  Edit,
+  Hash,
+  Clock,
+  FileText
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
@@ -19,7 +21,7 @@ import axios from "axios";
 
 const MoneyDashboard = () => {
   const navigate = useNavigate();
-  
+
   // ===== States =====
   const [loading, setLoading] = useState(true);
   const [financialLocked, setFinancialLocked] = useState(true);
@@ -27,22 +29,27 @@ const MoneyDashboard = () => {
   const [showPin, setShowPin] = useState(false);
   const [pinError, setPinError] = useState("");
   const [isPinLoading, setIsPinLoading] = useState(false);
-  
+
   // Wallet Search States
   const [walletSearch, setWalletSearch] = useState("");
   const [showWalletList, setShowWalletList] = useState(false);
   const [suggestionWallets, setSuggestionWallets] = useState([]);
-  
+
   // Dashboard Data
+  // ملاحظة: تأكد إن الباك إند بيرجع نفس المفتاح "cheques" لكل بيانات الشيكات
+  // (سواء ملخص الحالات أو استلام/إرسال) بدل التذبذب بين cheque و cheques.
   const [stats, setStats] = useState({
     incoming: 0,
     outgoing: 0,
     currentBalance: 0,
     wallets: { balance: 0, incoming: 0, outgoing: 0 },
     banks: { balance: 0, incoming: 0, outgoing: 0 },
+    instapay: { balance: 0, incoming: 0, outgoing: 0 },
     mail: { balance: 0, incoming: 0, outgoing: 0 },
     cash: { balance: 0, incoming: 0, outgoing: 0 },
     cheques: {
+      incoming: 0,
+      outgoing: 0,
       underCollection: 0,
       collected: 0,
       returned: 0,
@@ -143,6 +150,40 @@ const MoneyDashboard = () => {
     outgoing: "ارسال"
   };
 
+  const [editData, setEditData] = useState({
+    id: "",
+    module: "pay",
+    moneyFlow: "outgoing",
+    paymentMethod: "cash",
+    amount: "",
+    note: "",
+    date: "",
+    customer: {},
+    bankInfo: { bankName: "", transactionReference: "" },
+    walletInfo: {
+      provider: "",
+      senderName: "",
+      senderPhone: "",
+      receiverName: "",
+      receiverPhone: "",
+      transactionReference: "",
+      linkWallet: false,
+      walletId: ""
+    },
+    cheque: {
+      chequeNumber: "",
+      chequeType: "normal",
+      bankName: "",
+      receiveDate: "",
+      dueDate: "",
+      status: "under_collection"
+    }
+  });
+
+  const [loading2, setLoading2] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showData, setShowData] = useState(false);
+
   // ===== Fetch Wallet Suggestions =====
   const fetchSuggestions = async () => {
     try {
@@ -152,24 +193,21 @@ const MoneyDashboard = () => {
           "Content-Type": "application/json",
         },
       });
-      
+
       if (res.data && res.data.wallets) {
         setSuggestionWallets(res.data.wallets);
-        console.log("✅ تم جلب المحافظ:", res.data.wallets.length);
       } else {
         setSuggestionWallets([]);
-         setFinancialLocked(true);
       }
     } catch (err) {
       console.error("❌ Error fetching wallet suggestions:", err);
       setSuggestionWallets([]);
-       setFinancialLocked(true);
     }
   };
 
   // ===== Check Financial Lock Status =====
   useEffect(() => {
-    const token = localStorage.getItem('financialToken');
+    const token = localStorage.getItem("financialToken");
     if (token) {
       setFinancialLocked(false);
       fetchDashboardData();
@@ -189,48 +227,11 @@ const MoneyDashboard = () => {
         setStats(res.data.data);
       }
     } catch (err) {
-        showAlert({title:"حدث خطاء ما" , icon:"error"})
-       setFinancialLocked(true);
+      showAlert({ title: "حدث خطاء ما", icon: "error" });
+      setFinancialLocked(true);
     }
   };
 
-  const handleDeletePayment=async(paymentId)=>{
-
-        const confirm=await showAlertConfirm({
-          title:"حذف عمليه ",
-          icon:"warning",
-          text:"هل انت متأكد من ذلك لايمكن الرجوع في القرار بعد الموافقه",
-          confirmButtonText:"موافق",
-          cancelButtonText:"الغاء"
-        })
-        if(!confirm){
-          return;
-        }
-         try{
-          setLoading(true);
-                 await api.delete(
-            `/payment/deletePayment/${paymentId}`,      
-            {
-                params:{
-                    remove:true
-                }
-            }
-        ); 
-        
-        showAlert({
-          title:"تم الحذف بنجاح",
-          icon:"success"
-        })
-        setLoading(false);
-       fetchDashboardData();
-      fetchPayments();
-      fetchFilters();
-
-         }catch(err){
-          showAlert({title: err?.data.message || "حدث خطاء ما" , icon:"error"})
-          setLoading(false);
-         }
-  }
   // ===== Fetch Payments =====
   const fetchPayments = async (page = 1) => {
     try {
@@ -240,7 +241,7 @@ const MoneyDashboard = () => {
         limit: pagination.limit,
         ...filters
       };
-      Object.keys(params).forEach(key => {
+      Object.keys(params).forEach((key) => {
         if (!params[key]) delete params[key];
       });
 
@@ -252,7 +253,7 @@ const MoneyDashboard = () => {
     } catch (err) {
       console.error("Error fetching payments:", err);
       showAlert({ title: "خطأ في جلب البيانات", icon: "error" });
-       setFinancialLocked(true);
+      setFinancialLocked(true);
     } finally {
       setLoading(false);
     }
@@ -269,7 +270,7 @@ const MoneyDashboard = () => {
       }
     } catch (err) {
       console.error("Error fetching filters:", err);
-       setFinancialLocked(true);
+      setFinancialLocked(true);
     }
   };
 
@@ -287,7 +288,7 @@ const MoneyDashboard = () => {
     try {
       const res = await api.post("/payment/financialLogin", { financialPin });
       if (res.data.token) {
-        localStorage.setItem('financialToken', res.data.token);
+        localStorage.setItem("financialToken", res.data.token);
         setFinancialLocked(false);
         showAlert({ title: "تم فتح لوحة إدارة الأموال", icon: "success" });
         fetchDashboardData();
@@ -310,7 +311,6 @@ const MoneyDashboard = () => {
       return;
     }
 
-    // التحقق من البيانات المطلوبة حسب طريقة الدفع
     if (transferData.paymentMethod === "wallet") {
       if (transferData.type === "import" && !transferData.walletInfo.senderPhone) {
         showAlert({ title: "الرجاء إدخال رقم المرسل للمحفظة", icon: "warning" });
@@ -339,7 +339,6 @@ const MoneyDashboard = () => {
         amount: Number(transferData.amount)
       };
 
-      // إذا كانت طريقة الدفع محفظة ومفعل الربط
       if (transferData.paymentMethod === "wallet" && transferData.walletInfo.linkWallet) {
         if (!transferData.walletInfo.walletId) {
           showAlert({ title: "الرجاء اختيار محفظة من القائمة", icon: "warning" });
@@ -349,9 +348,9 @@ const MoneyDashboard = () => {
       }
 
       await api.post("/payment/financial/transfer", payload);
-      showAlert({ 
+      showAlert({
         title: transferData.type === "import" ? "تم إضافة الإيراد بنجاح" : "تم تسجيل خروج الأموال بنجاح",
-        icon: "success" 
+        icon: "success"
       });
       setShowTransferModal(false);
       resetTransferData();
@@ -411,7 +410,7 @@ const MoneyDashboard = () => {
       cancelButtonText: "إلغاء"
     });
     if (confirm.isConfirmed) {
-      localStorage.removeItem('financialToken');
+      localStorage.removeItem("financialToken");
       setFinancialLocked(true);
       showAlert({ title: "تم إغلاق لوحة إدارة الأموال", icon: "success" });
     }
@@ -419,7 +418,7 @@ const MoneyDashboard = () => {
 
   // ===== Format Currency =====
   const formatCurrency = (value) => {
-    return Number(value).toLocaleString() + " ج.م";
+    return Number(value || 0).toLocaleString() + " ج.م";
   };
 
   // ===== Get Translated Module Name =====
@@ -449,6 +448,440 @@ const MoneyDashboard = () => {
     return { label: "ارسال", bg: "bg-red-100 text-red-800" };
   };
 
+  const formatDateForInput = (date) => {
+    if (!date) return "";
+    const d = new Date(date);
+    const offset = d.getTimezoneOffset();
+    const localDate = new Date(d.getTime() - offset * 60000);
+    return localDate.toISOString().slice(0, 16);
+  };
+
+  // ===== Build edit-form data from a payment record (shared by edit & view modals) =====
+  const buildEditDataFromPayment = (payment) => {
+    let chequeData = {
+      chequeNumber: "", chequeType: "normal", bankName: "",
+      receiveDate: "", dueDate: "", status: "under_collection"
+    };
+
+    if (payment.cheque && typeof payment.cheque === "object") {
+      chequeData = {
+        chequeNumber: payment.cheque.chequeNumber || "",
+        chequeType: payment.cheque.chequeType || "normal",
+        bankName: payment.cheque.bankName || "",
+        receiveDate: payment.cheque.receiveDate ? formatDateForInput(payment.cheque.receiveDate) : "",
+        dueDate: payment.cheque.dueDate ? formatDateForInput(payment.cheque.dueDate) : "",
+        status: payment.cheque.status || "under_collection"
+      };
+    }
+
+    return {
+      id: payment._id,
+      module: payment.module || "pay",
+      moneyFlow: payment.moneyFlow || "outgoing",
+      paymentMethod: payment.paymentMethod || "cash",
+      amount: payment.amount,
+      note: payment.note || "",
+      date: formatDateForInput(payment.transactionDate),
+      bankInfo: payment.bankInfo || { bankName: "", transactionReference: "" },
+      walletInfo: payment.walletInfo || {
+        provider: "", senderName: "", senderPhone: "",
+        receiverName: "", receiverPhone: "", transactionReference: "",
+        linkWallet: false, walletId: ""
+      },
+      cheque: chequeData,
+      customer: payment.customer || payment.supplier
+    };
+  };
+
+  const editPaymentHistory = (payment) => {
+    setEditData(buildEditDataFromPayment(payment));
+    setShowEditModal(true);
+  };
+
+  const showPaymentHistory = (payment) => {
+    setEditData(buildEditDataFromPayment(payment));
+    setShowData(true);
+  };
+
+  // ===== Update payment =====
+  const updatePaymentHistory = async (editData) => {
+    try {
+      setLoading2(true);
+      const payload = {
+        amount: Number(editData.amount),
+        paymentMethod: editData.paymentMethod,
+        type: editData.module,
+        note: editData.note,
+        date: editData.date,
+      };
+
+      if (editData.paymentMethod === "bank" || editData.paymentMethod === "instapay") {
+        payload.bankInfo = editData.bankInfo;
+      }
+      if (editData.paymentMethod === "wallet") {
+        payload.walletInfo = editData.walletInfo;
+      }
+      if (editData.paymentMethod === "cheque") {
+        payload.cheque = { ...editData.cheque, amount: Number(editData.amount) };
+      }
+
+      await api.patch(
+        `/customers/editPaymentHistory/${editData?.id}/${editData.customer?._id}`,
+        payload
+      );
+
+      showAlert({ title: "تم التعديل بنجاح", icon: "success" });
+      setShowEditModal(false);
+      fetchDashboardData();
+      fetchPayments();
+      fetchFilters();
+    } catch (err) {
+      showAlert({
+        title: err.response?.data?.message || "حدث خطأ أثناء التعديل",
+        icon: "error"
+      });
+    } finally {
+      setLoading2(false);
+    }
+  };
+
+  // ===== Delete payment =====
+  const deletePaymentHistory = async (paymentId, traderId) => {
+    const confirm = await showAlertConfirm({
+      title: "حذف العملية",
+      text: "هل أنت متأكد من حذف هذه العملية الماليّة؟",
+      icon: "warning",
+      confirmButtonText: "نعم",
+      cancelButtonText: "إلغاء"
+    });
+
+    if (!confirm.isConfirmed) return;
+
+    try {
+      await api.delete(`/customers/deletePaymentHistory/${paymentId}/${traderId}`);
+
+      showAlert({
+        title: "تم الحذف بنجاح",
+        icon: "success"
+      });
+
+      fetchDashboardData();
+      fetchPayments();
+      fetchFilters();
+    } catch (err) {
+      showAlert({
+        title: err.response?.data?.message || "حدث خطأ أثناء الحذف",
+        icon: "error"
+      });
+    }
+  };
+
+  // ===== Render extra fields inside edit/view modal based on payment method =====
+  const renderEditPaymentFields = () => {
+    const method = editData.paymentMethod;
+
+    if (method === "cheque") {
+      return (
+        <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3 mt-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="text-right">
+              <label className="text-[11px] font-black text-slate-500 block mb-1">
+                <Hash size={12} className="inline ml-1" /> رقم الشيك
+              </label>
+              <input
+                type="text"
+                disabled={showData ? true : false}
+                className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm font-bold focus:border-orange-500 outline-none"
+                placeholder="رقم الشيك"
+                value={editData.cheque?.chequeNumber || ""}
+                onChange={(e) => setEditData({
+                  ...editData,
+                  cheque: { ...editData.cheque, chequeNumber: e.target.value }
+                })}
+              />
+            </div>
+            <div className="text-right">
+              <label className="text-[11px] font-black text-slate-500 block mb-1">
+                <Building size={12} className="inline ml-1" /> البنك المسحوب عليه
+              </label>
+              <input
+                disabled={showData ? true : false}
+                type="text"
+                className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm font-bold focus:border-orange-500 outline-none"
+                placeholder="اسم البنك"
+                value={editData.cheque?.bankName || ""}
+                onChange={(e) => setEditData({
+                  ...editData,
+                  cheque: { ...editData.cheque, bankName: e.target.value }
+                })}
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="text-right">
+              <label className="text-[11px] font-black text-slate-500 block mb-1">
+                <Calendar size={12} className="inline ml-1" /> تاريخ الاستلام
+              </label>
+              <input
+                disabled={showData ? true : false}
+                type="date"
+                className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm font-bold focus:border-orange-500 outline-none"
+                value={editData.cheque?.receiveDate || ""}
+                onChange={(e) => setEditData({
+                  ...editData,
+                  cheque: { ...editData.cheque, receiveDate: e.target.value }
+                })}
+              />
+            </div>
+            <div className="text-right">
+              <label className="text-[11px] font-black text-slate-500 block mb-1">
+                <Clock size={12} className="inline ml-1" /> تاريخ الاستحقاق
+              </label>
+              <input
+                disabled={showData ? true : false}
+                type="date"
+                className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm font-bold focus:border-orange-500 outline-none"
+                value={editData.cheque?.dueDate || ""}
+                onChange={(e) => setEditData({
+                  ...editData,
+                  cheque: { ...editData.cheque, dueDate: e.target.value }
+                })}
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="text-right">
+              <label className="text-[11px] font-black text-slate-500 block mb-1">نوع الشيك</label>
+              <select
+                disabled={showData ? true : false}
+                className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm font-bold focus:border-orange-500 outline-none"
+                value={editData.cheque?.chequeType || "normal"}
+                onChange={(e) => setEditData({
+                  ...editData,
+                  cheque: { ...editData.cheque, chequeType: e.target.value }
+                })}
+              >
+                <option value="normal">عادي</option>
+                <option value="clearing">مقاصة</option>
+              </select>
+            </div>
+            <div className="text-right">
+              <label className="text-[11px] font-black text-slate-500 block mb-1">حالة الشيك</label>
+              <select
+                disabled={showData ? true : false}
+                className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm font-bold focus:border-orange-500 outline-none"
+                value={editData.cheque?.status || "under_collection"}
+                onChange={(e) => setEditData({
+                  ...editData,
+                  cheque: { ...editData.cheque, status: e.target.value }
+                })}
+              >
+                <option value="under_collection">تحت التحصيل</option>
+                <option value="due_today">مستحق اليوم</option>
+                <option value="collected">تم التحصيل</option>
+                <option value="returned">مرتجع</option>
+                <option value="cancelled">ملغي</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (method === "bank" || method === "instapay") {
+      return (
+        <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3 mt-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="text-right">
+              <label className="text-[11px] font-black text-slate-500 block mb-1">
+                <Building size={12} className="inline ml-1" /> اسم البنك / المنصة
+              </label>
+              <input
+                disabled={showData ? true : false}
+                type="text"
+                className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm font-bold focus:border-orange-500 outline-none"
+                placeholder={method === "instapay" ? "إنستا باي" : "اسم البنك"}
+                value={editData.bankInfo?.bankName || ""}
+                onChange={(e) => setEditData({
+                  ...editData,
+                  bankInfo: { ...editData.bankInfo, bankName: e.target.value }
+                })}
+              />
+            </div>
+            <div className="text-right">
+              <label className="text-[11px] font-black text-slate-500 block mb-1">
+                <FileText size={12} className="inline ml-1" /> رقم مرجع المعاملة
+              </label>
+              <input
+                disabled={showData ? true : false}
+                type="text"
+                className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm font-bold focus:border-orange-500 outline-none"
+                placeholder="رقم التحويل أو العملية"
+                value={editData.bankInfo?.transactionReference || ""}
+                onChange={(e) => setEditData({
+                  ...editData,
+                  bankInfo: { ...editData.bankInfo, transactionReference: e.target.value }
+                })}
+              />
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (method === "wallet") {
+      return (
+        <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3 mt-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="text-right">
+              <label className="text-[11px] font-black text-slate-500 block mb-1">رقم الراسل</label>
+              <input
+                disabled={showData ? true : false}
+                type="text"
+                className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm font-bold focus:border-orange-500 outline-none"
+                placeholder="رقم هاتف الراسل"
+                value={editData.walletInfo?.senderPhone || ""}
+                onChange={(e) => setEditData({
+                  ...editData,
+                  walletInfo: { ...editData.walletInfo, senderPhone: e.target.value }
+                })}
+              />
+            </div>
+            <div className="text-right">
+              <label className="text-[11px] font-black text-slate-500 block mb-1">اسم الراسل</label>
+              <input
+                disabled={showData ? true : false}
+                type="text"
+                className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm font-bold focus:border-orange-500 outline-none"
+                placeholder="اسم الراسل"
+                value={editData.walletInfo?.senderName || ""}
+                onChange={(e) => setEditData({
+                  ...editData,
+                  walletInfo: { ...editData.walletInfo, senderName: e.target.value }
+                })}
+              />
+            </div>
+          </div>
+
+          {!editData.walletInfo?.linkWallet && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="text-right">
+                <label className="text-[11px] font-black text-slate-500 block mb-1">رقم المستلم</label>
+                <input
+                  disabled={showData ? true : false}
+                  type="text"
+                  className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm font-bold focus:border-orange-500 outline-none"
+                  placeholder="رقم هاتف المستلم"
+                  value={editData.walletInfo?.receiverPhone || ""}
+                  onChange={(e) => setEditData({
+                    ...editData,
+                    walletInfo: { ...editData.walletInfo, receiverPhone: e.target.value }
+                  })}
+                />
+              </div>
+              <div className="text-right">
+                <label className="text-[11px] font-black text-slate-500 block mb-1">اسم المستلم</label>
+                <input
+                  disabled={showData ? true : false}
+                  type="text"
+                  className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm font-bold focus:border-orange-500 outline-none"
+                  placeholder="اسم المستلم"
+                  value={editData.walletInfo?.receiverName || ""}
+                  onChange={(e) => setEditData({
+                    ...editData,
+                    walletInfo: { ...editData.walletInfo, receiverName: e.target.value }
+                  })}
+                />
+              </div>
+            </div>
+          )}
+
+          {editData.walletInfo?.linkWallet && (
+            <div className="relative text-right">
+              <label className="text-[11px] font-black text-slate-500 block mb-1">المحفظة المستلمة</label>
+              <input
+                disabled={showData ? true : false}
+                type="text"
+                className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm font-bold focus:border-orange-500 outline-none"
+                placeholder="ابحث بالاسم أو رقم المحفظة..."
+                value={walletSearch}
+                onFocus={() => setShowWalletList(true)}
+                onChange={(e) => {
+                  setWalletSearch(e.target.value);
+                  setShowWalletList(true);
+                }}
+              />
+              {showWalletList && walletSearch.length > 0 && (
+                <div className="absolute z-50 mt-1 w-full max-h-56 overflow-y-auto bg-white rounded-xl border shadow-xl">
+                  {suggestionWallets
+                    .filter((w) =>
+                      w.walletName?.toLowerCase().includes(walletSearch.toLowerCase()) ||
+                      w.phoneNumber?.includes(walletSearch)
+                    )
+                    .map((wallet) => (
+                      <div
+                        key={wallet._id}
+                        className="p-3 border-b hover:bg-slate-50 cursor-pointer transition"
+                        onClick={() => {
+                          setEditData({
+                            ...editData,
+                            walletInfo: {
+                              ...editData.walletInfo,
+                              walletId: wallet._id,
+                              receiverName: wallet.walletName,
+                              receiverPhone: wallet.phoneNumber,
+                              provider: wallet.walletProvider
+                            }
+                          });
+                          setWalletSearch(wallet.walletName);
+                          setShowWalletList(false);
+                        }}
+                      >
+                        <div className="font-black text-dark">{wallet.walletName}</div>
+                        <div className="text-xs text-slate-500">{wallet.phoneNumber}</div>
+                        <div className="text-xs text-green-600">{wallet.walletProvider}</div>
+                      </div>
+                    ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {editData.walletInfo?.walletId && editData.walletInfo?.linkWallet && (
+            <div className="grid grid-cols-3 gap-3 bg-white p-3 rounded-lg border border-slate-200">
+              <div className="text-right">
+                <label className="text-[10px] font-black text-slate-400 block">اسم المستلم</label>
+                <input
+                  readOnly
+                  value={editData.walletInfo.receiverName || ""}
+                  className="w-full p-2 bg-slate-50 rounded-lg text-sm font-bold border border-slate-100"
+                />
+              </div>
+              <div className="text-right">
+                <label className="text-[10px] font-black text-slate-400 block">رقم المستلم</label>
+                <input
+                  readOnly
+                  value={editData.walletInfo.receiverPhone || ""}
+                  className="w-full p-2 bg-slate-50 rounded-lg text-sm font-bold border border-slate-100"
+                />
+              </div>
+              <div className="text-right">
+                <label className="text-[10px] font-black text-slate-400 block">شركة المحفظة</label>
+                <input
+                  readOnly
+                  value={editData.walletInfo.provider || ""}
+                  className="w-full p-2 bg-slate-50 rounded-lg text-sm font-bold border border-slate-100"
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    return null;
+  };
+
   // ===== Render Financial Lock Screen =====
   if (financialLocked) {
     return (
@@ -473,9 +906,8 @@ const MoneyDashboard = () => {
                     type={showPin ? "text" : "password"}
                     value={financialPin}
                     onChange={(e) => setFinancialPin(e.target.value)}
-                    className={`w-full p-3 pl-12 bg-ligth/20 border rounded-xl outline-none font-bold text-dark focus:border-brown transition-all ${
-                      pinError ? "border-red-500" : "border-brown/10"
-                    }`}
+                    className={`w-full p-3 pl-12 bg-ligth/20 border rounded-xl outline-none font-bold text-dark focus:border-brown transition-all ${pinError ? "border-red-500" : "border-brown/10"
+                      }`}
                     placeholder="أدخل الرقم السري..."
                     maxLength={6}
                     autoFocus
@@ -525,20 +957,21 @@ const MoneyDashboard = () => {
   // ===== Main Dashboard =====
   return (
     <div className="w-full min-h-screen p-4 lg:p-8 bg-ligth/10 font-[cairo]" dir="rtl">
-      
+
       {/* ===== Header ===== */}
       <div className="flex flex-wrap justify-between items-center gap-4 mb-8">
         <div>
           <h1 className="text-3xl font-black text-dark">لوحة إدارة الأموال</h1>
           <p className="text-dark/60 text-sm">المرجع المالي الحقيقي لسيستم المخرز</p>
         </div>
-        <div className="flex flex-wrap gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-3">
           <button
-            onClick={() => setShowTransferModal(true)}
+            onClick={() => navigate("/customer/payments")}
             className="bg-brown hover:bg-brown/90 text-white px-5 py-2.5 rounded-xl font-black text-sm flex items-center gap-2 shadow-md transition-all"
           >
-            <Plus size={18} /> عملية مالية جديدة
+            <Plus size={18} /> معاملات التجار
           </button>
+
           <button
             onClick={handleFinancialLogout}
             className="bg-red-600 hover:bg-red-700 text-white px-5 py-2.5 rounded-xl font-black text-sm flex items-center gap-2 shadow-md transition-all"
@@ -555,7 +988,7 @@ const MoneyDashboard = () => {
       </div>
 
       {/* ===== Stats Cards ===== */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 mb-8">
         <div className="bg-white p-6 rounded-2xl border border-brown/20 shadow-sm">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-bold text-dark/60">إجمالي الاستلام</span>
@@ -570,24 +1003,10 @@ const MoneyDashboard = () => {
           </div>
           <span className="text-2xl font-black text-red-600">{formatCurrency(stats.outgoing)}</span>
         </div>
-        {/* <div className="bg-white p-6 rounded-2xl border border-brown/20 shadow-sm">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold text-dark/60">الرصيد الحالي</span>
-            <Banknote size={18} className="text-brown" />
-          </div>
-          <span className="text-2xl font-black text-brown">{formatCurrency(stats.currentBalance)}</span>
-        </div> */}
-        {/* <div className="bg-white p-6 rounded-2xl border border-brown/20 shadow-sm">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold text-dark/60">شيكات تحت التحصيل</span>
-            <Shield size={18} className="text-amber-600" />
-          </div>
-          <span className="text-2xl font-black text-amber-600">{formatCurrency(stats.cheques?.underCollection || 0)}</span>
-        </div> */}
       </div>
 
       {/* ===== Wallet/Bank/Mail/Cash Cards ===== */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 mb-8">
         <div className="bg-white p-5 rounded-2xl border border-brown/20 shadow-sm">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center">
@@ -595,7 +1014,6 @@ const MoneyDashboard = () => {
             </div>
             <div>
               <p className="text-xs font-bold text-dark/60">المحافظ الإلكترونية</p>
-
             </div>
           </div>
           <div className="flex justify-between text-xs">
@@ -604,31 +1022,28 @@ const MoneyDashboard = () => {
           </div>
         </div>
 
-
-             <div className="bg-white p-5 rounded-2xl border border-brown/20 shadow-sm">
+        <div className="bg-white p-5 rounded-2xl border border-brown/20 shadow-sm">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center">
               <BanknoteIcon size={20} className="text-amber-700" />
             </div>
             <div>
-              <p className="text-xs font-bold text-dark/60"> الشيكات</p>
-
+              <p className="text-xs font-bold text-dark/60">الشيكات</p>
             </div>
           </div>
           <div className="flex justify-between text-xs">
-            <span className="text-emerald-600">استلام: {formatCurrency(stats.cheque?.incoming || 0)}</span>
-            <span className="text-red-600">ارسال: {formatCurrency(stats.cheque?.outgoing || 0)}</span>
+            <span className="text-emerald-600">استلام: {formatCurrency(stats.cheques?.incoming || 0)}</span>
+            <span className="text-red-600">ارسال: {formatCurrency(stats.cheques?.outgoing || 0)}</span>
           </div>
         </div>
 
-                     <div className="bg-white p-5 rounded-2xl border border-brown/20 shadow-sm">
+        <div className="bg-white p-5 rounded-2xl border border-brown/20 shadow-sm">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center">
               <Building size={20} className="text-amber-700" />
             </div>
             <div>
-              <p className="text-xs font-bold text-dark/60"> انستاباي</p>
-
+              <p className="text-xs font-bold text-dark/60">انستاباي</p>
             </div>
           </div>
           <div className="flex justify-between text-xs">
@@ -644,7 +1059,6 @@ const MoneyDashboard = () => {
             </div>
             <div>
               <p className="text-xs font-bold text-dark/60">الحسابات البنكية</p>
-
             </div>
           </div>
           <div className="flex justify-between text-xs">
@@ -675,7 +1089,6 @@ const MoneyDashboard = () => {
             </div>
             <div>
               <p className="text-xs font-bold text-dark/60">النقدي</p>
-
             </div>
           </div>
           <div className="flex justify-between text-xs">
@@ -794,7 +1207,7 @@ const MoneyDashboard = () => {
                 <input
                   type="text"
                   className="w-full p-2 rounded-lg border border-brown/10 bg-white font-bold text-sm"
-                  placeholder="رقم المرجع..."
+                  placeholder="بحث عن التاجر..."
                   value={filters.search}
                   onChange={(e) => setFilters({ ...filters, search: e.target.value })}
                 />
@@ -838,21 +1251,20 @@ const MoneyDashboard = () => {
                 <th className="p-3 font-black">النوع</th>
                 <th className="p-3 font-black">المبلغ</th>
                 <th className="p-3 font-black">التاجر</th>
-                <th className="p-3 font-black rounded-l-xl">الملاحظات</th>
+                <th className="p-3 font-black">الملاحظات</th>
                 <th className="p-3 font-black rounded-l-xl">الأجراءات</th>
-
               </tr>
             </thead>
             <tbody className="divide-y divide-brown/10">
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="p-8 text-center">
+                  <td colSpan={8} className="p-8 text-center">
                     <span className="animate-spin inline-block">⏳</span> جاري التحميل...
                   </td>
                 </tr>
               ) : payments.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="p-8 text-center text-dark/40">
+                  <td colSpan={8} className="p-8 text-center text-dark/40">
                     لا توجد حركات مالية
                   </td>
                 </tr>
@@ -863,7 +1275,7 @@ const MoneyDashboard = () => {
                   return (
                     <tr key={p._id} className="hover:bg-ligth/30">
                       <td className="p-3 font-bold">
-                        {new Date(p.transactionDate).toLocaleDateString('ar-EG')}
+                        {new Date(p.transactionDate).toLocaleDateString("ar-EG")}
                       </td>
                       <td className="p-3 text-dark/70">
                         {getModuleLabel(p.module)}
@@ -881,14 +1293,37 @@ const MoneyDashboard = () => {
                       <td className={`p-3 font-black ${p.moneyFlow === "incoming" ? "text-emerald-600" : "text-red-600"}`}>
                         {formatCurrency(p.amount)}
                       </td>
-                                            <td className="p-3 text-dark/50 text-xs">{p?.supplier?.name || p?.customer?.name || "—"}</td>
+
+                      <td className="p-3 text-dark/50 text-xs">{p?.supplier?.name || p?.customer?.name || "—"}</td>
                       <td className="p-3 text-dark/50 text-xs">{p.notes || "—"}</td>
-{ (p.module =="import" || p.module=="export" )  && <td className="p-3 text-dark/50 text-xs">
-<Trash2Icon  onClick={()=>handleDeletePayment(p._id)} className="text-xs text-red-600 cursor-pointer hover:text-red-500" />
-</td>}
 
-
-                      
+                      <td className="p-3">
+                        <div className="flex items-center gap-2">
+                          {p?.cheque?.status !== "collected" && (
+                            <button
+                              onClick={() => deletePaymentHistory(p._id, p.customer?._id || p.supplier?._id)}
+                              className="p-2 bg-red-50 text-red-600 hover:bg-red-800 hover:text-white rounded-xl transition-all"
+                              title="حذف"
+                            >
+                              <Trash2 size={18} />
+                            </button>
+                          )}
+                          <button
+                            onClick={() => editPaymentHistory(p)}
+                            className="p-2 bg-slate-100 text-dark rounded-xl hover:bg-dark hover:text-white transition-all border border-slate-100"
+                            title="تعديل البيانات"
+                          >
+                            <Edit size={18} />
+                          </button>
+                          <button
+                            onClick={() => showPaymentHistory(p)}
+                            className="p-2 bg-slate-100 text-dark rounded-xl hover:bg-dark hover:text-white transition-all border border-slate-100"
+                            title="عرض البيانات"
+                          >
+                            <Eye size={18} />
+                          </button>
+                        </div>
+                      </td>
                     </tr>
                   );
                 })
@@ -926,633 +1361,175 @@ const MoneyDashboard = () => {
         )}
       </div>
 
-      {/* ===== Transfer Modal ===== */}
-      {showTransferModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" dir="rtl">
-            <div className="p-6 border-b border-brown/10 flex justify-between items-center sticky top-0 bg-white z-10 rounded-t-3xl">
-              <h3 className="text-xl font-black text-dark">عملية مالية جديدة</h3>
-              <button
-                onClick={() => {
-                  setShowTransferModal(false);
-                  resetTransferData();
-                }}
-                className="text-dark/40 hover:text-dark"
-              >
-                <X size={24} />
-              </button>
-            </div>
+      {/* مودال تعديل المعاملة الماليّة */}
+      {showEditModal && (
+        <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50 overflow-y-auto py-8">
+          <div className="bg-white rounded-xl w-[600px] max-w-[95vw] p-6 shadow-xl max-h-[90vh] overflow-y-auto">
+            <h2 className="text-xl font-bold mb-6 text-slate-800">تعديل العملية المالية</h2>
 
-            <div className="p-6 space-y-4">
-              {/* Type */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block font-bold text-dark text-sm mb-1">نوع العملية</label>
-                  <select
-                    className="w-full p-3 rounded-xl border border-brown/10 bg-ligth/20 font-bold"
-                    value={transferData.type}
-                    onChange={(e) => {
-                      setTransferData({ ...transferData, type: e.target.value });
-                      // إعادة تعيين بيانات المحفظة عند تغيير النوع
-                      setWalletSearch("");
-                      setTransferData(prev => ({
-                        ...prev,
-                        walletInfo: {
-                          ...prev.walletInfo,
-                          walletId: "",
-                          receiverName: "",
-                          receiverPhone: "",
-                          provider: "",
-                          senderName: "",
-                          senderPhone: ""
-                        }
-                      }));
-                    }}
-                  >
-                    <option value="import">استيراد (استلام)</option>
-                    <option value="export">تصدير (ارسال)</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block font-bold text-dark text-sm mb-1">المبلغ</label>
-                  <input
-                    type="number"
-                    className="w-full p-3 rounded-xl border border-brown/10 bg-ligth/20 font-bold"
-                    placeholder="أدخل المبلغ..."
-                    value={transferData.amount}
-                    onChange={(e) => setTransferData({ ...transferData, amount: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              {/* Payment Method */}
+            <div className="space-y-4">
               <div>
-                <label className="block font-bold text-dark text-sm mb-1">وسيلة الدفع</label>
+                <label className="block text-sm font-bold mb-1">الوحدة</label>
                 <select
-                  className="w-full p-3 rounded-xl border border-brown/10 bg-ligth/20 font-bold"
-                  value={transferData.paymentMethod}
-                  onChange={(e) => setTransferData({ ...transferData, paymentMethod: e.target.value })}
+                  className="w-full border rounded-lg p-2 outline-none focus:border-dark"
+                  value={editData.module}
+                  onChange={(e) => setEditData({ ...editData, module: e.target.value })}
                 >
-                  <option value="cash">نقدي</option>
-                  <option value="wallet">محفظة إلكترونية</option>
-                  <option value="bank">تحويل بنكي</option>
-                  <option value="instapay">إنستا باي</option>
-                  {/* <option value="cheque">شيك</option> */}
+                  <option value="pay">دفع (استلام فلوس من تاجر )</option>
+                  <option value="debt">مديونية (دفع فلوس للتاجر )</option>
                 </select>
               </div>
 
-{/* Conditional Fields - Wallet */}
-{transferData.paymentMethod === "wallet" && (
-  <div className="bg-amber-50 p-4 rounded-xl border border-amber-200 space-y-3">
-    <h4 className="font-black text-amber-800 text-sm flex items-center gap-2">
-      <Wallet size={16} /> بيانات المحفظة
-    </h4>
-
-    {/* ربط العملية */}
-    <div className="flex gap-3 items-center p-3 rounded-lg bg-amber-100/30">
-      <input
-        type="checkbox"
-        checked={transferData.walletInfo.linkWallet || false}
-        onChange={(e) => {
-          const checked = e.target.checked;
-          setTransferData({
-            ...transferData,
-            walletInfo: { 
-              ...transferData.walletInfo, 
-              linkWallet: checked,
-              ...(checked ? {} : { 
-                walletId: "", 
-                receiverName: "", 
-                receiverPhone: "", 
-                provider: "",
-                senderName: "",
-                senderPhone: ""
-              })
-            }
-          });
-          if (!checked) {
-            setWalletSearch("");
-            setShowWalletList(false);
-          }
-        }}
-        className="w-4 h-4 text-amber-600"
-      />
-      <span className="text-sm font-bold text-amber-800">ربط العملية بنظام المحافظ</span>
-    </div>
-
-    {/* في حالة الاستيراد: المحفظة مرسلة + بيانات المستلم يدوياً */}
-    {transferData.type === "import" && (
-      <>
-        {/* بيانات المحفظة المرسلة (تظهر دائماً) */}
-        <div className="flex gap-3 justify-between items-center w-full">
-          <div className="w-full text-right">
-            <label className="block mb-1 text-[11px] font-black text-amber-800">
-              رقم المحفظة المرسلة
-            </label>
-            <input
-              type="text"
-              className="p-2 w-full text-sm font-bold rounded-lg border border-amber-200 bg-white"
-              placeholder="رقم هاتف المرسل"
-              value={transferData.walletInfo.senderPhone || ""}
-              onChange={(e) => setTransferData({
-                ...transferData,
-                walletInfo: { ...transferData.walletInfo, senderPhone: e.target.value }
-              })}
-            />
-          </div>
-          <div className="w-full text-right">
-            <label className="block mb-1 text-[11px] font-black text-amber-800">
-              اسم المحفظة المرسلة
-            </label>
-            <input
-              type="text"
-              className="p-2 w-full text-sm font-bold rounded-lg border border-amber-200 bg-white"
-              placeholder="اسم المرسل"
-              value={transferData.walletInfo.senderName || ""}
-              onChange={(e) => setTransferData({
-                ...transferData,
-                walletInfo: { ...transferData.walletInfo, senderName: e.target.value }
-              })}
-            />
-          </div>
-        </div>
-
-        {/* بيانات المستلم (تدخل يدوياً) */}
-        <div className="flex gap-3 justify-between items-center w-full">
-          <div className="w-full text-right">
-            <label className="block mb-1 text-[11px] font-black text-amber-800">
-              رقم المستلم (صاحب السيستم)
-            </label>
-            <input
-              type="text"
-              className="p-2 w-full text-sm font-bold rounded-lg border border-amber-200 bg-white"
-              placeholder="رقم هاتف المستلم"
-              value={transferData.walletInfo.receiverPhone || ""}
-              onChange={(e) => setTransferData({
-                ...transferData,
-                walletInfo: { ...transferData.walletInfo, receiverPhone: e.target.value }
-              })}
-            />
-          </div>
-          <div className="w-full text-right">
-            <label className="block mb-1 text-[11px] font-black text-amber-800">
-              اسم المستلم (صاحب السيستم)
-            </label>
-            <input
-              type="text"
-              className="p-2 w-full text-sm font-bold rounded-lg border border-amber-200 bg-white"
-              placeholder="اسم المستلم"
-              value={transferData.walletInfo.receiverName || ""}
-              onChange={(e) => setTransferData({
-                ...transferData,
-                walletInfo: { ...transferData.walletInfo, receiverName: e.target.value }
-              })}
-            />
-          </div>
-        </div>
-
-        {/* المزود */}
-        <div className="w-full text-right">
-          <label className="block mb-1 text-[11px] font-black text-amber-800">
-            مزود المحفظة
-          </label>
-          <input
-            type="text"
-            className="p-2 w-full text-sm font-bold rounded-lg border border-amber-200 bg-white"
-            placeholder="مثال: Vodafone Cash, Etisalat Wallet..."
-            value={transferData.walletInfo.provider || ""}
-            onChange={(e) => setTransferData({
-              ...transferData,
-              walletInfo: { ...transferData.walletInfo, provider: e.target.value }
-            })}
-          />
-        </div>
-      </>
-    )}
-
-    {/* في حالة التصدير: المحفظة مستلمة + بيانات المرسل يدوياً */}
-    {transferData.type === "export" && (
-      <>
-        {/* بيانات المرسل (تدخل يدوياً) */}
-        <div className="flex gap-3 justify-between items-center w-full">
-          <div className="w-full text-right">
-            <label className="block mb-1 text-[11px] font-black text-amber-800">
-              رقم المرسل (صاحب السيستم)
-            </label>
-            <input
-              type="text"
-              className="p-2 w-full text-sm font-bold rounded-lg border border-amber-200 bg-white"
-              placeholder="رقم هاتف المرسل"
-              value={transferData.walletInfo.senderPhone || ""}
-              onChange={(e) => setTransferData({
-                ...transferData,
-                walletInfo: { ...transferData.walletInfo, senderPhone: e.target.value }
-              })}
-            />
-          </div>
-          <div className="w-full text-right">
-            <label className="block mb-1 text-[11px] font-black text-amber-800">
-              اسم المرسل (صاحب السيستم)
-            </label>
-            <input
-              type="text"
-              className="p-2 w-full text-sm font-bold rounded-lg border border-amber-200 bg-white"
-              placeholder="اسم المرسل"
-              value={transferData.walletInfo.senderName || ""}
-              onChange={(e) => setTransferData({
-                ...transferData,
-                walletInfo: { ...transferData.walletInfo, senderName: e.target.value }
-              })}
-            />
-          </div>
-        </div>
-
-        {/* بيانات المحفظة المستلمة (تظهر دائماً) */}
-        <div className="flex gap-3 justify-between items-center w-full">
-          <div className="w-full text-right">
-            <label className="block mb-1 text-[11px] font-black text-amber-800">
-              رقم المحفظة المستلمة
-            </label>
-            <input
-              type="text"
-              className="p-2 w-full text-sm font-bold rounded-lg border border-amber-200 bg-white"
-              placeholder="رقم هاتف المستلم"
-              value={transferData.walletInfo.receiverPhone || ""}
-              onChange={(e) => setTransferData({
-                ...transferData,
-                walletInfo: { ...transferData.walletInfo, receiverPhone: e.target.value }
-              })}
-            />
-          </div>
-          <div className="w-full text-right">
-            <label className="block mb-1 text-[11px] font-black text-amber-800">
-              اسم المحفظة المستلمة
-            </label>
-            <input
-              type="text"
-              className="p-2 w-full text-sm font-bold rounded-lg border border-amber-200 bg-white"
-              placeholder="اسم المستلم"
-              value={transferData.walletInfo.receiverName || ""}
-              onChange={(e) => setTransferData({
-                ...transferData,
-                walletInfo: { ...transferData.walletInfo, receiverName: e.target.value }
-              })}
-            />
-          </div>
-        </div>
-
-        {/* المزود */}
-        <div className="w-full text-right">
-          <label className="block mb-1 text-[11px] font-black text-amber-800">
-            مزود المحفظة
-          </label>
-          <input
-            type="text"
-            className="p-2 w-full text-sm font-bold rounded-lg border border-amber-200 bg-white"
-            placeholder="مثال: Vodafone Cash, Etisalat Wallet..."
-            value={transferData.walletInfo.provider || ""}
-            onChange={(e) => setTransferData({
-              ...transferData,
-              walletInfo: { ...transferData.walletInfo, provider: e.target.value }
-            })}
-          />
-        </div>
-      </>
-    )}
-
-    {/* البحث عن المحفظة (يظهر عند تفعيل الربط) */}
-    {transferData.walletInfo.linkWallet && (
-      <div className="relative text-right">
-        <label className="block mb-1 text-[11px] font-black text-amber-800">
-          {transferData.type === "import" ? "اختر المحفظة المرسلة من القائمة" : "اختر المحفظة المستلمة من القائمة"}
-        </label>
-        <input
-          type="text"
-          className="p-2 w-full text-sm font-bold rounded-lg border border-amber-200 bg-white"
-          placeholder={transferData.type === "import" ? "ابحث باسم أو رقم المحفظة المرسلة..." : "ابحث باسم أو رقم المحفظة المستلمة..."}
-          value={walletSearch}
-          onFocus={() => setShowWalletList(true)}
-          onChange={(e) => {
-            setWalletSearch(e.target.value);
-            setShowWalletList(true);
-          }}
-        />
-
-        {/* قائمة اقتراحات المحافظ */}
-        {showWalletList && walletSearch.length > 0 && (
-          <div className="absolute z-50 mt-1 w-full max-h-56 overflow-y-auto bg-white rounded-xl border shadow-xl">
-            {suggestionWallets
-              .filter(
-                (w) =>
-                  w.walletName
-                    ?.toLowerCase()
-                    .includes(walletSearch.toLowerCase()) ||
-                  w.phoneNumber?.includes(walletSearch) ||
-                  w.ownerName?.toLowerCase().includes(walletSearch.toLowerCase())
-              )
-              .map((wallet) => (
-                <div
-                  key={wallet._id}
-                  className="p-3 border-b transition cursor-pointer hover:bg-amber-50"
-                  onClick={() => {
-                    if (transferData.type === "import") {
-                      // استيراد: تعيين بيانات المحفظة المرسلة
-                      setTransferData({
-                        ...transferData,
-                        walletInfo: {
-                          ...transferData.walletInfo,
-                          walletId: wallet._id,
-                          senderName: wallet.walletName,
-                          senderPhone: wallet.phoneNumber,
-                          provider: wallet.walletProvider,
-                        }
-                      });
-                    } else {
-                      // تصدير: تعيين بيانات المحفظة المستلمة
-                      setTransferData({
-                        ...transferData,
-                        walletInfo: {
-                          ...transferData.walletInfo,
-                          walletId: wallet._id,
-                          receiverName: wallet.walletName,
-                          receiverPhone: wallet.phoneNumber,
-                          provider: wallet.walletProvider,
-                        }
-                      });
-                    }
-                    setWalletSearch(wallet.walletName);
-                    setShowWalletList(false);
-                  }}
-                >
-                  <div className="font-black text-dark">{wallet.walletName}</div>
-                  <div className="text-xs text-gray-500 flex gap-2">
-                    <span>📱 {wallet.phoneNumber}</span>
-                    <span>|</span>
-                    <span>👤 {wallet.ownerName || 'غير محدد'}</span>
-                  </div>
-                  <div className="text-xs flex gap-3 mt-1">
-                    <span className="text-amber-600 font-bold">{wallet.walletProvider}</span>
-                    <span className="text-emerald-600">💰 {wallet.balance?.toLocaleString() || 0} ج.م</span>
-                    <span className="text-blue-600">📊 متبقي: {wallet.remainingIncoming?.toLocaleString() || 0}</span>
-                  </div>
-                </div>
-              ))}
-          </div>
-        )}
-      </div>
-    )}
-
-    {/* عرض بيانات المحفظة المختارة تلقائياً */}
-    {transferData.walletInfo.walletId && transferData.walletInfo.linkWallet && (
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-        <div>
-          <label className="block mb-1 text-[11px] font-black text-amber-800">
-            {transferData.type === "import" ? "اسم المحفظة المرسلة" : "اسم المحفظة المستلمة"}
-          </label>
-          <input
-            readOnly
-            value={transferData.type === "import" 
-              ? transferData.walletInfo.senderName || "" 
-              : transferData.walletInfo.receiverName || ""}
-            className="p-2 w-full text-sm font-bold bg-gray-100 rounded-lg border"
-          />
-        </div>
-
-        <div>
-          <label className="block mb-1 text-[11px] font-black text-amber-800">
-            {transferData.type === "import" ? "رقم المحفظة المرسلة" : "رقم المحفظة المستلمة"}
-          </label>
-          <input
-            readOnly
-            value={transferData.type === "import" 
-              ? transferData.walletInfo.senderPhone || "" 
-              : transferData.walletInfo.receiverPhone || ""}
-            className="p-2 w-full text-sm font-bold bg-gray-100 rounded-lg border"
-          />
-        </div>
-
-        <div>
-          <label className="block mb-1 text-[11px] font-black text-amber-800">شركة المحفظة</label>
-          <input
-            readOnly
-            value={transferData.walletInfo.provider || ""}
-            className="p-2 w-full text-sm font-bold bg-gray-100 rounded-lg border"
-          />
-        </div>
-      </div>
-    )}
-
-    {/* رقم المرجع */}
-    <div>
-      <label className="block mb-1 text-[11px] font-black text-amber-800">رقم المرجع</label>
-      <input
-        type="text"
-        className="p-2 w-full text-sm font-bold rounded-lg border border-amber-200 bg-white"
-        placeholder="رقم مرجع المعاملة (اختياري)"
-        value={transferData.walletInfo.transactionReference || ""}
-        onChange={(e) => setTransferData({
-          ...transferData,
-          walletInfo: { ...transferData.walletInfo, transactionReference: e.target.value }
-        })}
-      />
-    </div>
-  </div>
-)}
-
-              {/* Conditional Fields - Bank & Instapay */}
-              {(transferData.paymentMethod === "bank" || transferData.paymentMethod === "instapay") && (
-                <div className="bg-blue-50 p-4 rounded-xl border border-blue-200 space-y-3">
-                  <h4 className="font-black text-blue-800 text-sm flex items-center gap-2">
-                    <Building2 size={16} /> بيانات البنك
-                  </h4>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="col-span-2">
-                      <label className="block mb-1 text-[11px] font-black text-blue-800">اسم البنك</label>
-                      <input
-                        type="text"
-                        className="p-2 w-full text-sm font-bold rounded-lg border border-blue-200 bg-white"
-                        placeholder="مثال: البنك الأهلي المصري"
-                        value={transferData.bankInfo.bankName}
-                        onChange={(e) => setTransferData({
-                          ...transferData,
-                          bankInfo: { ...transferData.bankInfo, bankName: e.target.value }
-                        })}
-                      />
-                    </div>
-                    <div>
-                      <label className="block mb-1 text-[11px] font-black text-blue-800">رقم الحساب</label>
-                      <input
-                        type="text"
-                        className="p-2 w-full text-sm font-bold rounded-lg border border-blue-200 bg-white"
-                        placeholder="رقم الحساب البنكي"
-                        value={transferData.bankInfo.accountNumber || ""}
-                        onChange={(e) => setTransferData({
-                          ...transferData,
-                          bankInfo: { ...transferData.bankInfo, accountNumber: e.target.value }
-                        })}
-                      />
-                    </div>
-                    <div>
-                      <label className="block mb-1 text-[11px] font-black text-blue-800">صاحب الحساب</label>
-                      <input
-                        type="text"
-                        className="p-2 w-full text-sm font-bold rounded-lg border border-blue-200 bg-white"
-                        placeholder="اسم صاحب الحساب"
-                        value={transferData.bankInfo.accountHolder || ""}
-                        onChange={(e) => setTransferData({
-                          ...transferData,
-                          bankInfo: { ...transferData.bankInfo, accountHolder: e.target.value }
-                        })}
-                      />
-                    </div>
-                    <div className="col-span-2">
-                      <label className="block mb-1 text-[11px] font-black text-blue-800">رقم المرجع</label>
-                      <input
-                        type="text"
-                        className="p-2 w-full text-sm font-bold rounded-lg border border-blue-200 bg-white"
-                        placeholder="رقم مرجع المعاملة البنكية"
-                        value={transferData.bankInfo.transactionReference}
-                        onChange={(e) => setTransferData({
-                          ...transferData,
-                          bankInfo: { ...transferData.bankInfo, transactionReference: e.target.value }
-                        })}
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Conditional Fields - Cheque */}
-              {transferData.paymentMethod === "cheque" && (
-                <div className="bg-rose-50 p-4 rounded-xl border border-rose-200 space-y-3">
-                  <h4 className="font-black text-rose-800 text-sm flex items-center gap-2">
-                    <Shield size={16} /> بيانات الشيك
-                  </h4>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block mb-1 text-[11px] font-black text-rose-800">رقم الشيك</label>
-                      <input
-                        type="text"
-                        className="p-2 w-full text-sm font-bold rounded-lg border border-rose-200 bg-white"
-                        placeholder="رقم الشيك"
-                        value={transferData.cheque.chequeNumber}
-                        onChange={(e) => setTransferData({
-                          ...transferData,
-                          cheque: { ...transferData.cheque, chequeNumber: e.target.value }
-                        })}
-                      />
-                    </div>
-                    <div>
-                      <label className="block mb-1 text-[11px] font-black text-rose-800">اسم البنك</label>
-                      <input
-                        type="text"
-                        className="p-2 w-full text-sm font-bold rounded-lg border border-rose-200 bg-white"
-                        placeholder="البنك المسحوب عليه"
-                        value={transferData.cheque.bankName}
-                        onChange={(e) => setTransferData({
-                          ...transferData,
-                          cheque: { ...transferData.cheque, bankName: e.target.value }
-                        })}
-                      />
-                    </div>
-                    <div>
-                      <label className="block mb-1 text-[11px] font-black text-rose-800">نوع الشيك</label>
-                      <select
-                        className="p-2 w-full text-sm font-bold rounded-lg border border-rose-200 bg-white"
-                        value={transferData.cheque.chequeType}
-                        onChange={(e) => setTransferData({
-                          ...transferData,
-                          cheque: { ...transferData.cheque, chequeType: e.target.value }
-                        })}
-                      >
-                        <option value="normal">عادي</option>
-                        <option value="clearing">مقاصة</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block mb-1 text-[11px] font-black text-rose-800">حالة الشيك</label>
-                      <select
-                        className="p-2 w-full text-sm font-bold rounded-lg border border-rose-200 bg-white"
-                        value={transferData.cheque.status}
-                        onChange={(e) => setTransferData({
-                          ...transferData,
-                          cheque: { ...transferData.cheque, status: e.target.value }
-                        })}
-                      >
-                        <option value="under_collection">تحت التحصيل</option>
-                        <option value="due_today">مستحق اليوم</option>
-                        <option value="collected">تم تحصيله</option>
-                        <option value="returned">مرتجع</option>
-                        <option value="cancelled">ملغي</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block mb-1 text-[11px] font-black text-rose-800">تاريخ الاستلام</label>
-                      <input
-                        type="date"
-                        className="p-2 w-full text-sm font-bold rounded-lg border border-rose-200 bg-white"
-                        value={transferData.cheque.receiveDate}
-                        onChange={(e) => setTransferData({
-                          ...transferData,
-                          cheque: { ...transferData.cheque, receiveDate: e.target.value }
-                        })}
-                      />
-                    </div>
-                    <div>
-                      <label className="block mb-1 text-[11px] font-black text-rose-800">تاريخ الاستحقاق</label>
-                      <input
-                        type="date"
-                        className="p-2 w-full text-sm font-bold rounded-lg border border-rose-200 bg-white"
-                        value={transferData.cheque.dueDate}
-                        onChange={(e) => setTransferData({
-                          ...transferData,
-                          cheque: { ...transferData.cheque, dueDate: e.target.value }
-                        })}
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Date & Notes */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block font-bold text-dark text-sm mb-1">التاريخ</label>
-                  <input
-                    type="date"
-                    className="w-full p-3 rounded-xl border border-brown/10 bg-ligth/20 font-bold"
-                    value={transferData.transactionDate}
-                    onChange={(e) => setTransferData({ ...transferData, transactionDate: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <label className="block font-bold text-dark text-sm mb-1">ملاحظات</label>
-                  <input
-                    type="text"
-                    className="w-full p-3 rounded-xl border border-brown/10 bg-ligth/20 font-bold"
-                    placeholder="اختياري..."
-                    value={transferData.notes}
-                    onChange={(e) => setTransferData({ ...transferData, notes: e.target.value })}
-                  />
-                </div>
+              <div>
+                <label className="block text-sm font-bold mb-1">المبلغ</label>
+                <input
+                  type="number"
+                  className="w-full border rounded-lg p-2 outline-none focus:border-dark"
+                  value={editData.amount}
+                  onChange={(e) => setEditData({ ...editData, amount: e.target.value })}
+                />
               </div>
 
-              {/* Submit */}
-              <button
-                onClick={handleTransfer}
-                disabled={transferLoading}
-                className="w-full bg-brown hover:bg-brown/90 text-white p-3 rounded-xl font-black flex items-center justify-center gap-2 transition-all disabled:opacity-50"
-              >
-                {transferLoading ? (
-                  <span className="flex items-center gap-2">
-                    <span className="animate-spin">⏳</span> جاري التنفيذ...
-                  </span>
-                ) : (
-                  <>
-                    <Plus size={18} /> تنفيذ العملية المالية
-                  </>
-                )}
-              </button>
+              <div>
+                <label className="block text-sm font-bold mb-1">طريقة الدفع</label>
+                <select
+                  className="w-full border rounded-lg p-2 outline-none focus:border-dark"
+                  value={editData.paymentMethod}
+                  onChange={(e) => setEditData({ ...editData, paymentMethod: e.target.value })}
+                >
+                  <option value="cash">نقدي</option>
+                  <option value="wallet">محفظة</option>
+                  <option value="bank">تحويل بنكي</option>
+                  <option value="instapay">أنستا باي</option>
+                  <option value="mail">بريد</option>
+                  <option value="cheque">شيك</option>
+                  <option value="work">شغل</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold mb-1">التاريخ</label>
+                <input
+                  type="datetime-local"
+                  className="w-full border rounded-lg p-2 outline-none focus:border-dark"
+                  value={editData.date}
+                  onChange={(e) => setEditData({ ...editData, date: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold mb-1">ملاحظات</label>
+                <textarea
+                  className="w-full border rounded-lg p-2 outline-none focus:border-dark"
+                  rows={2}
+                  value={editData.note}
+                  onChange={(e) => setEditData({ ...editData, note: e.target.value })}
+                />
+              </div>
+
+              {renderEditPaymentFields()}
+
+              <div className="flex justify-end gap-3 mt-6">
+                <button
+                  onClick={() => setShowEditModal(false)}
+                  className="px-5 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 font-bold"
+                >
+                  إلغاء
+                </button>
+                <button
+                  disabled={loading2}
+                  onClick={() => updatePaymentHistory(editData)}
+                  className="px-5 py-2 rounded-lg bg-dark text-white hover:bg-dark/90 font-bold disabled:opacity-50"
+                >
+                  {!loading2 ? "حفظ" : "جاري الحفظ"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* مودال عرض تفاصيل المعاملة الماليّة (قراءة فقط) */}
+      {showData && (
+        <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50 overflow-y-auto py-8">
+          <div className="bg-white rounded-xl w-[600px] max-w-[95vw] p-6 shadow-xl max-h-[90vh] overflow-y-auto">
+            <h2 className="text-xl font-bold mb-6 text-slate-800">العملية المالية</h2>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-bold mb-1">الوحدة</label>
+                <select
+                  disabled={true}
+                  className="w-full border rounded-lg p-2 outline-none focus:border-dark"
+                  value={editData.module}
+                  onChange={(e) => setEditData({ ...editData, module: e.target.value })}
+                >
+                  <option value="pay">دفع (استلام فلوس من تاجر )</option>
+                  <option value="debt">مديونية (دفع فلوس للتاجر )</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold mb-1">المبلغ</label>
+                <input
+                  disabled={true}
+                  type="number"
+                  className="w-full border rounded-lg p-2 outline-none focus:border-dark"
+                  value={editData.amount}
+                  onChange={(e) => setEditData({ ...editData, amount: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold mb-1">طريقة الدفع</label>
+                <select
+                  disabled={true}
+                  className="w-full border rounded-lg p-2 outline-none focus:border-dark"
+                  value={editData.paymentMethod}
+                  onChange={(e) => setEditData({ ...editData, paymentMethod: e.target.value })}
+                >
+                  <option value="cash">نقدي</option>
+                  <option value="wallet">محفظة</option>
+                  <option value="bank">تحويل بنكي</option>
+                  <option value="instapay">أنستا باي</option>
+                  <option value="mail">بريد</option>
+                  <option value="cheque">شيك</option>
+                  <option value="work">شغل</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold mb-1">التاريخ</label>
+                <input
+                  disabled={true}
+                  type="datetime-local"
+                  className="w-full border rounded-lg p-2 outline-none focus:border-dark"
+                  value={editData.date}
+                  onChange={(e) => setEditData({ ...editData, date: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold mb-1">ملاحظات</label>
+                <textarea
+                  disabled={true}
+                  className="w-full border rounded-lg p-2 outline-none focus:border-dark"
+                  rows={2}
+                  value={editData.note}
+                  onChange={(e) => setEditData({ ...editData, note: e.target.value })}
+                />
+              </div>
+
+              {renderEditPaymentFields()}
+
+              <div className="flex justify-end gap-3 mt-6">
+                <button
+                  onClick={() => setShowData(false)}
+                  className="px-5 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 font-bold"
+                >
+                  إغلاق
+                </button>
+              </div>
             </div>
           </div>
         </div>

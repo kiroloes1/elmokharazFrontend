@@ -84,14 +84,14 @@ const CustomerList = () => {
     fetchSuggestions();
   }, []);
 
-  // جلب قائمة العملاء
+  // جلب قائمة التجار
   const fetchSuppliers = async () => {
     try {
       const res = await api.get("/customers/getAllSupplierName");
       setSuppliers(res.data.data || []);
       setFilteredSuppliers(res.data.data || []);
     } catch (err) {
-      showAlert({ title: "فشل في تحميل العملاء", icon: "error" });
+      showAlert({ title: "فشل في تحميل التجار", icon: "error" });
     } finally {
       setLoading(false);
     }
@@ -101,7 +101,7 @@ const CustomerList = () => {
     fetchSuppliers();
   }, []);
 
-  // جلب بيانات العميل المحدد ومدفوعاته
+  // جلب بيانات التاجر المحدد ومدفوعاته
   const toSelectedSupplier = async (id) => {
     try {
       setSubLoading(true);
@@ -136,13 +136,13 @@ const CustomerList = () => {
       setOperations(mappedOperations);
 
     } catch (err) {
-      showAlert({ title: "فشل في جلب تفاصيل العميل", icon: "error" });
+      showAlert({ title: "فشل في جلب تفاصيل التاجر", icon: "error" });
     } finally {
       setSubLoading(false);
     }
   };
 
-  // تصفية العملاء أثناء البحث
+  // تصفية التجار أثناء البحث
   useEffect(() => {
     const results = suppliers.filter(s =>
       s.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -151,11 +151,11 @@ const CustomerList = () => {
     setFilteredSuppliers(results);
   }, [searchTerm, suppliers]);
 
-  // حذف عميل
+  // حذف تاجر
   const handleDelete = async (id, name) => {
     const confirm = await showAlertConfirm({
-      title: `حذف العميل ${name}`,
-      text: "هل أنت متأكد من حذف هذا العميل نهائياً؟ لا يمكن التراجع عن هذا الإجراء.",
+      title: `حذف التاجر ${name}`,
+      text: "هل أنت متأكد من حذف هذا التاجر نهائياً؟ لا يمكن التراجع عن هذا الإجراء.",
       icon: "warning",
       confirmButtonText: "نعم، احذف",
       cancelButtonText: "تراجع",
@@ -612,7 +612,7 @@ const CustomerList = () => {
     const isIncoming = moneyFlow === "incoming";
     
     const badges = {
-      debt: { label:"استلام من عميل", color: "bg-emerald-50 text-emerald-600" },
+      debt: { label:"استلام من تاجر", color: "bg-emerald-50 text-emerald-600" },
       delivery: { label: "نقلة بضاعة", color: "bg-blue-50 text-blue-600" },
       pay: { label: "تقليل مديونية", color: "bg-red-50 text-red-600" },
 
@@ -637,17 +637,17 @@ const CustomerList = () => {
   return (
     <div className=" flex flex-col justify-between md:flex-row min-h-screen md:h-screen gap-6 p-4 overflow-y-auto" dir="rtl">
       
-      {/* القائمة اليمنى: العميلون والبحث */}
+      {/* القائمة اليمنى: التاجرون والبحث */}
       <div className="md:w-1/3 w-full flex flex-col bg-white rounded-[24px]  border border-slate-100 ">
         <div className="p-6 border-b border-slate-50">
           <h2 className="text-xl font-black text-dark mb-4 flex items-center gap-2">
-            <User className="text-dark -500" /> قائمة العملاء
+            <User className="text-dark -500" /> قائمة التجار
           </h2>
           <div className="relative">
             <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
             <input
               type="text"
-              placeholder="ابحث باسم العميل أو رقم الهاتف..."
+              placeholder="ابحث باسم التاجر أو رقم الهاتف..."
               className="w-full pr-10 pl-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:border-dark -500 outline-none transition-all text-lg"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -686,11 +686,11 @@ const CustomerList = () => {
         </div>
       </div>
 
-      {/* القسم الأيسر: تفاصيل العميل والسجل */}
+      {/* القسم الأيسر: تفاصيل التاجر والسجل */}
       <div className="flex flex-col flex-1 justify-center gap-6 overflow-y-auto min-h-screen md:h-screen custom-scrollbar">
         {selectedSupplier && !subLoading ? (
           <>
-            {/* بطاقة معلومات العميل */}
+            {/* بطاقة معلومات التاجر */}
             <div className="bg-white p-6 md:p-8 rounded-[24px] border border-slate-100 relative ">
               <div className="absolute top-0 left-0 w-40 h-40 bg-dark -500/5 rounded-full -ml-20 -mt-20" />
 
@@ -714,11 +714,20 @@ const CustomerList = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4  w-full md:w-auto justify-end">
                   <button
-                    onClick={() => navigate(`/customer/printSupplierDetails/${selectedSupplier?._id}`)}
+                    onClick={() => navigate(`/customer/SupplierPrintManager/${selectedSupplier?._id}`)}
                     className="flex items-center gap-2 px-4 py-3 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-600 hover:text-white transition-all font-bold text-sm"
                   >
                     <Printer size={18} /> كشف حساب
                   </button>
+{/* 
+                                    <button
+                    onClick={() => navigate(`/customer/CustomerAccountSummary/${selectedSupplier?._id}`)}
+                    className="flex items-center gap-2 px-4 py-3 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-600 hover:text-white transition-all font-bold text-sm"
+                  >
+                    <Printer size={18} /> ملخص الحساب
+                  </button> */}
+
+
 
                   <button
                     onClick={() => navigate(`/customer/CustomerPaymentsPrintPage/${selectedSupplier?._id}`)}
@@ -760,7 +769,7 @@ const CustomerList = () => {
                       (selectedSupplier.balance || selectedSupplier.remainingBalance || 0) >= 0 ? "bg-red-500" : "bg-emerald-500"
                     }`} />
                     <span className={(selectedSupplier.balance || selectedSupplier.remainingBalance || 0) >= 0 ? "text-red-600" : "text-emerald-600"}>
-                      {(selectedSupplier.balance || selectedSupplier.remainingBalance || 0) >= 0 ? "الرصيد المتبقي للعميل (علينا)" : "رصيد مستحق (لنا)"}
+                      {(selectedSupplier.balance || selectedSupplier.remainingBalance || 0) >= 0 ? "الرصيد المتبقي للتاجر (علينا)" : "رصيد مستحق (لنا)"}
                     </span>
                   </p>
 
@@ -774,7 +783,7 @@ const CustomerList = () => {
 
                 <div className="bg-dark p-6 rounded-lg text-white relative overflow-hidden group">
                   <div className="relative z-10">
-                    <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2">رصيد العميل الافتتاحي</p>
+                    <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2">رصيد التاجر الافتتاحي</p>
                     <h3 className="text-3xl font-black flex items-baseline gap-2">
                       {selectedSupplier?.openningBalance || 0}
                       <span className="text-sm font-bold opacity-40 uppercase">ج.م</span>
@@ -865,22 +874,43 @@ const CustomerList = () => {
                                   title="عرض المستند المتعلق"
                                 />
                               )}
-                              {t.module !== "delivery" &&  !(t.walletInfo?.linkWallet || false) &&(
+                              {!(t.walletInfo?.linkWallet || false) && (
                                 <Edit
                                   size={20}
                                   className="text-blue-600 cursor-pointer hover:text-blue-400"
-                                  onClick={() => editPaymentHistory(t)}
-                                  title="تعديل"
+                                  onClick={() => {
+                                    if (t.module === "delivery") {
+                                      navigate(`/deliveries/edit/${t.moduleId}`);
+                                    } else {
+                                      editPaymentHistory(t);
+                                    }
+                                  }}
+                                  title={t.module === "delivery" ? "تعديل النقلة" : "تعديل"}
                                 />
                               )}
-                              {t.module !== "delivery" && (
+
+
+                              {/* {t.module !== "delivery" && (
                                 <Trash2
                                   size={20}
                                   className="text-red-700 cursor-pointer hover:text-red-500"
                                   onClick={() => deletePaymentHistory(t.id)}
                                   title="حذف"
                                 />
-                              )}
+                              )} */}
+
+                                <Trash2
+                                  size={20}
+                                  className="text-red-700 cursor-pointer hover:text-red-500"
+                                  onClick={() => {
+                                    if (t.module === "delivery") {
+                                      navigate(`/deliveries/edit/${t.moduleId}`);
+                                    } else {
+                                      deletePaymentHistory(t.id);
+                                    }
+                                  }}
+                                  title={t.module === "delivery" ? "تعديل النقلة" : "حذف"}
+                                />
                             </div>
                           </td>
                         </tr>
@@ -898,11 +928,11 @@ const CustomerList = () => {
         ) : (
           <div className="flex flex-col items-center justify-center h-full bg-white rounded-[15px] border border-dashed border-slate-200 text-slate-400">
             {subLoading ? (
-              <p className="text-xl font-bold text-dark -500">جاري تحميل بيانات العميل...</p>
+              <p className="text-xl font-bold text-dark -500">جاري تحميل بيانات التاجر...</p>
             ) : (
               <>
                 <User size={64} className="mb-4 opacity-10" />
-                <p className="text-lg font-bold">اختر عميل من القائمة لعرض التفاصيل</p>
+                <p className="text-lg font-bold">اختر تاجر من القائمة لعرض التفاصيل</p>
               </>
             )}
           </div>
@@ -935,8 +965,8 @@ const CustomerList = () => {
                   value={editData.module}
                   onChange={(e) => setEditData({ ...editData, module: e.target.value })}
                 >
-                  <option value="pay">دفع (استلام فلوس من عميل )</option>
-                  <option value="debt">مديونية (دفع فلوس للعميل )</option>
+                  <option value="pay">دفع (استلام فلوس من تاجر )</option>
+                  <option value="debt">مديونية (دفع فلوس للتاجر )</option>
 
                 </select>
               </div>

@@ -38,7 +38,7 @@ const CreateWireForm = () => {
           receiverName: "",
           receiverPhone: "",
           transactionReference: "",
-          linkWallet: false,
+          linkWallet: true,
           walletId: "",
         },
         cheque: {
@@ -190,10 +190,7 @@ const CreateWireForm = () => {
 
   // ===== إدارة طرق الدفع =====
   const addPaymentField = () => {
-    if (formData.payment.length >= 7) {
-      showAlert({ title: "الحد الأقصى لطرق الدفع المدمجة هو 7 طرق", icon: "error" });
-      return;
-    }
+
     const allMethods = ["cash", "wallet", "instapay", "bank", "mail", "cheque", "work"];
     const unusedMethod =
       allMethods.find((method) => !formData.payment.some((m) => m.paymentMethod === method)) ||
@@ -214,7 +211,7 @@ const CreateWireForm = () => {
             receiverName: "",
             receiverPhone: "",
             transactionReference: "",
-            linkWallet: false,
+            linkWallet: true,
             walletId: "",
           },
           cheque: {
@@ -247,10 +244,10 @@ const CreateWireForm = () => {
         const isDuplicate = formData.payment.some(
           (m, i) => i !== idx && m.paymentMethod === value
         );
-        if (isDuplicate) {
-          showAlert({ title: "لا يمكن تكرار طريقة الدفع في نفس الفاتورة", icon: "error" });
-          return;
-        }
+        // if (isDuplicate) {
+        //   showAlert({ title: "لا يمكن تكرار طريقة الدفع في نفس الفاتورة", icon: "error" });
+        //   return;
+        // }
       }
       newPayments[idx][field] = field === "paidAmount" ? Number(value) : value;
     }
@@ -315,7 +312,7 @@ const CreateWireForm = () => {
             transactionReference: p.bankInfo.transactionReference || ""
           } : undefined,
           walletInfo: p.walletInfo ? {
-            linkWallet: p.walletInfo.linkWallet || false,
+            linkWallet: p.walletInfo.linkWallet || true,
             walletId: p.walletInfo.walletId || "",
             provider: p.walletInfo.provider || "",
             senderName: p.walletInfo.senderName || "",
@@ -631,7 +628,8 @@ const CreateWireForm = () => {
                       <div className="flex gap-3 items-center p-3 rounded-lg bg-light/20">
                         <input
                           type="checkbox"
-                          checked={pay.walletInfo?.linkWallet || false}
+                          disabled={true}
+                          checked={pay.walletInfo?.linkWallet || true}
                           onChange={(e) =>
                             handlePaymentChange(pIdx, "walletInfo", e.target.checked, "linkWallet")
                           }

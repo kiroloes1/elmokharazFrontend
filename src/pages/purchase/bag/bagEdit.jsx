@@ -76,7 +76,7 @@ const EditBagForm = () => {
             paymentMethod: p.paymentMethod || "cash",
             bankInfo: p.bankInfo || { bankName: "", transactionReference: "" },
             walletInfo: {
-              linkWallet: p.walletInfo?.linkWallet || false,
+              linkWallet: p.walletInfo?.linkWallet || true,
               walletId: p.walletInfo?.walletId || "",
               provider: p.walletInfo?.provider || "",
               senderName: p.walletInfo?.senderName || "",
@@ -101,7 +101,7 @@ const EditBagForm = () => {
               paymentMethod: "cash",
               bankInfo: { bankName: "", transactionReference: "" },
               walletInfo: {
-                linkWallet: false,
+                linkWallet: true,
                 walletId: "",
                 provider: "",
                 senderName: "",
@@ -248,10 +248,10 @@ const EditBagForm = () => {
 
   // ===== إدارة طرق الدفع =====
   const addPaymentField = () => {
-    if (formData.payment.length >= 7) {
-      showAlert({ title: "الحد الأقصى لطرق الدفع المدمجة هو 7 طرق", icon: "error" });
-      return;
-    }
+    // if (formData.payment.length >= 7) {
+    //   showAlert({ title: "الحد الأقصى لطرق الدفع المدمجة هو 7 طرق", icon: "error" });
+    //   return;
+    // }
     const allMethods = ["cash", "wallet", "instapay", "bank", "mail", "cheque", "work"];
     const unusedMethod =
       allMethods.find((method) => !formData.payment.some((m) => m.paymentMethod === method)) ||
@@ -272,7 +272,7 @@ const EditBagForm = () => {
             receiverName: supSearch || "",
             receiverPhone: "",
             transactionReference: "",
-            linkWallet: false,
+            linkWallet: true,
             walletId: "",
           },
           cheque: {
@@ -306,10 +306,10 @@ const EditBagForm = () => {
         const isDuplicate = formData.payment.some(
           (m, i) => i !== idx && m.paymentMethod === value
         );
-        if (isDuplicate) {
-          showAlert({ title: "لا يمكن تكرار طريقة الدفع في نفس الفاتورة", icon: "error" });
-          return;
-        }
+        // if (isDuplicate) {
+        //   showAlert({ title: "لا يمكن تكرار طريقة الدفع في نفس الفاتورة", icon: "error" });
+        //   return;
+        // }
       }
       newPayments[idx][field] = field === "paidAmount" ? Number(value) : value;
     }
@@ -693,6 +693,7 @@ const EditBagForm = () => {
                       <div className="flex gap-3 items-center p-3 rounded-lg bg-light/20">
                         <input
                           type="checkbox"
+                          disabled={true}
                           checked={pay.walletInfo?.linkWallet || false}
                           onChange={(e) =>
                             handlePaymentChange(pIdx, "walletInfo", e.target.checked, "linkWallet")

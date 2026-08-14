@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from "react";
-import axios from "axios";
 import {
   BuildingLibraryIcon,
   UserGroupIcon,
@@ -9,11 +8,9 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   ExclamationTriangleIcon,
-  CheckCircleIcon,
-  ClockIcon,
-  XCircleIcon,
 } from "@heroicons/react/24/outline";
 import api from "../../services/api";
+import html2pdf from "html2pdf.js";
 
 const API_BASE_URL = "/advancedReports/cheques";
 
@@ -21,6 +18,7 @@ export default function ChequesReport() {
   const [activeTab, setActiveTab] = useState("list"); // 'list' | 'by-bank' | 'by-trader'
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [sharing, setSharing] = useState(false);
 
   // البيانات المتلقاة من API
   const [reportData, setReportData] = useState([]);
@@ -57,7 +55,6 @@ export default function ChequesReport() {
       if (activeTab === "by-bank") endpoint += "/by-bank";
       if (activeTab === "by-trader") endpoint += "/by-trader";
 
-      // تنظيف الفلاتر الفارغة قبل الإرسال
       const cleanParams = Object.fromEntries(
         Object.entries(filters).filter(([_, val]) => val !== "" && val !== null)
       );
@@ -88,7 +85,6 @@ export default function ChequesReport() {
     fetchData();
   }, [fetchData]);
 
-  // تحديث الفلاتر
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilters((prev) => ({ ...prev, [name]: value, page: 1 }));
@@ -111,14 +107,12 @@ export default function ChequesReport() {
     });
   };
 
-  // تغيير الصفحة
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= pagination.totalPages) {
       setFilters((prev) => ({ ...prev, page: newPage }));
     }
   };
 
-  // شارة الحالة (Status Badge)
   const renderStatusBadge = (status) => {
     const styles = {
       under_collection: "bg-amber-100 text-amber-800 border-amber-300",
@@ -138,7 +132,7 @@ export default function ChequesReport() {
 
     return (
       <span
-        className={`px-2.5 py-1 text-xs font-semibold rounded-full border ${
+        className={`px-2.5 py-1 text-xs font-semibold rounded-full border print:border-none ${
           styles[status] || "bg-gray-100 text-gray-700 border-gray-200"
         }`}
       >
@@ -147,22 +141,93 @@ export default function ChequesReport() {
     );
   };
 
+  // معالجة تصدير ومشاركة الـ PDF
+  const handleSharePDF = async () => {
+    const element = document.getElementById("report-capture");
+    if (!element) return;
+
+    const reportTitle =
+      activeTab === "by-bank"
+        ? "تقرير الشيكات حسب البنك"
+        : activeTab === "by-trader"
+        ? "تقرير الشيكات حسب التاجر"
+        : "قائمة الشيكات التفصيلية";
+
+    const fileName = `${reportTitle}.pdf`;
+
+    const options = {
+      margin: [10, 10, 10, 10],
+      filename: fileName,
+      image: { type: "jpeg", quality: 0.98 },
+      html2canvas: {
+        scale: 2,
+        useCORS: true,
+        letterRendering: true,
+        scrollX: 0,
+        scrollY: 0,
+      },
+      jsPDF: {
+        unit: "mm",
+        format: "a4",
+        orientation: "landscape",
+      },
+    };
+
+    try {
+      setSharing(true);
+      const pdfBlob = await html2pdf().set(options).from(element).output("blob");
+      const file = new File([pdfBlob], fileName, { type: "application/pdf" });
+
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: reportTitle,
+          text: `مرفق ${reportTitle}`,
+        });
+      } else {
+        html2pdf().set(options).from(element).save();
+      }
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      alert("حدث خطأ أثناء محاولة إنشاء أو مشاركة الملف.");
+    } finally {
+      setSharing(false);
+    }
+  };
+
   return (
-    <div className="p-4 md:p-6 bg-ligth min-h-screen text-dark space-y-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-brown/20 pb-4">
+    <div className="p-4 md:p-6 bg-ligth min-h-screen text-dark space-y-6 print:bg-white print:p-0 print:space-y-4">
+      {/* Header - إخفاء عناصر التحكم أثناء الطباعة */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-brown/20 pb-4 print:border-b-2 print:border-black">
         <div>
-          <h1 className="text-2xl font-bold text-dark flex items-center gap-2">
-            <DocumentCheckIcon className="w-8 h-8 text-accent" />
+          <h1 className="text-2xl font-bold text-dark flex items-center gap-2 print:text-xl">
+            <DocumentCheckIcon className="w-8 h-8 text-accent print:hidden" />
             تقارير الشيكات والعمليات المالية
           </h1>
-          <p className="text-xs text-brown mt-1">
+          <p className="text-xs text-brown mt-1 print:text-black">
             متابعة حركة الشيكات، تحليلات البنوك، وتقارير التعاملات مع التجار.
           </p>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="flex bg-white rounded-lg p-1 shadow-sm border border-brown/10 self-start md:self-auto">
+        {/* أزرار الطباعة والمشاركة - مخفية عند الطباعة */}
+        <div className="flex items-center gap-2 w-full md:w-auto print:hidden">
+          <button
+            onClick={() => window.print()}
+            className="bg-black text-white px-5 py-2 rounded font-normal hover:bg-gray-800 transition-all text-sm flex-1 md:flex-none"
+          >
+            طباعة الكشف
+          </button>
+          <button
+            onClick={handleSharePDF}
+            disabled={sharing}
+            className="bg-green-700 text-white px-5 py-2 rounded font-normal hover:bg-green-800 transition-all text-sm flex-1 md:flex-none disabled:opacity-50"
+          >
+            {sharing ? "جاري التجهيز..." : "مشاركة كـ PDF"}
+          </button>
+        </div>
+
+        {/* Tab Navigation - مخفي عند الطباعة */}
+        <div className="flex bg-white rounded-lg p-1 shadow-sm border border-brown/10 self-start md:self-auto print:hidden">
           <button
             onClick={() => {
               setActiveTab("list");
@@ -208,8 +273,8 @@ export default function ChequesReport() {
         </div>
       </div>
 
-      {/* Filters Section */}
-      <div className="bg-white p-4 rounded-xl shadow-sm border border-brown/10 space-y-4">
+      {/* Filters Section - مخفي عند الطباعة */}
+      <div className="bg-white p-4 rounded-xl shadow-sm border border-brown/10 space-y-4 print:hidden">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-bold text-dark flex items-center gap-2">
             <FunnelIcon className="w-4 h-4 text-accent" />
@@ -225,7 +290,6 @@ export default function ChequesReport() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
-          {/* فلتر البنك - يظهر في قائمة الشيكات فقط */}
           {activeTab === "list" && (
             <div>
               <label className="block text-brown font-medium mb-1">اسم البنك</label>
@@ -240,7 +304,6 @@ export default function ChequesReport() {
             </div>
           )}
 
-          {/* فلتر حالة الشيك */}
           <div>
             <label className="block text-brown font-medium mb-1">حالة الشيك</label>
             <select
@@ -258,7 +321,6 @@ export default function ChequesReport() {
             </select>
           </div>
 
-          {/* فلتر حركة المال */}
           {activeTab !== "by-bank" && (
             <div>
               <label className="block text-brown font-medium mb-1">اتجاه الشيك</label>
@@ -269,13 +331,12 @@ export default function ChequesReport() {
                 className="w-full px-3 py-2 border border-brown/20 rounded-lg focus:outline-none focus:border-accent bg-ligth/50"
               >
                 <option value="">الكل (ارسال و استلام)</option>
-                <option value="incoming"> استلام (مقبوضات)</option>
+                <option value="incoming">استلام (مقبوضات)</option>
                 <option value="outgoing">ارسال (مدفوعات)</option>
               </select>
             </div>
           )}
 
-          {/* فلتر الترتيب في تقارير التجميع */}
           {activeTab !== "list" && (
             <div>
               <label className="block text-brown font-medium mb-1">ترتيب حسب</label>
@@ -294,7 +355,6 @@ export default function ChequesReport() {
             </div>
           )}
 
-          {/* فلاتر التواريخ */}
           <div>
             <label className="block text-brown font-medium mb-1">
               من تاريخ ({activeTab === "by-trader" ? "الاستلام" : "الاستحقاق"})
@@ -325,14 +385,17 @@ export default function ChequesReport() {
 
       {/* Error Message */}
       {error && (
-        <div className="p-4 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs flex items-center gap-2">
+        <div className="p-4 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs flex items-center gap-2 print:hidden">
           <ExclamationTriangleIcon className="w-5 h-5 shrink-0 text-rose-500" />
           <span>{error}</span>
         </div>
       )}
 
-      {/* Data Display Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-brown/10 overflow-hidden">
+      {/* المنطقة المحددة للالتقاط والطباعة */}
+      <div
+        id="report-capture"
+        className="bg-white rounded-xl shadow-sm border border-brown/10 overflow-hidden print:border-none print:shadow-none"
+      >
         {loading ? (
           <div className="p-12 text-center text-brown text-sm flex flex-col items-center gap-3">
             <ArrowPathIcon className="w-8 h-8 animate-spin text-accent" />
@@ -346,8 +409,8 @@ export default function ChequesReport() {
           <div className="overflow-x-auto">
             {/* Table 1: قائمة الشيكات التفصيلية */}
             {activeTab === "list" && (
-              <table className="w-full text-right text-xs">
-                <thead className="bg-ligth text-dark font-bold border-b border-brown/10">
+              <table className="w-full text-right text-xs print:text-[11px]">
+                <thead className="bg-ligth text-dark font-bold border-b border-brown/10 print:bg-gray-100 print:border-black">
                   <tr>
                     <th className="p-3">رقم الشيك</th>
                     <th className="p-3">البنك</th>
@@ -358,12 +421,12 @@ export default function ChequesReport() {
                     <th className="p-3">الحالة</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-brown/10">
+                <tbody className="divide-y divide-brown/10 print:divide-gray-300">
                   {reportData.map((item) => {
                     const trader = item.customer || item.supplier;
                     return (
                       <tr key={item._id} className="hover:bg-ligth/30 transition-colors">
-                        <td className="p-3  font-semibold text-dark">
+                        <td className="p-3 font-semibold text-dark">
                           {item.chequeNumber || "—"}
                         </td>
                         <td className="p-3 font-medium">{item.bankName || "—"}</td>
@@ -372,7 +435,7 @@ export default function ChequesReport() {
                             <div>
                               <p className="font-semibold text-dark">{trader.name}</p>
                               {trader.phone && (
-                                <p className="text-[10px] text-brown">{trader.phone}</p>
+                                <p className="text-[10px] text-brown print:text-gray-600">{trader.phone}</p>
                               )}
                             </div>
                           ) : (
@@ -387,13 +450,13 @@ export default function ChequesReport() {
                                 : "bg-rose-50 text-rose-700"
                             }`}
                           >
-                            {item.moneyFlow === "incoming" ? " استلام" : "ارسال"}
+                            {item.moneyFlow === "incoming" ? "استلام" : "ارسال"}
                           </span>
                         </td>
                         <td className="p-3 font-bold text-dark">
                           {item.amount?.toLocaleString()} ج.م
                         </td>
-                        <td className="p-3 text-brown">
+                        <td className="p-3 text-brown print:text-black">
                           {item.dueDate
                             ? new Date(item.dueDate).toLocaleDateString("ar-EG")
                             : "—"}
@@ -408,8 +471,8 @@ export default function ChequesReport() {
 
             {/* Table 2: تقرير حسب البنك */}
             {activeTab === "by-bank" && (
-              <table className="w-full text-right text-xs">
-                <thead className="bg-ligth text-dark font-bold border-b border-brown/10">
+              <table className="w-full text-right text-xs print:text-[11px]">
+                <thead className="bg-ligth text-dark font-bold border-b border-brown/10 print:bg-gray-100 print:border-black">
                   <tr>
                     <th className="p-3">اسم البنك</th>
                     <th className="p-3">إجمالي الشيكات</th>
@@ -421,18 +484,18 @@ export default function ChequesReport() {
                     <th className="p-3">نسبة الارتجاع</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-brown/10">
+                <tbody className="divide-y divide-brown/10 print:divide-gray-300">
                   {reportData.map((item, idx) => (
                     <tr key={idx} className="hover:bg-ligth/30 transition-colors">
                       <td className="p-3 font-bold text-dark">{item.bankName || "غير محدد"}</td>
                       <td className="p-3 font-semibold">{item.count}</td>
-                      <td className="p-3 font-bold text-accent">
+                      <td className="p-3 font-bold text-accent print:text-black">
                         {item.totalAmount?.toLocaleString()} ج.م
                       </td>
-                      <td className="p-3 text-emerald-700">{item.collectedCount}</td>
-                      <td className="p-3 text-amber-700">{item.underCollectionCount}</td>
-                      <td className="p-3 text-rose-700 font-bold">{item.returnedCount}</td>
-                      <td className="p-3 text-rose-700">
+                      <td className="p-3 text-emerald-700 print:text-black">{item.collectedCount}</td>
+                      <td className="p-3 text-amber-700 print:text-black">{item.underCollectionCount}</td>
+                      <td className="p-3 text-rose-700 font-bold print:text-black">{item.returnedCount}</td>
+                      <td className="p-3 text-rose-700 print:text-black">
                         {item.returnedAmount?.toLocaleString()} ج.م
                       </td>
                       <td className="p-3">
@@ -454,8 +517,8 @@ export default function ChequesReport() {
 
             {/* Table 3: تقرير حسب التاجر */}
             {activeTab === "by-trader" && (
-              <table className="w-full text-right text-xs">
-                <thead className="bg-ligth text-dark font-bold border-b border-brown/10">
+              <table className="w-full text-right text-xs print:text-[11px]">
+                <thead className="bg-ligth text-dark font-bold border-b border-brown/10 print:bg-gray-100 print:border-black">
                   <tr>
                     <th className="p-3">اسم التاجر</th>
                     <th className="p-3">نوع التاجر</th>
@@ -464,7 +527,7 @@ export default function ChequesReport() {
                     <th className="p-3">عدد الشيكات المرتجعة</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-brown/10">
+                <tbody className="divide-y divide-brown/10 print:divide-gray-300">
                   {reportData.map((item, idx) => (
                     <tr key={idx} className="hover:bg-ligth/30 transition-colors">
                       <td className="p-3 font-bold text-dark">
@@ -478,14 +541,14 @@ export default function ChequesReport() {
                               : "bg-purple-50 text-purple-700"
                           }`}
                         >
-                          {item.traderType === "customer" ? "عميل" : "تاجر"}
+                          {item.traderType === "customer" ? "عميل" : "مورد"}
                         </span>
                       </td>
                       <td className="p-3 font-semibold">{item.count}</td>
-                      <td className="p-3 font-bold text-accent">
+                      <td className="p-3 font-bold text-accent print:text-black">
                         {item.totalAmount?.toLocaleString()} ج.م
                       </td>
-                      <td className="p-3 font-bold text-rose-600">
+                      <td className="p-3 font-bold text-rose-600 print:text-black">
                         {item.returnedCount}
                       </td>
                     </tr>
@@ -496,9 +559,9 @@ export default function ChequesReport() {
           </div>
         )}
 
-        {/* Pagination Controls */}
+        {/* Pagination Controls - مخفية عند الطباعة */}
         {!loading && reportData.length > 0 && (
-          <div className="p-4 bg-ligth/40 border-t border-brown/10 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-brown">
+          <div className="p-4 bg-ligth/40 border-t border-brown/10 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-brown print:hidden">
             <div>
               عرض الإدخالات من{" "}
               <span className="font-bold text-dark">
@@ -536,6 +599,14 @@ export default function ChequesReport() {
           </div>
         )}
       </div>
+
+      
+      <style>{`
+        @media print {
+          .no-print { display: none !important; }
+          body { background: white !important; }
+        }
+      `}</style>
     </div>
   );
 }

@@ -411,7 +411,9 @@ const SettingsPage = () => {
                     onChange={handleChange}
                     className="w-full px-3 py-2 border border-brown/30 rounded-lg focus:outline-none text-dark bg-white"
                   >
-                    <option value="Hooz">Hooz (الافتراضي المنسق)</option>
+                    
+                    <option value="Tahoma">Tahoma (الافتراضي المنسق)</option>
+                    <option value="Hooz">Hooz</option>
                     <option value="Cairo">Cairo</option>
                     <option value="Tajawal">Tajawal (عصري ومبسط)</option>
                     <option value="Almarai">Almarai (مريح للعين)</option>

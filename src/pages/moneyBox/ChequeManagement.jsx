@@ -15,8 +15,10 @@ import {
 import api from "../../services/api";
 import { FaMoneyBill } from "react-icons/fa";
  import { FiPrinter } from "react-icons/fi";
-import { Eye, EyeIcon } from "lucide-react";
+import { Eye, EyeIcon, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { showAlert } from "../../services/alert";
+import { showAlertConfirm } from "../../services/alertConfirm";
 
 const ChequeManagement = () => {
   // === States ===
@@ -186,6 +188,8 @@ const [isViewModalOpen, setIsViewModalOpen] = useState(false);
     </div>
 );
 
+
+
   // === Dictionaries & Helpers ===
   const statusBadges = {
     under_collection: { label: "تحت التحصيل", bg: "bg-amber-100 text-amber-800 border-amber-300" },
@@ -203,6 +207,48 @@ const [isViewModalOpen, setIsViewModalOpen] = useState(false);
     archived: "مؤرشف",
   };
 
+
+    // حذف عملية ماليّة
+    const deletePaymentHistory = async (cheque,paymentId,supplierId) => {
+ const isCollected = cheque.status === "collected";
+
+        // 1. تأكيد الحذف الأساسي
+        const confirmDelete = await showAlertConfirm({
+          title: "حذف الشيك",
+          text: isCollected
+            ? "هل أنت متأكد من حذف هذا الشيك؟"
+            : "هذا الشيك ليس محصّلاً بعد. سيتم إلغاؤه أولاً ثم حذفه. هل تريد المتابعة؟",
+          icon: "warning",
+          confirmButtonText: "نعم",
+          cancelButtonText: "إلغاء",
+        });
+
+  
+ if (!confirmDelete.isConfirmed) return;
+
+      try {
+            if (!isCollected) {
+      await api.put(`/cheque/${cheque._id}`, { status: "cancelled" });
+    }
+
+
+        await api.delete(
+          `/customers/deletePaymentHistory/${paymentId}/${supplierId}`
+        );
+  
+    showAlert({ title: "تم حذف الشيك بنجاح", icon: "success" });
+  
+   
+        fetchCheques();
+    fetchNotifications();
+  
+      } catch (err) {
+        showAlert({
+          title: err.response?.data?.message || "حدث خطأ أثناء الحذف",
+          icon: "error"
+        });
+      }
+    };
   return (
     <div id="invoice" className="p-4 md:p-6 bg-ligth min-h-screen text-dark " dir="rtl">
       
@@ -375,7 +421,7 @@ const [isViewModalOpen, setIsViewModalOpen] = useState(false);
           </select>
 
                     {/* اتجاه الشيك */}
-          <select
+          {/* <select
             name="moneyFlow"
             value={filters.moneyFlow}
             onChange={handleFilterChange}
@@ -384,7 +430,7 @@ const [isViewModalOpen, setIsViewModalOpen] = useState(false);
             <option value="">كل الاتجاهاات </option>
             <option value="incoming"> مستلم</option>
             <option value="outgoing"> مرسل</option>
-          </select>
+          </select> */}
 
           {/* تاريخ الاستحقاق من */}
           <div>
@@ -505,13 +551,30 @@ const [isViewModalOpen, setIsViewModalOpen] = useState(false);
                       >
                         <Eye size={16} />
                       </button>
-
+{/* 
                        <button
                         onClick={() => navigation(`/cheque/${item._id}`)}
                         title=" الشيك"
                         className="p-1 text-white  bg-dark hover:bg-gray-100 rounded-lg transition"
                       >
                         <Eye size={16} />
+
+
+                             
+                      </button> */}
+
+                      <button
+                                    className="p-1.5 text-dark hover:bg-gray-100 rounded-lg transition"
+                      >
+                                                                         <Trash2
+                       size={16}
+                        className="text-red-700 cursor-pointer hover:text-red-500"
+                          onClick={() => {
+                            deletePaymentHistory(item,item?._id , item?.customer?._id);
+                                                            
+                                  }}
+                                  title={"حذف"}
+                                                        />
                       </button>
                     </td>
                   </tr>

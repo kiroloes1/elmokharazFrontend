@@ -83,6 +83,12 @@ import EquipmentReport from "./pages/advancedReports/EquipmentReport";
 import SuppliersReport from "./pages/advancedReports/SuppliersReport";
 import UserActivityReport from "./pages/advancedReports/UserActivityReport";
 import BackupSettings from "./pages/settings/backupSystem";
+import CustomerAccountSummary from "./pages/customer/summaryStatement";
+import SupplierAccountSummary from "./pages/supplier/SupplierAccountSummary";
+import SupplierPrintManager from "./pages/customer/customerPrintMangement";
+import CustomerChequeAutocomplete from "./pages/moneyBox/addCheque";
+import DeliveriesReport from "./pages/advancedReports/DeliveriesReport";
+import ItemsReport from "./pages/advancedReports/ItemsReport";
 
 function App() {
    const upToTop = () => {
@@ -141,6 +147,9 @@ return (
           <Route path="/customer/payments" element={<CustomerBalanceAutocomplete />} />
           <Route path="/customer/printSupplierDetails/:customerId" element={<PrintStatement />} />
           <Route path="/customer/CustomerPaymentsPrintPage/:id" element={<CustomerPaymentsPrintPage />} />
+          <Route path="/customer/CustomerAccountSummary/:customerId" element={<CustomerAccountSummary />} />
+          <Route path="/customer/SupplierPrintManager/:customerId" element={<SupplierPrintManager />} />
+
 
 
           {/* supplier */}
@@ -150,6 +159,7 @@ return (
           <Route path="/supplier/payments" element={<SupplierBalanceAutocomplete />} />
           <Route path="/supplier/printSupplierDetails/:supplierId" element={<SupplierStatement />} />
           <Route path="/supplier/CustomerPaymentsPrintPage/:id" element={<SupplierPaymentsPrintPage />} />
+          <Route path="/supplier/SupplierAccountSummary/:id" element={<SupplierAccountSummary />} />
 
 
 
@@ -227,6 +237,8 @@ return (
         <Route path="/advancedReport/equipment" element={<EquipmentReport />} />
         <Route path="/advancedReport/supplier" element={<SuppliersReport />} />
         <Route path="/advancedReport/user" element={<UserActivityReport />} />
+        <Route path="/advancedReport/delivery" element={<DeliveriesReport />} />
+        <Route path="/advancedReport/items" element={<ItemsReport />} />
 
 
 
@@ -245,7 +257,7 @@ return (
            <Route path="ChequeManagement" element={<ChequeManagement/>} ></Route>
            <Route path="MoneyDashboard" element={<MoneyDashboard/>} ></Route>
            <Route path="cheque/:chequeId" element={<Cheque/>} ></Route>
-
+           <Route path="addCheque" element={<CustomerChequeAutocomplete/>} ></Route>
 
 
 

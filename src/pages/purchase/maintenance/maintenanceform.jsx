@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import api from "../../../services/api";
 import { showAlert } from "../../../services/alert";
+import BankAutocomplete from "../../../services/allBank";
 
 const Maintenance = () => {
   const [suppliers, setSuppliers] = useState([]);
@@ -41,7 +42,7 @@ const Maintenance = () => {
           receiverName: "",
           receiverPhone: "",
           transactionReference: "",
-          linkWallet: false,
+           linkWallet: true,
           walletId: "",
         },
         cheque: {
@@ -178,10 +179,10 @@ const Maintenance = () => {
 
   // ===== إدارة طرق الدفع =====
   const addPaymentField = () => {
-    if (formData.payment.length >= 7) {
-      showAlert({ title: "الحد الأقصى لطرق الدفع المدمجة هو 7 طرق", icon: "error" });
-      return;
-    }
+    // if (formData.payment.length >= 7) {
+    //   showAlert({ title: "الحد الأقصى لطرق الدفع المدمجة هو 7 طرق", icon: "error" });
+    //   return;
+    // }
     const allMethods = ["cash", "wallet", "instapay", "bank", "mail", "cheque", "work"];
     const unusedMethod =
       allMethods.find((method) => !formData.payment.some((m) => m.paymentMethod === method)) ||
@@ -202,7 +203,7 @@ const Maintenance = () => {
             receiverName: "",
             receiverPhone: "",
             transactionReference: "",
-            linkWallet: false,
+             linkWallet: true,
             walletId: "",
           },
           cheque: {
@@ -235,10 +236,10 @@ const Maintenance = () => {
         const isDuplicate = formData.payment.some(
           (m, i) => i !== idx && m.paymentMethod === value
         );
-        if (isDuplicate) {
-          showAlert({ title: "لا يمكن تكرار طريقة الدفع في نفس الفاتورة", icon: "error" });
-          return;
-        }
+        // if (isDuplicate) {
+        //   showAlert({ title: "لا يمكن تكرار طريقة الدفع في نفس الفاتورة", icon: "error" });
+        //   return;
+        // }
       }
       newPayments[idx][field] = field === "paidAmount" ? Number(value) : value;
     }
@@ -590,12 +591,17 @@ const Maintenance = () => {
                     <div className="grid grid-cols-2 gap-2 bg-white p-3 rounded-lg border border-brown/10 shadow-inner">
                       <div className="text-right">
                         <label className="text-[11px] font-black text-brown block mb-1">اسم البنك / المنصة</label>
-                        <input
-                          type="text"
-                          placeholder="مثال: بنك مصر / إنستاباي"
-                          className="w-full p-2 bg-ligth/20 border rounded-lg text-xs font-bold"
+                        <BankAutocomplete
                           value={pay.bankInfo?.bankName || ""}
-                          onChange={(e) => handlePaymentChange(pIdx, "bankInfo", e.target.value, "bankName")}
+                          placeholder="اكتب اسم البنك..."
+                          onChange={(value) =>
+                            handlePaymentChange(
+                              pIdx,
+                              "bankInfo",
+                              value,
+                              "bankName"
+                            )
+                          }
                         />
                       </div>
                       <div className="text-right">
@@ -619,7 +625,8 @@ const Maintenance = () => {
                       <div className="flex gap-3 items-center p-3 rounded-lg bg-light/20">
                         <input
                           type="checkbox"
-                          checked={pay.walletInfo?.linkWallet || false}
+                          disabled={true}
+                          checked={pay.walletInfo?.linkWallet || true}
                           onChange={(e) =>
                             handlePaymentChange(pIdx, "walletInfo", e.target.checked, "linkWallet")
                           }
@@ -796,12 +803,18 @@ const Maintenance = () => {
                         </div>
                         <div className="text-right">
                           <label className="text-[11px] font-black text-brown block mb-1">البنك المسحوب عليه</label>
-                          <input
-                            type="text"
-                            className="w-full p-2 bg-ligth/20 border rounded-lg text-xs font-bold"
-                            value={pay.cheque?.bankName || ""}
-                            onChange={(e) => handlePaymentChange(pIdx, "cheque", e.target.value, "bankName")}
-                          />
+                        <BankAutocomplete
+                          value={pay.cheque?.bankName || ""}
+                          placeholder="البنك المسحوب عليه..."
+                          onChange={(value) =>
+                            handlePaymentChange(
+                              pIdx,
+                              "cheque",
+                              value,
+                              "bankName"
+                            )
+                          }
+                        />
                         </div>
                       </div>
                       <div className="grid grid-cols-2 gap-2">

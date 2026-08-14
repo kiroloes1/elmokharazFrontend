@@ -39,22 +39,22 @@ const PurchasesHub = () => {
       icon: Wrench,
       accent: theme.accent,
     },
-    {
-      key: "wire",
-      title: "الأسلاك",
-      subtitle: "مشتريات الأسلاك بالأنواع",
-      path: "/wire",
-      icon: Cable,
-      accent: theme.secondary,
-    },
-    {
-      key: "bag",
-      title: "الشكاير",
-      subtitle: "مشتريات الشكاير بالأنواع",
-      path: "/bag",
-      icon: ShoppingBag,
-      accent: theme.primary,
-    },
+    // {
+    //   key: "wire",
+    //   title: "الأسلاك",
+    //   subtitle: "مشتريات الأسلاك بالأنواع",
+    //   path: "/wire",
+    //   icon: Cable,
+    //   accent: theme.secondary,
+    // },
+    // {
+    //   key: "bag",
+    //   title: "الشكاير",
+    //   subtitle: "مشتريات الشكاير بالأنواع",
+    //   path: "/bag",
+    //   icon: ShoppingBag,
+    //   accent: theme.primary,
+    // },
   ];
 
   return (

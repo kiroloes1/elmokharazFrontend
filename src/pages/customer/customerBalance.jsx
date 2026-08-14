@@ -10,6 +10,7 @@ import {
   Link, Plus, Trash2
 } from "lucide-react";
 import axios from "axios";
+import BankAutocomplete from "../../services/allBank";
 
 const CustomerBalanceAutocomplete = () => {
   const [search, setSearch] = useState("");
@@ -69,7 +70,7 @@ const CustomerBalanceAutocomplete = () => {
     const walletInfo = { ...prev.walletInfo };
 
     if (transactionType === "payment") {
-      // العميل هو الراسل
+      // التاجر هو الراسل
       walletInfo.senderName = supplier.name || "";
       walletInfo.senderPhone = supplier.phone || "";
 
@@ -80,7 +81,7 @@ const CustomerBalanceAutocomplete = () => {
       }
     } else {
       // debt
-      // العميل هو المستلم
+      // التاجر هو المستلم
       walletInfo.receiverName = supplier.name || "";
       walletInfo.receiverPhone = supplier.phone || "";
 
@@ -227,7 +228,7 @@ const CustomerBalanceAutocomplete = () => {
       return showAlert({ title: "أدخل مبلغاً صحيحاً", icon: "error" });
     }
     if (!supplier) {
-      return showAlert({ title: "يرجى اختيار عميل أولاً", icon: "error" });
+      return showAlert({ title: "يرجى اختيار تاجر أولاً", icon: "error" });
     }
     if (!paymentMethod) {
       return showAlert({ title: "يرجى اختيار طريقة الدفع", icon: "error" });
@@ -236,8 +237,8 @@ const CustomerBalanceAutocomplete = () => {
     if (!validatePaymentData()) return;
 
     const confirmed = await showAlertConfirm({
-      title: transactionType === "debt" ? " دفع للعميل؟" : "تسجيل دفع؟",
-      text: `المبلغ: ${amount} ج.م للعميل: ${supplier.name}`,
+      title: transactionType === "debt" ? " سداد للتاجر؟" : "تسجيل دفع؟",
+      text: `المبلغ: ${amount} ج.م للتاجر: ${supplier.name}`,
       icon: "question"
     });
 
@@ -274,6 +275,7 @@ const CustomerBalanceAutocomplete = () => {
       const updatedSupplier = await api.get(`/customers/${supplier._id}`);
       setSupplier(updatedSupplier.data.data);
       fetchSuppliers();
+      setPayment(updatedSupplier.data.payment || []);
 
       setAmount("");
       setNote("");
@@ -338,12 +340,17 @@ const CustomerBalanceAutocomplete = () => {
               <label className="text-[11px] font-black text-slate-500 block mb-1">
                 <Building size={12} className="inline ml-1" /> البنك المسحوب عليه
               </label>
-              <input 
-                type="text" 
-                className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm font-bold focus:border-brown -500 outline-none"
-                placeholder="اسم البنك"
-                value={paymentData.cheque?.bankName || ""} 
-                onChange={(e) => handlePaymentChange("cheque", e.target.value, "bankName")} 
+              <BankAutocomplete
+                value={paymentData.cheque?.bankName || ""}
+                placeholder="اكتب اسم البنك..."
+                onChange={(value) =>
+                  handlePaymentChange(
+                    
+                    "cheque",
+                    value,
+                    "bankName"
+                  )
+                }
               />
             </div>
           </div>
@@ -854,7 +861,7 @@ const CustomerBalanceAutocomplete = () => {
             ) : !subLoading ? (
               <div className="bg-white border-2 border-dashed border-slate-200 rounded-[10px] p-8 h-full flex flex-col items-center justify-center text-slate-400 min-h-[300px]">
                 <Wallet size={64} className="mb-4 opacity-10" />
-                <p className="font-bold text-center">اختر عميلاً لعرض التفاصيل</p>
+                <p className="font-bold text-center">اختر تاجراً لعرض التفاصيل</p>
               </div>
             ) : (
               <div className="bg-white border-2 border-dashed border-slate-200 rounded-[10px] p-8 h-full flex flex-col items-center justify-center text-slate-400 min-h-[300px]">
@@ -875,17 +882,21 @@ const CustomerBalanceAutocomplete = () => {
                 {/* نوع العملية */}
                 <div className="flex bg-slate-50 p-1 rounded-2xl">
                   <button
-                    onClick={() => setTransactionType("debt")}
+                    onClick={() => {setTransactionType("debt")
+                        setPaymentMethod("cash")}
+                    }
                     className={`flex-1 py-3 rounded-xl font-black text-lg transition-all ${
                       transactionType === "debt" 
                         ? "bg-dark text-white shadow-lg" 
                         : "text-slate-400 hover:text-dark"
                     }`}
                   >
-                   دفع للعميل(-)
+                   سداد للتاجر(-)
                   </button>
                   <button
-                    onClick={() => setTransactionType("payment")}
+                    onClick={() => {setTransactionType("payment")
+                    
+                    }}
                     className={`flex-1 py-3 rounded-xl font-black text-lg transition-all ${
                       transactionType === "payment" 
                         ? "bg-green-600 text-white shadow-lg" 
@@ -1034,7 +1045,7 @@ const CustomerBalanceAutocomplete = () => {
                           <p className={`text-md font-black ${
                             t.module === 'debt' ? 'text-red-400' : 'text-green-500'
                           }`}>
-                            {t.module === "debt" ? "دفع للعميل" : "استلام مبلغ"}
+                            {t.module === "debt" ? "سداد للتاجر" : "استلام مبلغ"}
                           </p>
                         </div>
                       </div>

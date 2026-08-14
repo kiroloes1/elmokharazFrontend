@@ -69,7 +69,7 @@ const MoneyDashboard = ({ onBack }) => {
           <div>
             <h1 className="text-3xl font-black text-dark">الماليات</h1>
             <p className="text-gray-500 font-bold text-sm">
-              نظرة عامة على المبالغ المستحقة للعملاء والتجار
+              نظرة عامة على المبالغ المستحقة للتجار والتجار
             </p>
           </div>
         </div>
@@ -93,15 +93,15 @@ const MoneyDashboard = ({ onBack }) => {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        {/* العملاء */}
+        {/* التجار */}
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
           <div className="flex items-center gap-3 mb-4">
             <div className="p-3 bg-blue-100 rounded-xl">
               <Users size={24} className="text-blue-600" />
             </div>
             <div>
-              <h3 className="text-lg font-black text-dark">العملاء</h3>
-              <p className="text-sm text-gray-400 font-bold">إجمالي العملاء: {customers.total}</p>
+              <h3 className="text-lg font-black text-dark">التجار</h3>
+              <p className="text-sm text-gray-400 font-bold">إجمالي التجار: {customers.total}</p>
             </div>
           </div>
           
@@ -183,19 +183,19 @@ const MoneyDashboard = ({ onBack }) => {
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
           <div className="flex items-center gap-2 mb-6">
             <Wallet size={20} className="text-blue-600" />
-            <h3 className="text-lg font-black text-dark">تفاصيل العملاء</h3>
+            <h3 className="text-lg font-black text-dark">تفاصيل التجار</h3>
           </div>
           
           <div className="space-y-4">
             <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-              <span className="font-bold text-gray-600">إجمالي العملاء</span>
+              <span className="font-bold text-gray-600">إجمالي التجار</span>
               <span className="font-black text-dark">{customers.total}</span>
             </div>
             
             <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg border border-green-100">
               <div className="flex items-center gap-2">
                 <UserCheck size={16} className="text-green-600" />
-                <span className="font-bold text-green-700">عملاء لهم فلوس</span>
+                <span className="font-bold text-green-700">تجار لهم فلوس</span>
               </div>
               <div className="text-left">
                 <span className="font-black text-green-600 block">{customers.haveMoneyCount}</span>
@@ -206,7 +206,7 @@ const MoneyDashboard = ({ onBack }) => {
             <div className="flex justify-between items-center p-3 bg-red-50 rounded-lg border border-red-100">
               <div className="flex items-center gap-2">
                 <UserX size={16} className="text-red-600" />
-                <span className="font-bold text-red-700">عملاء عليهم فلوس</span>
+                <span className="font-bold text-red-700">تجار عليهم فلوس</span>
               </div>
               <div className="text-left">
                 <span className="font-black text-red-600 block">{customers.debtCount}</span>

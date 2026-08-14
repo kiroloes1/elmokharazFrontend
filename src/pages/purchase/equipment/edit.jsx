@@ -4,6 +4,7 @@ import api from "../../../services/api";
 import { showAlert } from "../../../services/alert";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
+import BankAutocomplete from "../../../services/allBank";
 
 const EquipmentEditForm = () => {
   const { id } = useParams(); 
@@ -237,10 +238,10 @@ const EquipmentEditForm = () => {
   };
 
   const addPaymentField = () => {
-    if (formData.payment.length >= 7) {
-      showAlert({ title: "الحد الأقصى لطرق الدفع المدمجة هي 7 طرق", icon: "error" });
-      return;
-    }
+    // if (formData.payment.length >= 7) {
+    //   showAlert({ title: "الحد الأقصى لطرق الدفع المدمجة هي 7 طرق", icon: "error" });
+    //   return;
+    // }
     const allMethods = ["cash", "wallet", "instapay", "bank", "mail", "cheque", "work"];
     const unusedMethod = allMethods.find(method => !formData.payment.some(m => m.paymentMethod === method)) || "cash";
 
@@ -253,7 +254,7 @@ const EquipmentEditForm = () => {
           paymentMethod: unusedMethod,
           bankInfo: { bankName: "", transactionReference: "" },
           walletInfo: { 
-            linkWallet: false,
+            linkWallet: true,
             walletId: "",
             provider: "", 
             senderName: "", 
@@ -291,10 +292,10 @@ const EquipmentEditForm = () => {
     } else {
       if (field === "paymentMethod") {
         const isDuplicate = formData.payment.some((m, i) => i !== idx && m.paymentMethod === value);
-        if (isDuplicate) {
-          showAlert({ title: "لا يمكن تكرار طريقة الدفع في نفس الفاتورة", icon: "error" });
-          return;
-        }
+        // if (isDuplicate) {
+        //   showAlert({ title: "لا يمكن تكرار طريقة الدفع في نفس الفاتورة", icon: "error" });
+        //   return;
+        // }
       }
       // مهم: الحقل اسمه paidAmount في الـ req.body
       newPayments[idx][field] = field === "paidAmount" ? Number(value) : value;
@@ -349,7 +350,7 @@ const EquipmentEditForm = () => {
             transactionReference: p.bankInfo.transactionReference || ""
           } : undefined,
           walletInfo: p.walletInfo ? {
-            linkWallet: p.walletInfo.linkWallet || false,
+            linkWallet: p.walletInfo.linkWallet || true,
             walletId: p.walletInfo.walletId || "",
             provider: p.walletInfo.provider || "",
             senderName: p.walletInfo.senderName || "",
@@ -640,12 +641,18 @@ const EquipmentEditForm = () => {
                   <div className="grid grid-cols-2 gap-2 bg-white p-3 rounded-lg border border-brown/10 shadow-inner">
                     <div className="text-right">
                       <label className="text-[11px] font-black text-brown block mb-1">اسم البنك / المنصة</label>
-                      <input 
-                        type="text" 
-                        className="w-full p-2 bg-ligth/20 border rounded-lg text-xs font-bold"
-                        value={pay.bankInfo?.bankName || ""} 
-                        onChange={(e) => handlePaymentChange(pIdx, "bankInfo", e.target.value, "bankName")} 
-                      />
+<BankAutocomplete
+  value={pay.bankInfo?.bankName || ""}
+  placeholder="اكتب اسم البنك..."
+  onChange={(value) =>
+    handlePaymentChange(
+      pIdx,
+      "bankInfo",
+      value,
+      "bankName"
+    )
+  }
+/>
                     </div>
                     <div className="text-right">
                       <label className="text-[11px] font-black text-brown block mb-1">رقم مرجع المعاملة (Ref)</label>
@@ -666,7 +673,8 @@ const EquipmentEditForm = () => {
                     <div className="flex gap-3 items-center p-3 rounded-lg bg-light/20">
                       <input
                         type="checkbox"
-                        checked={pay.walletInfo?.linkWallet || false}
+                        disabled={true}
+                        checked={pay.walletInfo?.linkWallet || true}
                         onChange={(e) =>
                           handlePaymentChange(
                             pIdx,
@@ -885,12 +893,18 @@ const EquipmentEditForm = () => {
                       </div>
                       <div className="text-right">
                         <label className="text-[11px] font-black text-brown block mb-1">البنك المسحوب عليه</label>
-                        <input 
-                          type="text" 
-                          className="w-full p-2 bg-ligth/20 border rounded-lg text-xs font-bold"
-                          value={pay.cheque?.bankName || ""} 
-                          onChange={(e) => handlePaymentChange(pIdx, "cheque", e.target.value, "bankName")} 
-                        />
+<BankAutocomplete
+  value={pay.cheque?.bankName || ""}
+  placeholder="البنك المسحوب عليه..."
+  onChange={(value) =>
+    handlePaymentChange(
+      pIdx,
+      "cheque",
+      value,
+      "bankName"
+    )
+  }
+/>
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-2">

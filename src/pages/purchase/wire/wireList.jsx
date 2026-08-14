@@ -121,11 +121,11 @@ const WireList = () => {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-ligth text-center p-6" dir="rtl">
         <Wrench size={70} className="text-brown/40 mb-4" />
-        <h2 className="text-2xl font-black text-dark">لا توجد فواتير شراء أسلاك</h2>
+        <h2 className="text-2xl font-normal text-dark">لا توجد فواتير شراء أسلاك</h2>
         <p className="text-dark/60 mt-2">لم يتم تسجيل أي فاتورة شراء أسلاك حتى الآن.</p>
         <button
           onClick={() => navigate("/wire/add")}
-          className="mt-6 bg-brown text-ligth px-6 py-3 rounded-lg font-black hover:opacity-90 transition-all"
+          className="mt-6 bg-brown text-ligth px-6 py-3 rounded-lg font-normal hover:opacity-90 transition-all"
         >
           إضافة فاتورة شراء أسلاك جديدة
         </button>
@@ -147,10 +147,10 @@ const WireList = () => {
         {/* Top Header */}
         <div className="flex justify-between items-center border-b border-brown/20 pb-4 flex-wrap gap-4">
           <div className="space-y-1 text-right">
-            <span className="px-3 py-1 bg-brown/10 text-brown text-[10px] font-black rounded-full uppercase">
+            <span className="px-3 py-1 bg-brown/10 text-brown text-[10px] font-normal rounded-full uppercase">
               معاينة الفاتورة الكاملة
             </span>
-            <h1 className="text-3xl font-black text-dark">
+            <h1 className="text-3xl font-normal text-dark">
               فاتورة شراء أسلاك #{selectedInvoice?.invoiceNumber || "---"} - {selectedInvoice?.supplier?.name || "تاجر  غير محدد"}
             </h1>
           </div>
@@ -159,21 +159,21 @@ const WireList = () => {
             <button
               onClick={() => handleToDelete(selectedInvoice?._id)}
               disabled={!selectedInvoice || detailsLoading}
-              className="bg-red-700 hover:opacity-90 disabled:opacity-50 text-ligth px-5 py-2.5 rounded-lg font-black text-sm flex items-center gap-2 shadow-md transition-all"
+              className="bg-red-700 hover:opacity-90 disabled:opacity-50 text-ligth px-5 py-2.5 rounded-lg font-normal text-sm flex items-center gap-2 shadow-md transition-all"
             >
               <Trash size={18} /> حذف
             </button>
             <button
               onClick={() => navigate(`/wire/edit/${selectedInvoice?._id}`)}
               disabled={!selectedInvoice || detailsLoading}
-              className="bg-dark hover:opacity-90 disabled:opacity-50 text-ligth px-5 py-2.5 rounded-lg font-black text-sm flex items-center gap-2 shadow-md transition-all"
+              className="bg-dark hover:opacity-90 disabled:opacity-50 text-ligth px-5 py-2.5 rounded-lg font-normal text-sm flex items-center gap-2 shadow-md transition-all"
             >
               <Edit3 size={18} /> تعديل الفاتورة
             </button>
             <button
               onClick={() => navigate(`/wire/print/${selectedInvoice?._id}`)}
               disabled={!selectedInvoice || detailsLoading}
-              className="bg-brown hover:opacity-90 disabled:opacity-50 text-ligth px-5 py-2.5 rounded-lg font-black text-sm flex items-center gap-2 shadow-md transition-all"
+              className="bg-brown hover:opacity-90 disabled:opacity-50 text-ligth px-5 py-2.5 rounded-lg font-normal text-sm flex items-center gap-2 shadow-md transition-all"
             >
               <Printer size={18} /> طباعة
             </button>
@@ -181,7 +181,7 @@ const WireList = () => {
           <button
               onClick={() => navigate(`/wire/part/print/${selectedInvoice?._id}`)}
               disabled={!selectedInvoice || detailsLoading}
-              className="bg-brown hover:opacity-90 disabled:opacity-50 text-ligth px-5 py-2.5 rounded-lg font-black text-sm flex items-center gap-2 shadow-md transition-all"
+              className="bg-brown hover:opacity-90 disabled:opacity-50 text-ligth px-5 py-2.5 rounded-lg font-normal text-sm flex items-center gap-2 shadow-md transition-all"
             >
               <Printer size={18} /> طباعة الاسلاك
             </button>
@@ -201,28 +201,28 @@ const WireList = () => {
             <div className="bg-white p-5 rounded-md border border-brown/20 shadow-sm grid grid-cols-2 md:grid-cols-4 gap-4 text-right">
               <div className="flex items-center justify-between bg-slate-50 p-3 rounded-lg">
                 <span className="text-xs font-bold text-dark/60 block mb-1">عدد الأصناف</span>
-                <span className="font-black text-dark text-sm flex items-center gap-1">
+                <span className="font-normal text-dark text-sm flex items-center gap-1">
                   <Package size={14} className="text-accent" />
                   {selectedInvoice.items?.length || 0}
                 </span>
               </div>
               <div className="flex items-center justify-between bg-slate-50 p-3 rounded-lg">
                 <span className="text-xs font-bold text-dark/60 block mb-1">إجمالي الكميات</span>
-                <span className="font-black text-dark text-sm flex items-center gap-1">
+                <span className="font-normal text-dark text-sm flex items-center gap-1">
                   <Package size={14} className="text-accent" />
                   {getTotalQuantity(selectedInvoice.items)}
                 </span>
               </div>
               <div className="flex items-center justify-between bg-slate-50 p-3 rounded-lg">
                 <span className="text-xs font-bold text-dark/60 block mb-1">تاريخ الشراء</span>
-                <span className="font-black text-dark text-sm flex items-center gap-1">
+                <span className="font-normal text-dark text-sm flex items-center gap-1">
                   <Calendar size={14} className="text-accent" />
                   {selectedInvoice.purchaseDate ? new Date(selectedInvoice.purchaseDate).toLocaleDateString('ar-EG') : "---"}
                 </span>
               </div>
               <div className="flex items-center justify-between bg-slate-50 p-3 rounded-lg">
                 <span className="text-xs font-bold text-dark/60 block mb-1">حالة الدفع</span>
-                <span className={`px-3 py-1 rounded-full text-xs font-black border ${getPaymentStatusBadge(selectedInvoice.paymentStatus).bg}`}>
+                <span className={`px-3 py-1 rounded-full text-xs font-normal border ${getPaymentStatusBadge(selectedInvoice.paymentStatus).bg}`}>
                   {getPaymentStatusBadge(selectedInvoice.paymentStatus).label}
                 </span>
               </div>
@@ -234,7 +234,7 @@ const WireList = () => {
               {/* === الجانب الأيمن: جدول الأصناف (7 أعمدة) === */}
               <div className="lg:col-span-7 bg-white p-6 rounded-md border border-brown/20 shadow-sm text-right space-y-4">
                 <div className="flex justify-between items-center border-b border-brown/10 pb-3">
-                  <h3 className="font-black text-dark text-lg flex items-center gap-2">
+                  <h3 className="font-normal text-dark text-lg flex items-center gap-2">
                     <Wrench size={20} className="text-accent" /> أصناف الأسلاك المشتراة
                   </h3>
                   <span className="text-xs font-bold text-brown bg-brown/10 px-3 py-1 rounded-full">
@@ -247,12 +247,12 @@ const WireList = () => {
                   <table className="w-full text-right border-collapse text-xs">
                     <thead>
                       <tr className="bg-ligth text-dark border-b border-brown/20">
-                        <th className="p-3 font-black rounded-r-xl">#</th>
-                        <th className="p-3 font-black">نوع السلك</th>
-                        <th className="p-3 font-black text-center">المقاس</th>
-                        <th className="p-3 font-black text-center">الكمية</th>
-                        <th className="p-3 font-black text-center">سعر الوحدة</th>
-                        <th className="p-3 font-black text-center rounded-l-xl">الإجمالي</th>
+                        <th className="p-3 font-normal rounded-r-xl">#</th>
+                        <th className="p-3 font-normal">نوع السلك</th>
+                        <th className="p-3 font-normal text-center">المقاس</th>
+                        <th className="p-3 font-normal text-center">الكمية</th>
+                        <th className="p-3 font-normal text-center">سعر الوحدة</th>
+                        <th className="p-3 font-normal text-center rounded-l-xl">الإجمالي</th>
                       </tr>
                     </thead>
 
@@ -265,26 +265,26 @@ const WireList = () => {
                         return (
                           <tr key={idx} className="hover:bg-ligth/50 font-bold text-dark">
                             <td className="p-3 text-center">{idx + 1}</td>
-                            <td className="p-3 font-black">{item.wireType?.name || "بدون نوع"}</td>
+                            <td className="p-3 font-normal">{item.wireType?.name || "بدون نوع"}</td>
                             <td className="p-3 text-center">{item.size || "—"}</td>
                             <td className="p-3 text-center">{quantity}</td>
                             <td className="p-3 text-center">{unitPrice.toLocaleString()} ج.م</td>
-                            <td className="p-3 text-center font-black">{total.toLocaleString()} ج.م</td>
+                            <td className="p-3 text-center font-normal">{total.toLocaleString()} ج.م</td>
                           </tr>
                         );
                       })}
                     </tbody>
 
                     {/* Footer الجدول */}
-                    <tfoot className="border-t-2 border-brown/20 bg-ligth font-black text-dark">
+                    <tfoot className="border-t-2 border-brown/20 bg-ligth font-normal text-dark">
                       <tr>
-                        <td className="p-3 font-black rounded-r-xl" colSpan={2}>الإجمالي الكلي</td>
+                        <td className="p-3 font-normal rounded-r-xl" colSpan={2}>الإجمالي الكلي</td>
                         <td className="p-3 text-center text-dark/40">—</td>
-                        <td className="p-3 text-center font-black">
+                        <td className="p-3 text-center font-normal">
                           {getTotalQuantity(selectedInvoice.items)}
                         </td>
                         <td className="p-3 text-center text-dark/40">—</td>
-                        <td className="p-3 text-center font-black bg-brown/10 rounded-l-xl">
+                        <td className="p-3 text-center font-normal bg-brown/10 rounded-l-xl">
                           {selectedInvoice.totalAmount?.toLocaleString() || 0} ج.م
                         </td>
                       </tr>
@@ -304,7 +304,7 @@ const WireList = () => {
               {/* === الجانب الأيسر: المعاملات المالية (5 أعمدة) === */}
               <div className="lg:col-span-5 bg-white p-6 rounded-md border border-brown/20 shadow-sm text-right space-y-4">
                 <div className="flex justify-between items-center border-b border-brown/10 pb-3">
-                  <h3 className="font-black text-dark text-lg flex items-center gap-2">
+                  <h3 className="font-normal text-dark text-lg flex items-center gap-2">
                     <DollarSign size={20} className="text-accent" /> ملخص المدفوعات
                   </h3>
                   <span className="text-xs font-bold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
@@ -316,15 +316,15 @@ const WireList = () => {
                 <div className="bg-dark text-ligth p-4 rounded-lg space-y-2 pt-3">
                   <div className="flex justify-between items-center text-xs">
                     <span className="text-ligth/70">إجمالي الفاتورة:</span>
-                    <span className="font-black text-sm">{totalAmount.toLocaleString()} ج.م</span>
+                    <span className="font-normal text-sm">{totalAmount.toLocaleString()} ج.م</span>
                   </div>
                   <div className="flex justify-between items-center text-xs">
                     <span className="text-emerald-400">إجمالي المدفوع:</span>
-                    <span className="font-black text-sm text-emerald-400">{paidAmount.toLocaleString()} ج.م</span>
+                    <span className="font-normal text-sm text-emerald-400">{paidAmount.toLocaleString()} ج.م</span>
                   </div>
                   <div className="flex justify-between items-center text-xs border-t border-ligth/20 pt-2">
                     <span className="text-amber-400">المتبقي:</span>
-                    <span className="font-black text-sm text-amber-400">{remainingAmount.toLocaleString()} ج.م</span>
+                    <span className="font-normal text-sm text-amber-400">{remainingAmount.toLocaleString()} ج.م</span>
                   </div>
                 </div>
 
@@ -333,10 +333,10 @@ const WireList = () => {
                   <div className="bg-slate-50 p-3 rounded-lg border border-brown/20 mt-3">
                     <span className="text-xs font-bold text-dark/60 block">معلومات التاجر :</span>
                     <div className="flex justify-between items-center mt-1">
-                      <span className="font-black text-dark text-sm">{selectedInvoice.supplier.name}</span>
+                      <span className="font-normal text-dark text-sm">{selectedInvoice.supplier.name}</span>
                       {selectedInvoice.supplier.balance !== undefined && (
                         <span className="text-xs text-dark/60">
-                          الرصيد: <span className="font-black">{selectedInvoice.supplier.balance.toLocaleString()} ج.م</span>
+                          الرصيد: <span className="font-normal">{selectedInvoice.supplier.balance.toLocaleString()} ج.م</span>
                         </span>
                       )}
                     </div>
@@ -347,7 +347,7 @@ const WireList = () => {
                 {selectedInvoice.oldBalance > 0 && (
                   <div className="bg-blue-50 p-3 rounded-lg border border-blue-200 mt-3">
                     <span className="text-xs font-bold text-blue-700 block">الرصيد القديم للتاجر :</span>
-                    <span className="font-black text-blue-800">{selectedInvoice.oldBalance.toLocaleString()} ج.م</span>
+                    <span className="font-normal text-blue-800">{selectedInvoice.oldBalance.toLocaleString()} ج.م</span>
                   </div>
                 )}
               </div>
@@ -364,7 +364,7 @@ const WireList = () => {
         
         {/* رأس الشريط السفلي + أزرار الصفحات */}
         <div className="flex justify-between items-center text-right flex-wrap gap-2">
-          <span className="text-xs font-black text-dark">اختر فاتورة من القائمة للتفاصيل:</span>
+          <span className="text-xs font-normal text-dark">اختر فاتورة من القائمة للتفاصيل:</span>
           
           {/* أزرار الانتقال بين الصفحات */}
           <div className="flex items-center gap-2">
@@ -376,7 +376,7 @@ const WireList = () => {
             >
               <ChevronRight size={18} />
             </button>
-            <span className="text-xs font-black text-brown">
+            <span className="text-xs font-normal text-brown">
               صفحة {page} من {totalPages}
             </span>
             <button
@@ -408,7 +408,7 @@ const WireList = () => {
               >
                 {/* أعلى المربع */}
                 <div className="flex justify-between items-center">
-                  <span className={`px-2 py-0.5 rounded-lg text-[10px] font-black ${isSelected ? "bg-accent text-dark" : "bg-brown/10 text-brown"}`}>
+                  <span className={`px-2 py-0.5 rounded-lg text-[10px] font-normal ${isSelected ? "bg-accent text-dark" : "bg-brown/10 text-brown"}`}>
                     فاتورة #{inv.invoiceNumber || "---"}
                   </span>
                   <span className={`text-[10px] font-bold ${isSelected ? "text-ligth/60" : "text-dark/50"}`}>
@@ -417,7 +417,7 @@ const WireList = () => {
                 </div>
 
                 {/* اسم التاجر  */}
-                <div className="font-black text-sm truncate">
+                <div className="font-normal text-sm truncate">
                   {inv.supplier?.name || "تاجر  غير معروف"}
                 </div>
 
@@ -435,7 +435,7 @@ const WireList = () => {
                 <div className="flex justify-between items-end pt-2 border-t border-brown/10 text-xs">
                   <div>
                     <span className={`text-[9px] block ${isSelected ? "text-ligth/60" : "text-dark/50"}`}>الإجمالي</span>
-                    <span className="font-black">{(inv.totalAmount || 0).toLocaleString()}</span>
+                    <span className="font-normal">{(inv.totalAmount || 0).toLocaleString()}</span>
                   </div>
 
                   {/* حالة الدفع - مربع صغير */}

@@ -166,13 +166,13 @@ const SupplierStatement = () => {
     }
   };
 
-  // ✅ الرصيد الافتتاحي + مدفوعات عامة (pay/debt/أخرى) + فواتير الشراء المجمعة
+  // ✅ المديونية السابقة + مدفوعات عامة (pay/debt/أخرى) + فواتير الشراء المجمعة
   const combinedLog = useMemo(() => {
     if (!supplierData) return [];
 
     const logs = [];
 
-    // 1. الرصيد الافتتاحي (مديونية عليا من أول المدة)
+    // 1. المديونية السابقة (مديونية عليا من أول المدة)
     if (supplierData.openningBalance ) {
       logs.push({
         date:  supplierData.openningBalanceDate||supplierData.createdAt || new Date(),
@@ -471,7 +471,7 @@ const SupplierStatement = () => {
           <p className="text-lg text-slate-800">رقم التلفون : {supplierData?.phone}</p>
           {supplierData?.openningBalance  && (
             <p className="text-lg text-slate-800">
-              الرصيد الافتتاحي : {supplierData.openningBalance.toLocaleString()} ج.م
+              المديونية السابقة : {supplierData.openningBalance.toLocaleString()} ج.م
             </p>
           )}
           <p className="text-lg text-slate-800">
@@ -619,7 +619,7 @@ const SupplierStatement = () => {
                             )}
                             {isOpening && (
                               <>
-                                <b>الرصيد الافتتاحي:</b> {op.currentInvoiceAmount?.toLocaleString()} ج.م
+                                <b>المديونية السابقة:</b> {op.currentInvoiceAmount?.toLocaleString()} ج.م
                               </>
                             )}
                           </div>
@@ -762,7 +762,7 @@ const SupplierStatement = () => {
             <div className="bg-black text-white p-3 text-center font-black">ملخص كشف الحساب</div>
             <div className="p-4 space-y-3">
               <div className="flex justify-between border-b pb-2">
-                <span className="font-bold">الرصيد الافتتاحي</span>
+                <span className="font-bold">المديونية السابقة</span>
                 <span className="font-black text-700">{totals.openingBalance.toLocaleString()} ج.م</span>
               </div>
 
