@@ -11,6 +11,7 @@ let currentServer = 0;
 export const api = axios.create({
   baseURL: SERVERS[currentServer],
   withCredentials: true,
+  
 });
 
 /* ================= REQUEST INTERCEPTOR ================= */
