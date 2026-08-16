@@ -89,6 +89,7 @@ import SupplierPrintManager from "./pages/customer/customerPrintMangement";
 import CustomerChequeAutocomplete from "./pages/moneyBox/addCheque";
 import DeliveriesReport from "./pages/advancedReports/DeliveriesReport";
 import ItemsReport from "./pages/advancedReports/ItemsReport";
+import InstallApp from "./services/install";
 
 function App() {
    const upToTop = () => {
@@ -116,6 +117,9 @@ return (
 
     <BrowserRouter>
       <ScrollToTop />
+      <InstallApp />
+
+      
 
       <Routes>
         {/* Public Routes */}

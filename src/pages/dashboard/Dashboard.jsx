@@ -166,19 +166,21 @@ const Dashboard = () => {
           subtitle="خلال الفترة المختارة"
         />
         <StatCard
-          title="تجار لهم فلوس"
-          value={loadingMoney ? "..." : `${(customers?.haveMoneyAmount || 0).toLocaleString()} ج.م`}
+          title="علينا للتاجر "
+          value={loadingMoney ? "..." : `${Math.abs(customers?.haveMoneyAmount || 0).toLocaleString()} ج.م`}
           count={loadingMoney ? null : `${customers?.haveMoneyCount || 0} تجار`}
-          icon={<TrendingUp className="text-white" />}
-          bgColor="bg-green-600"
+          icon={<TrendingDown className="text-white" />}
           subtitle="إجمالي مستحقات التجار"
+          bgColor="bg-red-500"
+
         />
         <StatCard
-          title="تجار عليهم فلوس"
+          title="لينا عند التاجر"
           value={loadingMoney ? "..." : `${(customers?.debtAmount || 0).toLocaleString()} ج.م`}
           count={loadingMoney ? null : `${customers?.debtCount || 0} تجار`}
-          icon={<TrendingDown className="text-white" />}
-          bgColor="bg-red-500"
+          icon={<TrendingUp className="text-white" />}
+          bgColor="bg-green-600"
+
           subtitle="إجمالي المديونيات"
         />
       </div>

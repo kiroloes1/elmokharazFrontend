@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../../services/api";
+import { useSystemSettings } from "../../context/shareInfo";
 
 const SupplierPrintManager = () => {
   const { id: supplierId, customerId } = useParams();
@@ -13,6 +14,9 @@ const SupplierPrintManager = () => {
   const [loading, setLoading] = useState(true);
   const [printMode, setPrintMode] = useState(null);
 
+   const { settings } = useSystemSettings();
+  
+   
   // 1. جلب البيانات من الـ Backend
   useEffect(() => {
     const fetchData = async () => {
@@ -190,7 +194,7 @@ const SupplierPrintManager = () => {
       <div className="no-print bg-white p-8 rounded-lg shadow-sm border border-gray-200 mb-8">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-bold text-gray-800 border-r-4 border-black pr-3">
-            لوحة طباعة التقارير | <span className="font-normal text-gray-600">{supplierData?.name}</span>
+            لوحة طباعة التقارير | <span className="font-semibold text-gray-600">{supplierData?.name}</span>
           </h2>
         </div>
         
@@ -228,7 +232,7 @@ const SupplierPrintManager = () => {
           {/* Header */}
           <div className="flex justify-between items-start border-b-2 border-black pb-8 mb-10">
             <div className="space-y-2">
-              <h1 className="text-4xl font-black tracking-tighter">مصنع عزوز عطية</h1>
+              <h1 className="text-4xl font-black tracking-tighter">   {settings?.invoiceFactoryName || "مصنع المخرز"}</h1>
             </div>
           </div>
 
@@ -352,7 +356,7 @@ const SupplierPrintManager = () => {
 
         <div className={`text-5xl font-black tracking-tighter text-black`}>
           {(finalBalance).toLocaleString()}{" "}
-          <span className="text-xl font-normal">ج.م</span>
+          <span className="text-xl font-semibold">ج.م</span>
         </div>
 
         {/* توضيح كتابي إضافي للتأكيد في الطباعة */}

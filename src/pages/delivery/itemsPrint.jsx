@@ -116,7 +116,7 @@ const PrintDeliveryPage = () => {
       {/* هيدر التحكم - يختفي عند الطباعة */}
       <div className="max-w-4xl mx-auto mb-4 no-print flex flex-col sm:flex-row justify-between items-center bg-white p-4 rounded-xl border border-black gap-3 -sm">
         <div>
-          <h2 className="text-base font-normal text-black">معاينة الفاتورة للطباعة والمشاركة</h2>
+          <h2 className="text-base font-semibold text-black">معاينة الفاتورة للطباعة والمشاركة</h2>
           <p className="text-xs text-gray-700 font-bold">نقلة رقم #{delivery.delveryNumber} - {supplier?.name || delivery.supplier?.name}</p>
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
@@ -148,10 +148,10 @@ const PrintDeliveryPage = () => {
             <tbody>
               <tr>
                 <td className="align-top">
-                  <h1 className="text-2xl font-normal text-black m-0"> {settings?.invoiceFactoryName || "مصنع المخرز"}</h1>
+                  <h1 className="text-2xl font-semibold text-black m-0"> {settings?.invoiceFactoryName || "مصنع المخرز"}</h1>
                   <div className="text-xs font-bold text-black mt-3 space-y-1">
-                    <p className="m-0">السيد التاجر: <span className="font-normal">{supplier?.name || delivery.supplier?.name || "تاجر عام"}</span></p>
-                    <p className="m-0">رصيد التاجر : <span className="font-normal">{ delivery.supplier?.balance || 0}</span></p>
+                    <p className="m-0">السيد التاجر: <span className="font-semibold">{supplier?.name || delivery.supplier?.name || "تاجر عام"}</span></p>
+                    <p className="m-0">رصيد التاجر : <span className="font-semibold">{ delivery.supplier?.balance || 0}</span></p>
                     <p className="m-0">المستلم: <span className="font-bold">{delivery.receivedBy?.username || "غير محدد"}</span></p>
                     <p className="m-0">اسم السائق: <span className="font-bold">{delivery.carName || "غير محدد"}</span></p>
 
@@ -160,7 +160,7 @@ const PrintDeliveryPage = () => {
 
                 <td className="text-left align-top min-w-[160px]">
                   <div className="p-3 border-2 border-black inline-block text-right">
-                    <p className="font-normal text-xs text-black m-0">نقلة رقم: #{delivery.delveryNumber}</p>
+                    <p className="font-semibold text-xs text-black m-0">نقلة رقم: #{delivery.delveryNumber}</p>
                     <p className="text-black text-[11px] font-bold m-0 mt-1">
                       {new Date(delivery.deliveryDate || delivery.createdAt).toLocaleString("ar-EG", {
                         timeZone: "Africa/Cairo",
@@ -180,10 +180,10 @@ const PrintDeliveryPage = () => {
 
         {/* جدول الأصناف الرئيسي */}
         <div className="mb-4">
-          <h3 className="text-xs font-normal text-black mb-2 border-r-4 border-black pr-2 uppercase">تفاصيل أصناف النقلة الحالية</h3>
+          <h3 className="text-xs font-semibold text-black mb-2 border-r-4 border-black pr-2 uppercase">تفاصيل أصناف النقلة الحالية</h3>
           <table className="w-full text-right border-collapse border-2 border-black text-xs">
             <thead>
-              <tr className="bg-gray-100 text-black border-b-2 border-black font-normal">
+              <tr className="bg-gray-100 text-black border-b-2 border-black font-semibold">
                 <th className="p-2 border-r border-black text-right">الصنف</th>
                 <th className="p-2 border-r border-black text-center">الباتشات / الأوزان</th>
                 <th className="p-2 border-r border-black text-center">الوزن القائم</th>
@@ -206,7 +206,7 @@ const PrintDeliveryPage = () => {
 
       return (
         <tr key={item._id || idx} className="text-black">
-          <td className="p-2 border-r border-black font-normal">
+          <td className="p-2 border-r border-black font-semibold">
             {item.item?.name || "صنف بدون اسم"}
           </td>
 
@@ -232,7 +232,7 @@ const PrintDeliveryPage = () => {
             {item.returnWeight > 0 ? `-${item.returnWeight}` : "0"} كجم
           </td> */}
 
-          <td className="p-2 border-r border-black text-center font-normal">
+          <td className="p-2 border-r border-black text-center font-semibold">
             {itemNetWeight.toLocaleString()} كجم
           </td>
 
@@ -240,7 +240,7 @@ const PrintDeliveryPage = () => {
             {(item.pricePerKg || 0).toLocaleString()} ج.م
           </td>
 
-          <td className="p-2 text-left border-r border-black font-normal">
+          <td className="p-2 text-left border-r border-black font-semibold">
             {itemTotalPrice.toLocaleString()} ج.م
           </td>
         </tr>
@@ -253,19 +253,19 @@ const PrintDeliveryPage = () => {
           {/* <div className="grid grid-cols-4 gap-2 my-3 text-xs">
             <div className="border border-black p-2 text-center">
               <div className="font-bold text-black text-[10px]">إجمالي الوزن القائم</div>
-              <div className="font-normal text-black text-sm mt-0.5">{totalWeight.toLocaleString()} كجم</div>
+              <div className="font-semibold text-black text-sm mt-0.5">{totalWeight.toLocaleString()} كجم</div>
             </div>
             <div className="border border-black p-2 text-center">
               <div className="font-bold text-black text-[10px]">إجمالي الراجع الحالي</div>
-              <div className="font-normal text-black text-sm mt-0.5">{returnWeight.toLocaleString()} كجم</div>
+              <div className="font-semibold text-black text-sm mt-0.5">{returnWeight.toLocaleString()} كجم</div>
             </div>
             <div className="border border-black p-2 text-center">
               <div className="font-bold text-black text-[10px]">صافي الوزن الحالي</div>
-              <div className="font-normal text-black text-sm mt-0.5">{totalNetWeight.toLocaleString()} كجم</div>
+              <div className="font-semibold text-black text-sm mt-0.5">{totalNetWeight.toLocaleString()} كجم</div>
             </div>
             <div className="border-2 border-black p-2 text-center bg-gray-50">
               <div className="font-bold text-black text-[10px]">صافي قيمة النقلة</div>
-              <div className="font-normal text-black text-sm mt-0.5">{currentNetItemsTotal.toLocaleString()} ج.م</div>
+              <div className="font-semibold text-black text-sm mt-0.5">{currentNetItemsTotal.toLocaleString()} ج.م</div>
             </div>
           </div> */}
         </div>
@@ -273,9 +273,9 @@ const PrintDeliveryPage = () => {
         {/* جدول الراجع القديم - يظهر فقط إن وجد */}
         {oldReturnItems.length > 0 && (
           <div className="mb-4">
-            <h3 className="text-xs font-normal text-black mb-2 border-r-4 border-black pr-2 uppercase">تفاصيل الراجع القديم (مخصوم)</h3>
+            <h3 className="text-xs font-semibold text-black mb-2 border-r-4 border-black pr-2 uppercase">تفاصيل الراجع القديم (مخصوم)</h3>
             <table className="w-full border-collapse border-2 border-black text-xs text-center">
-              <thead className="bg-gray-100 font-normal border-b-2 border-black">
+              <thead className="bg-gray-100 font-semibold border-b-2 border-black">
                 <tr>
                   <th className="border-r border-black p-2 text-right">الصنف</th>
                   <th className="border-r border-black p-2">وزن الراجع القديم</th>
@@ -286,20 +286,20 @@ const PrintDeliveryPage = () => {
               <tbody className="divide-y divide-black">
                 {oldReturnItems.map((item) => (
                   <tr key={item._id}>
-                    <td className="border-r border-black p-2 text-right font-normal">{item.item?.name}</td>
+                    <td className="border-r border-black p-2 text-right font-semibold">{item.item?.name}</td>
                     <td className="border-r border-black p-2 font-bold">{item.oldReturnWeight} كجم</td>
                     <td className="border-r border-black p-2 font-bold">{item.pricePerKg} ج.م</td>
-                    <td className="p-2 text-left font-normal">{(item.oldReturnWeight * item.pricePerKg).toLocaleString()} ج.م</td>
+                    <td className="p-2 text-left font-semibold">{(item.oldReturnWeight * item.pricePerKg).toLocaleString()} ج.م</td>
                   </tr>
                 ))}
               </tbody>
-              <tfoot className="font-normal border-t-2 border-black bg-gray-50">
+              <tfoot className="font-semibold border-t-2 border-black bg-gray-50">
                 <tr>
                   <td colSpan={2} className="p-2 border-r border-black text-right">
                     إجمالي الراجع القديم: <span className="font-bold">{oldReturnWeight.toLocaleString()} كجم</span>
                   </td>
                   <td colSpan={2} className="p-2 text-left">
-                    إجمالي المخصوم: <span className="font-normal">{totalOldReturnValue.toLocaleString()} ج.م</span>
+                    إجمالي المخصوم: <span className="font-semibold">{totalOldReturnValue.toLocaleString()} ج.م</span>
                   </td>
                 </tr>
               </tfoot>

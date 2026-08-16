@@ -208,17 +208,17 @@ const CustomerAccountSummary = () => {
       ? sequentialLedger[sequentialLedger.length - 1]?.balance
       : customerData?.openningBalance || 0;
 
-  if (loading) return <div className="p-10 text-center font-normal">جاري التحميل...</div>;
+  if (loading) return <div className="p-10 text-center font-semibold">جاري التحميل...</div>;
 
   return (
     <div id="invoice" className="p-4 mx-auto text-right max-w-4xl" dir="rtl">
       {/* شريط التحكم */}
       <div className="text-md no-print mb-6 flex flex-col md:flex-row justify-between items-center bg-gray-100 p-4 rounded gap-4">
-        <h2 className="font-normal">ملخص حساب: {customerData?.name}</h2>
+        <h2 className="font-semibold">ملخص حساب: {customerData?.name}</h2>
 
         <button
           onClick={() => window.print()}
-          className="bg-black text-white px-5 py-2 rounded font-normal hover:bg-gray-800 transition-all text-md"
+          className="bg-black text-white px-5 py-2 rounded font-semibold hover:bg-gray-800 transition-all text-md"
         >
           طباعة الملخص
         </button>
@@ -251,56 +251,56 @@ const CustomerAccountSummary = () => {
       {/* رأس الملخص */}
       <div className="bg-white p-6 border-2 border-black print:border-0" dir="rtl">
         <div className="border-b-4 border-black pb-4 mb-6 text-right">
-          <h1 className="text-2xl font-normal">{settings?.invoiceFactoryName}</h1>
-          <p className="font-normal mt-1 text-slate-700">ملخص كشف حساب التاجر</p>
+          <h1 className="text-2xl font-semibold">{settings?.invoiceFactoryName}</h1>
+          <p className="font-semibold mt-1 text-slate-700">ملخص كشف حساب التاجر</p>
         </div>
 
         <div className="mb-6 border-r-4 border-black pr-4">
-          <p className="text-xl font-normal">اسم التاجر : {customerData?.name}</p>
-          <p className="text-xl font-normal"> الرصيد : {customerData?.balance.toLocaleString()}</p>
+          <p className="text-xl font-semibold">اسم التاجر : {customerData?.name}</p>
+          <p className="text-xl font-semibold"> الرصيد : {customerData?.balance.toLocaleString()}</p>
 
           <p className="text-md text-slate-800">رقم التلفون : {customerData?.phone}</p>
         </div>
 
         {/* صندوق الملخص — نفس شكل الملخص في كشف الحساب التفصيلي */}
         <div className="border-4 border-black">
-          <div className="bg-black text-white p-3 text-center font-normal">ملخص كشف الحساب</div>
+          <div className="bg-black text-white p-3 text-center font-semibold">ملخص كشف الحساب</div>
           <div className="p-4 space-y-3">
             <div className="flex justify-between border-b pb-2">
-              <span className="font-normal">المديونية السابقة</span>
-              <span className="font-normal">{totals.openingBalance.toLocaleString()} ج.م</span>
+              <span className="font-semibold">المديونية السابقة</span>
+              <span className="font-semibold">{totals.openingBalance.toLocaleString()} ج.م</span>
             </div>
 
             <div className="flex justify-between border-b pb-2">
-              <span className="font-normal">إجمالي قيمة النقلات (مشتريات التاجر)</span>
-              <span className="font-normal">-{totals.totalDeliveries.toLocaleString()} ج.م</span>
+              <span className="font-semibold">إجمالي قيمة النقلات (مشتريات التاجر)</span>
+              <span className="font-semibold">-{totals.totalDeliveries.toLocaleString()} ج.م</span>
             </div>
 
             <div className="flex justify-between border-b pb-2">
-              <span className="font-normal">إجمالي ما تم استلامه من حساب النقلة</span>
-              <span className="font-normal">+{totals.totalDeliveryPayment.toLocaleString()} ج.م</span>
+              <span className="font-semibold">إجمالي ما تم استلامه من حساب النقلة</span>
+              <span className="font-semibold">+{totals.totalDeliveryPayment.toLocaleString()} ج.م</span>
             </div>
 
             <div className="flex justify-between border-b pb-2">
-              <span className="font-normal">سداد من التاجر (استلام فلوس)</span>
-              <span className="font-normal">+{totals.totalPayments.toLocaleString()} ج.م</span>
+              <span className="font-semibold">سداد من التاجر (استلام فلوس)</span>
+              <span className="font-semibold">+{totals.totalPayments.toLocaleString()} ج.م</span>
             </div>
 
             <div className="flex justify-between border-b pb-2">
-              <span className="font-normal">سداد للتاجر</span>
-              <span className="font-normal">-{totals.totalDebts.toLocaleString()} ج.م</span>
+              <span className="font-semibold">سداد للتاجر</span>
+              <span className="font-semibold">-{totals.totalDebts.toLocaleString()} ج.م</span>
             </div>
 
             {totals.totalTea > 0 && (
               <div className="flex justify-between border-b pb-2">
-                <span className="font-normal">إجمالي الشاي</span>
-                <span className="font-normal">-{totals.totalTea.toLocaleString()} ج.م</span>
+                <span className="font-semibold">إجمالي الشاي</span>
+                <span className="font-semibold">-{totals.totalTea.toLocaleString()} ج.م</span>
               </div>
             )}
 
             <div className="flex justify-between text-xl pt-2 border-t-2 border-black">
-              <span className="font-normal">الرصيد النهائي المستحق للتاجر</span>
-              <span className="font-normal">{finalBalance?.toLocaleString() || "0"} ج.م</span>
+              <span className="font-semibold">الرصيد النهائي المستحق للتاجر</span>
+              <span className="font-semibold">{finalBalance?.toLocaleString() || "0"} ج.م</span>
             </div>
           </div>
         </div>

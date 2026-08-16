@@ -17,7 +17,8 @@ const DeliveryStatement = () => {
 
   // 🔹 دالة تنسيق المبالغ طبقًا للقاعدة الموحدة
   const formatAmount = (amount) => {
-    if (amount === undefined || amount === null || isNaN(amount)) return "0 ج.م";
+    if (amount === undefined || amount === null || isNaN(amount)) return "-";
+    if (Number(amount) === 0) return "-";
     const absValue = Math.abs(amount).toLocaleString();
     if (amount < 0) {
       return `${absValue} -ج.م`;
@@ -159,154 +160,76 @@ const DeliveryStatement = () => {
   }, [customerData, payments, groupedPayments, deliveriesMap]);
 
   const getPaymentDisplay = (payment, type = "receive") => {
-  const method = payment?.paymentMethod;
+    const method = payment?.paymentMethod;
 
-  const methodNames = {
-    cash: "نقدي",
-    wallet: "محفظة",
-    instapay: "إنستا باي",
-    bank: "بنكي",
-    "bank transfer": "بنكي",
-    cheque: "شيك",
-    mail: "بريد",
-    work: "شغل",
-  };
+    const methodNames = {
+      cash: "نقدي",
+      wallet: "محفظة",
+      instapay: "إنستا باي",
+      bank: "بنكي",
+      "bank transfer": "بنكي",
+      cheque: "شيك",
+      mail: "بريد",
+      work: "شغل",
+    };
 
-  const methodName = methodNames[method] || method || "غير محدد";
+    const methodName = methodNames[method] || method || "غير محدد";
 
-  // اسم العملية
-  let title = type === "send"
-    ? "تحويل خارجي"
-    : "استلام دفعة";
+    let title = type === "send" ? "تحويل خارجي" : "استلام دفعة";
 
-  let details = "";
+    let details = "";
 
-  // =========================
-  // Wallet
-  // =========================
-  if (method === "wallet") {
-    const walletInfo = payment.walletInfo || {};
-
-    const receiverName =
-      walletInfo.receiverName ||
-      walletInfo.senderName ||
-      "";
-
-    const phone =
-      walletInfo.receiverPhone ||
-      walletInfo.senderPhone ||
-      "";
-
-    let maskedPhone = phone;
-
-    // إظهار آخر 4 أرقام فقط
-    if (phone) {
-      const cleanPhone = String(phone);
-      maskedPhone =
-        cleanPhone.length > 4
-          ? `(...${cleanPhone.slice(-4)})`
-          : cleanPhone;
+    if (method === "wallet") {
+      const walletInfo = payment.walletInfo || {};
+      const receiverName = walletInfo.receiverName || walletInfo.senderName || "";
+      const phone = walletInfo.receiverPhone || walletInfo.senderPhone || "";
+      let maskedPhone = phone;
+      if (phone) {
+        const cleanPhone = String(phone);
+        maskedPhone = cleanPhone.length > 4 ? `(...${cleanPhone.slice(-4)})` : cleanPhone;
+      }
+      if (receiverName || maskedPhone) {
+        details = `إلى: ${receiverName || ""} ${maskedPhone}`;
+      }
     }
 
-    if (receiverName || maskedPhone) {
-      details = `إلى: ${receiverName || ""} ${maskedPhone}`;
+    if (method === "bank" || method === "bank transfer") {
+      const bankInfo = payment.bankInfo || {};
+      const bankName = bankInfo.bankName || "";
+      const transactionReference = bankInfo.transactionReference || bankInfo.reference || "";
+      if (bankName || transactionReference) {
+        details = [bankName, transactionReference ? `عملية: ${transactionReference}` : ""].filter(Boolean).join(" | ");
+      }
     }
-  }
 
-  // =========================
-  // Bank
-  // =========================
-  if (
-    method === "bank" ||
-    method === "bank transfer"
-  ) {
-    const bankInfo = payment.bankInfo || {};
-
-    const bankName = bankInfo.bankName || "";
-    const transactionReference =
-      bankInfo.transactionReference ||
-      bankInfo.reference ||
-      "";
-
-    if (bankName || transactionReference) {
-      details = [
-        bankName,
-        transactionReference
-          ? `عملية: ${transactionReference}`
-          : ""
-      ]
-        .filter(Boolean)
-        .join(" | ");
+    if (method === "instapay") {
+      const bankInfo = payment.bankInfo || {};
+      const bankName = bankInfo.bankName || "";
+      const transactionReference = bankInfo.transactionReference || bankInfo.reference || "";
+      if (bankName || transactionReference) {
+        details = [bankName, transactionReference ? `عملية: ${transactionReference}` : ""].filter(Boolean).join(" | ");
+      }
     }
-  }
 
-  // =========================
-  // InstaPay
-  // =========================
-  if (method === "instapay") {
-    const bankInfo = payment.bankInfo || {};
-
-    const bankName = bankInfo.bankName || "";
-    const transactionReference =
-      bankInfo.transactionReference ||
-      bankInfo.reference ||
-      "";
-
-    if (bankName || transactionReference) {
-      details = [
-        bankName,
-        transactionReference
-          ? `عملية: ${transactionReference}`
-          : ""
-      ]
-        .filter(Boolean)
-        .join(" | ");
-    }
-  }
-
-  // =========================
-  // Cheque
-  // =========================
-  if (method === "cheque") {
-    const cheque = payment.cheque || {};
-
-    const chequeNumber =
-      cheque.chequeNumber ||
-      cheque.number ||
-      "";
-
-    const bankName =
-      cheque.bankName ||
-      "";
-
-    let dueDate = "";
-
-    if (cheque.dueDate) {
-      dueDate = new Date(cheque.dueDate).toLocaleDateString(
-        "ar-EG",
-        {
+    if (method === "cheque") {
+      const cheque = payment.cheque || {};
+      const chequeNumber = cheque.chequeNumber || cheque.number || "";
+      const bankName = cheque.bankName || "";
+      let dueDate = "";
+      if (cheque.dueDate) {
+        dueDate = new Date(cheque.dueDate).toLocaleDateString("ar-EG", {
           day: "2-digit",
           month: "2-digit",
           year: "2-digit",
-        }
-      );
+        });
+      }
+      details = [chequeNumber ? `رقم ${chequeNumber}` : "", bankName, dueDate ? `استحقاق ${dueDate}` : ""]
+        .filter(Boolean)
+        .join(" | ");
     }
 
-    details = [
-      chequeNumber ? `رقم ${chequeNumber}` : "",
-      bankName,
-      dueDate ? `استحقاق ${dueDate}` : ""
-    ]
-      .filter(Boolean)
-      .join(" | ");
-  }
-
-  return {
-    title,
-    methodName,
-    details,
+    return { title, methodName, details };
   };
-};
 
   const filteredLog = useMemo(() => {
     return combinedLog.filter((item) => {
@@ -324,7 +247,7 @@ const DeliveryStatement = () => {
 
   const sequentialLedger = useMemo(() => {
     let runningBalance = 0;
-    
+
     return filteredLog.map((op) => {
       const isDelivery = op.type === "delivery";
       const isPay = op.type === "debt";
@@ -348,8 +271,8 @@ const DeliveryStatement = () => {
       } else if (isDelivery) {
         paymentReceivedDelivery = op.paid || 0;
         const deliveryTotal = op.details?.totalAmount || op.amount || 0;
-        
-        paymentReceived = 0 
+
+        paymentReceived = 0;
         debtAdded = deliveryTotal - (op.paid || 0);
         currentInvoiceAmount = deliveryTotal;
 
@@ -366,7 +289,7 @@ const DeliveryStatement = () => {
         currentInvoiceAmount = 0;
       }
 
-      runningBalance = previousBalance + debtAdded - paymentReceived ;
+      runningBalance = previousBalance + debtAdded - paymentReceived;
 
       return {
         ...op,
@@ -418,7 +341,7 @@ const DeliveryStatement = () => {
   const handleSharePDF = async () => {
     const element = document.getElementById('invoice-capture');
     const arabicFileName = `${customerData?.name || 'التاجر'}.pdf`;
-    
+
     const options = {
       margin: 10,
       filename: arabicFileName,
@@ -459,24 +382,24 @@ const DeliveryStatement = () => {
     }
   };
 
-  if (loading) return <div className="p-10 text-center font-normal">جاري التحميل...</div>;
+  if (loading) return <div className="p-10 text-center font-semibold">جاري التحميل...</div>;
 
   return (
     <div id='invoice' className="p-4 mx-auto text-right" dir="rtl">
       <div className="text-md no-print mb-6 flex flex-col md:flex-row justify-between items-center bg-gray-100 p-4 rounded gap-4">
-        <h2 className="font-normal">كشف حساب موحد: {customerData?.name}</h2>
-        
+        <h2 className="font-semibold">كشف حساب موحد: {customerData?.name}</h2>
+
         <div className="grid lg:grid-cols-2 gap-2 w-full md:w-auto">
-          <button 
-            onClick={() => window.print()} 
-            className="bg-black text-white px-5 py-2 rounded font-normal hover:bg-gray-800 transition-all text-md flex-1 md:flex-none"
+          <button
+            onClick={() => window.print()}
+            className="bg-black text-white px-5 py-2 rounded font-semibold hover:bg-gray-800 transition-all text-md flex-1 md:flex-none"
           >
             طباعة الكشف
           </button>
-          <button 
+          <button
             onClick={handleSharePDF}
             disabled={sharing}
-            className="bg-green-700 text-white px-5 py-2 rounded font-normal hover:bg-green-800 transition-all text-md flex-1 md:flex-none disabled:opacity-50"
+            className="bg-green-700 text-white px-5 py-2 rounded font-semibold hover:bg-green-800 transition-all text-md flex-1 md:flex-none disabled:opacity-50"
           >
             {sharing ? "جاري التجهيز..." : "مشاركة كـ PDF"}
           </button>
@@ -510,15 +433,15 @@ const DeliveryStatement = () => {
       <div id="invoice-capture" className="bg-white p-8 border-2 border-black print:border-0 print:p-0" dir="rtl">
         <div className="flex justify-between items-start border-b-4 border-black pb-4 mb-8">
           <div className="text-right">
-            <h1 className="text-3xl font-normal">
+            <h1 className="text-3xl font-semibold">
               {settings.invoiceFactoryName}
             </h1>
-            <p className="font-normal mt-1">
+            <p className="font-semibold mt-1">
               كشف حساب تفصيلي وحركة الأوزان و تتبع المدفوعات
             </p>
           </div>
 
-          <div className="text-left text-md font-normal">
+          <div className="text-left text-md font-semibold">
             <p>تاريخ الاستخراج:</p>
             <p>
               {new Date().toLocaleString("ar-EG", {
@@ -534,23 +457,14 @@ const DeliveryStatement = () => {
         </div>
 
         <div className="mb-8 border-r-4 border-black pr-4 space-y-1">
-          <p className="text-2xl font-normal text-gray-900">اسم التاجر: {customerData?.name || "---"}</p>
-          {/* <p className="text-md text-slate-800 font-normal">رقم التلفون: {customerData?.phone || "---"}</p> */}
+          <p className="text-2xl font-semibold text-gray-900">اسم التاجر: {customerData?.name || "---"}</p>
 
-          {/* الرصيد الافتتاحي */}
-          {/* {customerData?.openningBalance !== undefined && customerData?.openningBalance !== 0 && (
-            <p className="text-md text-slate-800 font-normal">
-              الرصيد الافتتاحي: <span className="font-normal">{formatAmount(customerData.openningBalance)}</span>
-            </p>
-          )} */}
-
-          {/* الرصيد الحالي */}
           {(() => {
             const currentBalance = customerData?.balance || 0;
             return (
               <p className="text-md text-slate-800">
-                <span className="font-normal">الرصيد الحالي: </span>
-                <span className="font-normal text-black">
+                <span className="font-semibold">الرصيد الحالي: </span>
+                <span className="font-semibold text-black">
                   {formatAmount(currentBalance)}
                 </span>
               </p>
@@ -560,14 +474,14 @@ const DeliveryStatement = () => {
 
         <table className="w-full border-collapse border-2 border-black text-right text-md">
           <thead>
-            <tr className="bg-gray-200 text-black font-normal text-center border-b-2 border-black">
+            <tr className="bg-gray-200 text-black font-semibold text-center border-b-2 border-black">
               <th className="border border-black p-2 w-32">التاريخ والوقت</th>
               <th className="border border-black p-2 w-28">رصيد السابق</th>
               <th className="border border-black p-2">بيان الحركة وتفاصيل الأصناف</th>
               <th className="border border-black p-2 w-36">تفاصيل الحساب</th>
               <th className="border border-black p-2 w-24">استلام دفعه </th>
-              <th className="border border-black p-2 w-28 font-normal bg-slate-100 text-black">المرحل</th>
-              <th className="border border-black p-2 w-28 font-normal bg-gray-300 text-black">الرصيد الجاري</th>
+              <th className="border border-black p-2 w-28 font-semibold bg-slate-100 text-black">المرحل</th>
+              <th className="border border-black p-2 w-28 font-semibold bg-gray-300 text-black">الرصيد الجاري</th>
             </tr>
           </thead>
           <tbody>
@@ -581,7 +495,7 @@ const DeliveryStatement = () => {
                 <React.Fragment key={i}>
                   <tr className={`border-t border-black align-top ${isDelivery ? 'bg-white' : 'bg-gray-50'}`}>
                     {!isOpening && (
-                      <td className="border border-black p-2 text-center font-normal text-black leading-relaxed">
+                      <td className="border border-black p-2 text-center font-semibold text-black leading-relaxed">
                         {new Date(op.date).toLocaleString("ar-EG", {
                           weekday: "short",
                           year: "numeric",
@@ -594,23 +508,23 @@ const DeliveryStatement = () => {
                       </td>
                     )}
                     {isOpening && (
-                      <td className="border border-black p-2 text-center font-normal text-black leading-relaxed">
+                      <td className="border border-black p-2 text-center font-semibold text-black leading-relaxed">
                         منذ البدايه
                       </td>
                     )}
 
-                    <td className="border border-black p-2 text-center font-normal text-black bg-gray-50/50">
+                    <td className="border border-black p-2 text-center font-semibold text-black bg-gray-50/50">
                       {isOpening ? "0 ج.م" : formatAmount(op.previousBalance)}
                     </td>
 
                     <td className="border border-black p-2">
-                      <div className="font-normal text-md text-slate-900 mb-1">{op.label}</div>
+                      <div className="font-semibold text-md text-slate-900 mb-1">{op.label}</div>
 
                       {isDelivery && op.details?.items && (
                         <div className="mt-1 w-full">
                           <table className="w-full text-right text-[12px] border border-gray-300 border-collapse">
                             <thead>
-                              <tr className="bg-gray-50 text-black font-normal border-b border-gray-300 text-center">
+                              <tr className="bg-gray-50 text-black font-semibold border-b border-gray-300 text-center">
                                 <th className="p-1 border-l border-gray-300 text-right">الصنف</th>
                                 <th className="p-1 border-l border-gray-300 text-center">الأوزان والكمية</th>
                                 <th className="p-1 border-l border-gray-300 text-center">السعر</th>
@@ -625,12 +539,12 @@ const DeliveryStatement = () => {
 
                                 return (
                                   <tr key={idx} className="border-b border-gray-100 last:border-0 hover:bg-gray-50/30">
-                                    <td className="p-2 font-normal text-black border-l border-gray-200">
+                                    <td className="p-2 font-semibold text-black border-l border-gray-200">
                                       {item.item?.name || "غير معروف"}
                                     </td>
                                     <td className="p-2 border-l border-gray-200 text-black text-center text-md">
                                       <div className="flex flex-col gap-0.5 text-right px-1">
-                                        <div className="flex justify-between border-t border-gray-200 pt-0.5 font-normal text-md">
+                                        <div className="flex justify-between border-t border-gray-200 pt-0.5 font-semibold text-md">
                                           <span>الوزن:</span>
                                           <span>{itemNetWeight.toLocaleString()} كجم</span>
                                         </div>
@@ -639,7 +553,7 @@ const DeliveryStatement = () => {
                                     <td className="p-2 text-center border-l border-gray-200 font-medium">
                                       {formatAmount(item.pricePerKg)}
                                     </td>
-                                    <td className="p-2 text-left font-normal text-black">
+                                    <td className="p-2 text-left font-semibold text-black">
                                       {formatAmount(item.totalPrice)}
                                     </td>
                                   </tr>
@@ -647,13 +561,11 @@ const DeliveryStatement = () => {
                               })}
                             </tbody>
                             <tfoot>
-                              <tr className="font-normal border-t-2 border-gray-400 bg-gray-50">
+                              <tr className="font-semibold border-t-2 border-gray-400 bg-gray-50">
                                 <td className="p-1 text-right"> </td>
-                           
-
                                 <td className="p-2 text-left text-md">
                                   <div className="flex flex-col gap-0.5 text-right px-1">
-                                    <div className="flex justify-between border-t border-gray-300 pt-0.5 font-normal">
+                                    <div className="flex justify-between border-t border-gray-300 pt-0.5 font-semibold">
                                       <span>الاجمالي</span>
                                       <span>{op.details.items?.reduce((sum, i) => sum + ((i.totalWeight || 0) - ((i.returnWeight || 0) + (i.oldReturnWeight || 0))), 0).toLocaleString()} كجم</span>
                                     </div>
@@ -667,19 +579,14 @@ const DeliveryStatement = () => {
                             </tfoot>
                           </table>
 
-                          <div className=" font-normal text-[12px] gap-1.5">
-                            {/* <div className="flex justify-between items-center text-black">
-                              <span>إجمالي البضاعة:</span>
-                              <span className="text-slate-900">{formatAmount(op.grossAmount || 0)}</span>
-                            </div> */}
-
+                          <div className=" font-semibold text-[12px] gap-1.5">
                             {isDelivery && op.tea > 0 && (
                               <div className="text-slate-900 border-t border-dashed border-gray-300 pt-1.5 flex flex-col gap-1 text-[13px]">
                                 <div className="flex justify-between">
                                   <span>شاي العمال:</span>
                                   <span>{formatAmount(op.tea)}</span>
                                 </div>
-                                <div className="flex justify-between font-normal text-[12px] bg-white p-1.5 rounded border border-gray-200">
+                                <div className="flex justify-between font-semibold text-[12px] bg-white p-1.5 rounded border border-gray-200">
                                   <span>صافي السعر النهائي:</span>
                                   <span>{formatAmount(op.grossAmount - op.tea)}</span>
                                 </div>
@@ -689,70 +596,58 @@ const DeliveryStatement = () => {
                         </div>
                       )}
 
-{isPay && op.paymentDetails && (
-  <div className="mt-2 text-sm text-center leading-relaxed">
-    {(() => {
-      const paymentDisplay = getPaymentDisplay(
-        op.paymentDetails,
-        "receive"
-      );
+                      {isPay && op.paymentDetails && (
+                        <div className="mt-2 text-sm text-center leading-relaxed">
+                          {(() => {
+                            const paymentDisplay = getPaymentDisplay(op.paymentDetails, "receive");
+                            return (
+                              <div>
+                                <div className="font-semibold text-md">
+                                  {paymentDisplay.title} - {paymentDisplay.methodName}: {formatAmount(op.amount)}
+                                </div>
+                                {paymentDisplay.details && (
+                                  <div className="text-sm font-semibold mt-0.5">
+                                    {paymentDisplay.details}
+                                  </div>
+                                )}
+                                {op.note && (
+                                  <div className="text-xs text-gray-600 mt-1">
+                                    {op.note}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })()}
+                        </div>
+                      )}
 
-      return (
-        <div>
-          <div className="font-normal text-md">
-            {paymentDisplay.title} - {paymentDisplay.methodName}
-          </div>
-
-          {paymentDisplay.details && (
-            <div className="text-sm font-normal mt-0.5">
-              {paymentDisplay.details}
-            </div>
-          )}
-
-          {op.note && (
-            <div className="text-xs text-gray-600 mt-1">
-              {op.note}
-            </div>
-          )}
-        </div>
-      );
-    })()}
-  </div>
-)}
-
-{isDebt && (
-  <div className="mt-2 text-sm text-center leading-relaxed">
-    {(() => {
-      const paymentDisplay = getPaymentDisplay(
-        op.paymentDetails || op,
-        "send"
-      );
-
-      return (
-        <div>
-          <div className="font-normal text-md">
-            {paymentDisplay.title} - {paymentDisplay.methodName}
-          </div>
-
-          {paymentDisplay.details && (
-            <div className="text-sm font-normal mt-0.5">
-              {paymentDisplay.details}
-            </div>
-          )}
-
-          {op.note && (
-            <div className="text-xs text-gray-600 mt-1">
-              {op.note}
-            </div>
-          )}
-        </div>
-      );
-    })()}
-  </div>
-)}
+                      {isDebt && (
+                        <div className="mt-2 text-sm text-center leading-relaxed">
+                          {(() => {
+                            const paymentDisplay = getPaymentDisplay(op.paymentDetails || op, "send");
+                            return (
+                              <div>
+                                <div className="font-semibold text-md">
+                                  {paymentDisplay.title} - {paymentDisplay.methodName}: {formatAmount(op.amount)}
+                                </div>
+                                {paymentDisplay.details && (
+                                  <div className="text-sm font-semibold mt-0.5">
+                                    {paymentDisplay.details}
+                                  </div>
+                                )}
+                                {op.note && (
+                                  <div className="text-xs text-gray-600 mt-1">
+                                    {op.note}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })()}
+                        </div>
+                      )}
 
                       {isOpening && (
-                        <div className="mt-2 text-sm text-700 font-normal">
+                        <div className="mt-2 text-sm text-700 font-semibold">
                           {op.note || "رصيد أول المدة"}
                         </div>
                       )}
@@ -761,156 +656,129 @@ const DeliveryStatement = () => {
                     <td className="border border-black p-2 text-right text-md bg-50/5 pt-3">
                       {(isDelivery || isDebt || isOpening || isPay) ? (
                         <div className="space-y-1 text-right">
-                          <div className="text-[12px] font-normal text-black">
+                          <div className="text-[12px] font-semibold text-black">
                             {isDelivery && <b>رصيد السابق: </b>}
                             {isDelivery && formatAmount(op.previousBalance)}
                           </div>
-                          <div className="text-[12px] font-normal text-black">
+                          <div className="text-[12px] font-semibold text-black">
                             {isDelivery && (
                               <><b>قيمه النقله: </b>{formatAmount(op.currentInvoiceAmount)}</>
                             )}
-                            {/* {isDebt && (
-                              <><b>المديوينه الحاليه </b>{formatAmount(op.debtAdded)}</>
-                            )}
-                            {isPay && (
-                              <><b>المديوينه الحاليه </b>{formatAmount(-op.paymentReceived)}</>
-                            )}
-                            {isOpening && (
-                              <><b>رصيد السابق: </b>{formatAmount(op.currentInvoiceAmount)}</>
-                            )} */}
                           </div>
-                          {/* <div className="text-[12px] font-normal text-slate-800 border-t border-dashed pt-1 mt-1">
-                            <b>{isOpening ? "الرصيد بعد الإضافة" : "الاجمالي النهائي"}: </b> 
-                            {formatAmount(isOpening ? op.currentInvoiceAmount : isDelivery ? (op.previousBalance + op.currentInvoiceAmount) : op.previousBalance + (op.debtAdded || 0) - (op.paymentReceived || 0))}
-                          </div> */}
-                {isOpening  &&
-                         <div className="text-[12px] font-normal text-slate-800 border-t border-dashed pt-1 mt-1">
-                            <b>{ "الرصيد بعد الإضافة" }: </b> 
-                            {formatAmount(op.currentInvoiceAmount )}
-                              
-                            
-                          </div>}
+                          {isOpening &&
+                            <div className="text-[12px] font-semibold text-slate-800 border-t border-dashed pt-1 mt-1">
+                              <b>{"الرصيد بعد الإضافة"}: </b>
+                              {formatAmount(op.currentInvoiceAmount)}
+                            </div>}
 
-                          {isDelivery  &&
-                         <div className="text-[12px] font-normal text-slate-800 border-t border-dashed pt-1 mt-1">
-                            <b>{ "الاجمالي النهائي" }: </b> 
-                                                      
-                            {formatAmount  (op.previousBalance + op.currentInvoiceAmount) }
-                              
-                            
-                          </div>}
+                          {isDelivery &&
+                            <div className="text-[12px] font-semibold text-slate-800 border-t border-dashed pt-1 mt-1">
+                              <b>{"الاجمالي "}: </b>
+                              {formatAmount(op.previousBalance + op.currentInvoiceAmount)}
+                            </div>}
 
-                                                    {!isDelivery && !isOpening  &&
-                         <div className="text-[12px] font-normal text-slate-800 border-t border-dashed pt-1 mt-1 text-center">
-                                   ----
-                          </div>}
-
-
-
-
-                          {/* "الاجمالي النهائي" */}
+                          {!isDelivery && !isOpening &&
+                            <div className="text-[12px] font-semibold text-slate-800 border-t border-dashed pt-1 mt-1 text-center">
+                              ----
+                            </div>}
                         </div>
                       ) : "-"}
                     </td>
 
-                    <td className="border border-black p-2 text-center font-normal text-slate-700 text-md bg-slate-50/5 pt-3">
-                      {isDelivery && (
-                        <div className="flex flex-col items-center gap-1">
-                          <span className="font-normal text-md">
-                            {formatAmount(op.deliveryPayments.reduce((acc, curr) => acc + curr.amount, 0))}
-                          </span>
-                          <div className="w-full border-t border-gray-200 mt-1 pt-1 space-y-0.5">
-                  {op.deliveryPayments.map((p, idx) => {
-  const paymentDisplay = getPaymentDisplay(p, "receive");
+                    <td className="border border-black p-2 text-center font-semibold text-slate-700 text-md bg-slate-50/5 pt-3">
 
-  return (
-    <div
-      key={`pay-${idx}`}
-      className="text-[13px] text-slate-700 block text-center py-1"
-    >
-      <div className="font-normal">
-        {paymentDisplay.title} - {paymentDisplay.methodName}
-      </div>
+                      {/* نقلة - عرض كل وسيلة دفع ومبلغها بدون تكرار */}
+                      {isDelivery && (() => {
+                        const totalDeliveryPayment = (op.deliveryPayments || []).reduce(
+                          (acc, curr) => acc + (Number(curr.amount) || 0), 0
+                        );
+                        const totalDeliveryPaymentMethods = (op.deliveryPaymentMethods || []).reduce(
+                          (acc, curr) => acc + (Number(curr.paidAmount) || 0), 0
+                        );
 
-      {paymentDisplay.details && (
-        <div className="text-[12px]">
-          {paymentDisplay.details}
-        </div>
-      )}
-    </div>
-  );
-})}
-                            {op.deliveryPaymentMethods && op.deliveryPaymentMethods.length > 0 && op.deliveryPayments?.length === 0 && (
-                              <>
-{op.deliveryPaymentMethods.map((p, idx) => {
-  const paymentDisplay = getPaymentDisplay(p, "receive");
+                        // نفضّل مصدر المدفوعات التفصيلي (فيه تفاصيل شيك/محفظة/بنك) لو موجود ومبلغه أكبر من صفر
+                        const useDetailed = totalDeliveryPayment > 0;
+                        const totalPayment = useDetailed ? totalDeliveryPayment : totalDeliveryPaymentMethods;
 
-  return (
-    <div
-      key={`del-${idx}`}
-      className="text-[13px] text-slate-700 block text-center py-1"
-    >
-      <div className="font-normal">
-        {paymentDisplay.title} - {paymentDisplay.methodName}
-      </div>
+                        if (totalPayment === 0) return null;
 
-      {paymentDisplay.details && (
-        <div className="text-[12px]">
-          {paymentDisplay.details}
-        </div>
-      )}
-    </div>
-  );
-})}
-                              </>
+                        const rows = useDetailed
+                          ? (op.deliveryPayments || []).filter(p => Number(p.amount))
+                          : (op.deliveryPaymentMethods || []).filter(p => Number(p.paidAmount));
+
+                        return (
+                          <div className="flex flex-col items-center gap-1">
+                            <span className="font-semibold text-md">
+                              {formatAmount(totalPayment)}
+                            </span>
+
+                            <div className="w-full border-t border-gray-200 mt-1 pt-1 space-y-1">
+                              {rows.map((p, idx) => {
+                                const amount = useDetailed ? p.amount : p.paidAmount;
+                                const paymentDisplay = getPaymentDisplay(p, "receive");
+
+                                return (
+                                  <div
+                                    key={`${useDetailed ? "pay" : "del"}-${idx}`}
+                                    className="text-[13px] text-slate-700 text-center py-1"
+                                  >
+                                    <div className="font-semibold">
+                                      {paymentDisplay.methodName}: {formatAmount(amount)}
+                                    </div>
+                                    {paymentDisplay.details && (
+                                      <div className="text-[12px]">
+                                        {paymentDisplay.details}
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+
+                            {op.tea > 0 && (
+                              <span className="text-[13px] block border-t border-dashed border-gray-200 w-full pt-0.5 mt-0.5">
+                                شاي: {formatAmount(op.tea)}
+                              </span>
                             )}
                           </div>
-                          
-                          {op.tea > 0 && (
-                            <span className="text-[13px] block border-t border-dashed border-gray-200 w-full pt-0.5 mt-0.5">
-                              شاي: {formatAmount(op.tea)}
-                            </span>
-                          )}
-                        </div>
-                      )}
+                        );
+                      })()}
 
-                      {isPay && (
+                      {/* استلام فلوس */}
+                      {isPay && Number(op.amount) !== 0 && (
                         <div className="flex flex-col items-center gap-0.5">
-                          <span className="font-normal text-md text-700">{formatAmount(-op.amount)}</span>
-                          {/* <span className="text-[13px] font-normal block"> (استلام فلوس)</span> */}
-                          {op.paymentMethod && (
-                            <span className="text-[13px] text-slate-700 font-normal block">
-                              {translatePaymentMethod(op.paymentMethod)}
-                            </span>
-                          )}
+                          <span className="font-semibold text-md text-700">
+                            {translatePaymentMethod(op.paymentMethod)}: {formatAmount(-op.amount)}
+                          </span>
                         </div>
                       )}
 
-                      { isDebt&& (
+                      {/* سداد للتاجر */}
+                      {isDebt && Number(op.amount) !== 0 && (
                         <div className="flex flex-col items-center gap-0.5">
-                          <span className="font-normal text-md text-700">{formatAmount(op.amount)}</span>
-                          {/* <span className="text-[13px] font-normal block">(سداد للتاجر)</span> */}
-                          {op.paymentMethod && (
-                            <span className="text-[13px] text-slate-700 font-normal block">
-                              {translatePaymentMethod(op.paymentMethod)}
-                            </span>
-                          )}
+                          <span className="font-semibold text-md text-700">
+                            {translatePaymentMethod(op.paymentMethod)}: {formatAmount(op.amount)}
+                          </span>
                         </div>
                       )}
 
-                      {isOpening && (
+                      {/* الرصيد الافتتاحي */}
+                      {isOpening && Number(op.amount) !== 0 && (
                         <div className="flex flex-col items-center gap-0.5">
-                          <span className="font-normal text-md text-700">{formatAmount(op.amount)}</span>
-                          <span className="text-[13px] font-normal block">(رصيد افتتاحي)</span>
+                          <span className="font-semibold text-md text-700">
+                            {formatAmount(op.amount)}
+                          </span>
+                          <span className="text-[13px] font-semibold block">
+                            (رصيد افتتاحي)
+                          </span>
                         </div>
                       )}
 
-                      {!isDelivery && !isPay && !isDebt && !isOpening && "-"}
                     </td>
 
-                    <td className="border border-black p-2 text-left font-normal bg-slate-50 text-md pl-2 pt-3">
+                    <td className="border border-black p-2 text-left font-semibold bg-slate-50 text-md pl-2 pt-3">
                       {(() => {
-                        const diff = (op.debtAdded || 0) - (op.paymentReceived || 0) ;
+                        const diff = (op.debtAdded || 0) - (op.paymentReceived || 0);
                         return (
                           <span className="text-black">
                             {formatAmount(diff)}
@@ -919,7 +787,7 @@ const DeliveryStatement = () => {
                       })()}
                     </td>
 
-                    <td className="border border-black p-2 text-left font-normal bg-gray-200 text-md pl-2 text-black pt-3">
+                    <td className="border border-black p-2 text-left font-semibold bg-gray-200 text-md pl-2 text-black pt-3">
                       {formatAmount(op.balance)}
                     </td>
                   </tr>
@@ -929,172 +797,75 @@ const DeliveryStatement = () => {
           </tbody>
         </table>
 
-        {/* <div className="mt-10 flex justify-end">
-          <div className="border-4 border-black min-w-[400px]">
-            <div className="bg-black text-white p-3 text-center font-normal">
-              ملخص كشف الحساب
-            </div>
-            <div className="p-4 space-y-3">
-              <div className="flex justify-between border-b pb-2">
-                <span className="font-normal">رصيد السابق</span>
-                <span className="font-normal text-700">
-                  {formatAmount(totals.openingBalance)}
-                </span>
-              </div>
+        {(() => {
+          const openingBalance = totals.openingBalance || 0;
+          const debts = totals.totalDebts || 0;
 
-              <div className="flex justify-between border-b pb-2">
-                <span className="font-normal">إجمالي قيمة النقلات (مشتريات التاجر)</span>
-                <span className="font-normal text-700">
-                  {formatAmount(+totals.totalDeliveries)}
-                </span>
-              </div>
+          const totalDebt = openingBalance > 0 ? openingBalance + debts : debts;
+          const totalPayment = openingBalance < 0 ? Math.abs(openingBalance) : 0;
 
-              <div className="flex justify-between border-b pb-2">
-                <span className="font-normal">اجمالي ما تم استلامه من حساب النقله</span>
-                <span className="font-normal text-700">
-                  {formatAmount(-totals?.totalDeliveryPayment)}
-                </span>
-              </div>
+          const totalReceived = (totals.totalDeliveryPayment || 0) + (totals.totalPayments || 0);
 
-              <div className="flex justify-between border-b pb-2">
-                <span className="font-normal">استلام فلوس </span>
-                <span className="font-normal text-700">
-                  {formatAmount(-totals.totalPayments)}
-                </span>
-              </div>
+          const finalBalance =
+            openingBalance +
+            (totals.totalDeliveries || 0) +
+            debts -
+            totalReceived -
+            (totals.totalTea || 0);
 
-              <div className="flex justify-between border-b pb-2">
-                <span className="font-normal">سداد للتاجر</span>
-                <span className="font-normal text-700">
-                  {formatAmount(+totals.totalDebts)}
-                </span>
-              </div>
+          return (
+            <div className="mt-10 flex justify-end">
+              <div className="border-4 border-black min-w-[400px]">
 
-              {totals.totalTea > 0 && (
-                <div className="flex justify-between border-b pb-2">
-                  <span className="font-normal">إجمالي الشاي</span>
-                  <span className="font-normal text-700">
-                    {formatAmount(-totals.totalTea)}
-                  </span>
+                <div className="bg-black text-white p-3 text-center font-semibold">
+                  ملخص كشف الحساب
                 </div>
-              )}
 
-              {(() => {
-                const finalBalance =
-                  sequentialLedger.length > 0
-                    ? sequentialLedger[sequentialLedger.length - 1]?.balance || 0
-                    : customerData?.openningBalance || 0;
+                <div className="p-4 space-y-3">
 
-                return (
-                  <div className="flex justify-between items-center text-xl pt-2 border-t-2 border-black">
-                    <span className="font-normal">
-                      الرصيد النهائي:
+                  <div className="flex justify-between border-b pb-2">
+                    <span className="font-semibold">
+                      إجمالي قيمة النقلات
                     </span>
-                    <span className="font-normal text-black">
+                    <span className="font-semibold">
+                      {formatAmount(totals.totalDeliveries)}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between border-b pb-2">
+                    <span className="font-semibold">
+                      إجمالي الفلوس المستلمة
+                    </span>
+                    <span className="font-semibold">
+                      {formatAmount(-totalReceived)}
+                    </span>
+                  </div>
+
+                  {(totalDebt > 0 || totalPayment > 0) && (
+                    <div className="flex justify-between border-b pb-2">
+                      <span className="font-semibold">
+                        {openingBalance < 0 ? "إجمالي السداد" : "إجمالي المديونية"}
+                      </span>
+                      <span className="font-semibold">
+                        {formatAmount(openingBalance < 0 ? -totalPayment : totalDebt)}
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="flex justify-between items-center text-xl pt-3 border-t-2 border-black">
+                    <span className="font-semibold">
+                      المتبقي النهائي
+                    </span>
+                    <span className="font-semibold text-black">
                       {formatAmount(finalBalance)}
                     </span>
                   </div>
-                );
-              })()} 
+
+                </div>
+              </div>
             </div>
-          </div>
-        </div> */}
-{(() => {
-  const openingBalance = totals.openingBalance || 0;
-  const debts = totals.totalDebts || 0;
-
-  // المديونية:
-  // لو الرصيد الافتتاحي موجب نضيف له المديونيات
-  const totalDebt =
-    openingBalance > 0
-      ? openingBalance + debts
-      : debts;
-
-  // السداد:
-  // لو الرصيد الافتتاحي سالب نضيف قيمته المطلقة إلى السداد
-  const totalPayment =
-    openingBalance < 0
-      ? Math.abs(openingBalance)
-      : 0;
-
-  const totalReceived =
-    (totals.totalDeliveryPayment || 0) +
-    (totals.totalPayments || 0);
-
-  const finalBalance =
-    openingBalance +
-    (totals.totalDeliveries || 0) +
-    debts -
-    totalReceived -
-    (totals.totalTea || 0);
-
-  return (
-    <div className="mt-10 flex justify-end">
-      <div className="border-4 border-black min-w-[400px]">
-
-        <div className="bg-black text-white p-3 text-center font-normal">
-          ملخص كشف الحساب
-        </div>
-
-        <div className="p-4 space-y-3">
-
-          {/* إجمالي قيمة النقلات */}
-          <div className="flex justify-between border-b pb-2">
-            <span className="font-normal">
-              إجمالي قيمة النقلات
-            </span>
-
-            <span className="font-normal">
-              {formatAmount(totals.totalDeliveries)}
-            </span>
-          </div>
-
-          {/* إجمالي الفلوس المستلمة */}
-          <div className="flex justify-between border-b pb-2">
-            <span className="font-normal">
-              إجمالي الفلوس المستلمة
-            </span>
-
-            <span className="font-normal">
-              {formatAmount(-totalReceived)}
-            </span>
-          </div>
-
-          {/* المديونية / السداد */}
-          {(totalDebt > 0 || totalPayment > 0) && (
-            <div className="flex justify-between border-b pb-2">
-              <span className="font-normal">
-                {openingBalance < 0
-                  ? "إجمالي السداد"
-                  : "إجمالي المديونية"}
-              </span>
-
-              <span className="font-normal">
-                {formatAmount(
-                  openingBalance < 0
-                    ? -totalPayment
-                    : totalDebt
-                )}
-              </span>
-            </div>
-          )}
-
-          {/* المتبقي النهائي */}
-          <div className="flex justify-between items-center text-xl pt-3 border-t-2 border-black">
-            <span className="font-normal">
-              المتبقي النهائي
-            </span>
-
-            <span className="font-normal text-black">
-              {formatAmount(finalBalance)}
-            </span>
-          </div>
-
-        </div>
-      </div>
-    </div>
-  );
-})()}
+          );
+        })()}
       </div>
 
       <style>{`

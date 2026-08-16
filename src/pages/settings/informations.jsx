@@ -385,6 +385,7 @@ const SettingsPage = () => {
                     className="w-full px-3 py-2 border border-brown/30 rounded-lg focus:outline-none text-dark bg-white"
                   >
                     <option value="Cairo">Cairo (مقروء ورسمي)</option>
+                                        <option value="Tahoma">Tahoma ( المنسق)</option>
                     <option value="Tajawal">Tajawal (عصري ومبسط)</option>
                     <option value="Almarai">Almarai (مريح للعين)</option>
                     <option value="Alexandria">Alexandria (حديث وأنيق)</option>
