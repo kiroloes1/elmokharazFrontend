@@ -112,7 +112,7 @@ const Dashboard = () => {
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-4">
         <div>
           <h1 className="text-3xl font-black text-dark">لوحة التحكم</h1>
-          <p className="text-gray-500 font-bold">{greeting}</p>
+          <p className="text-gray-500 font-bold">مساء الخير، عاطف عطية 💡 نتمنى لك يوم عمل موفق</p>
         </div>
 
         <div className="flex flex-wrap gap-3 bg-white p-3 rounded-xl shadow-sm border border-[#E0E7D0] w-full lg:w-auto">

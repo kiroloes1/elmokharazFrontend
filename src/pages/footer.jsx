@@ -56,7 +56,7 @@ function Footer() {
               </div>
               <div className="min-w-0">
                 <p className="text-[10px] font-bold text-ligth/40 uppercase mb-1">المدير العام</p>
-                <span className="text-ligth text-sm font-bold block truncate">عزوز عطية</span>
+                <span className="text-ligth text-sm font-bold block truncate">عاطف عطيه</span>
               </div>
             </div>
           </div>
@@ -70,7 +70,7 @@ function Footer() {
               <div className="min-w-0">
                 <p className="text-[10px] font-bold text-ligth/40 uppercase mb-1">رقم التواصل</p>
                 <a href="tel:01221906548" className="text-ligth text-sm font-bold block tracking-wider hover:text-brown transition-colors">
-                  01221906548
+                  01221844356
                 </a>
               </div>
             </div>

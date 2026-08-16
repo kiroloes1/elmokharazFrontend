@@ -430,12 +430,25 @@ const CustomerBalanceAutocomplete = () => {
               <label className="text-[11px] font-black text-slate-500 block mb-1">
                 <Building size={12} className="inline ml-1" /> اسم البنك / المنصة
               </label>
-              <input 
+              {/* <input 
                 type="text" 
                 className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm font-bold focus:border-brown -500 outline-none"
                 placeholder={method === "instapay" ? "إنستا باي" : "اسم البنك"}
                 value={paymentData.bankInfo?.bankName || ""} 
                 onChange={(e) => handlePaymentChange("bankInfo", e.target.value, "bankName")} 
+              /> */}
+
+                            <BankAutocomplete
+                value={paymentData.bankInfo?.bankName || ""}
+                placeholder="اكتب اسم البنك..."
+                onChange={(value) =>
+                  handlePaymentChange(
+                    
+                    "bankInfo",
+                    value,
+                    "bankName"
+                  )
+                }
               />
             </div>
             <div className="text-right">
@@ -1018,11 +1031,11 @@ const CustomerBalanceAutocomplete = () => {
                       <div key={idx} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
                         <div className="flex items-center gap-3">
                           <div className={`p-2 rounded-lg ${
-                            t.module === "debt" 
+                            t.module !== "debt" 
                               ? "bg-red-50 text-red-500" 
                               : "bg-green-50 text-green-600"
                           }`}>
-                            {t.module === "debt" ? <ArrowUpRight size={16} /> : <ArrowDownLeft size={16} />}
+                            {t.module !== "debt" ? <ArrowUpRight size={16} /> : <ArrowDownLeft size={16} />}
                           </div>
                           <div>
                             <p className="text-lg font-black text-dark">{t.amount?.toLocaleString()} ج.م</p>
@@ -1043,9 +1056,9 @@ const CustomerBalanceAutocomplete = () => {
                             })}
                           </p>
                           <p className={`text-md font-black ${
-                            t.module === 'debt' ? 'text-red-400' : 'text-green-500'
+                            t.module !== 'debt' ? 'text-red-400' : 'text-green-500'
                           }`}>
-                            {t.module === "debt" ? "سداد للتاجر" : "استلام مبلغ"}
+                            {t.module !== "debt" ? "سداد للتاجر" : "استلام مبلغ"}
                           </p>
                         </div>
                       </div>

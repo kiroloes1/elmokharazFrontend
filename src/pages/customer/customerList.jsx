@@ -312,7 +312,7 @@ const CustomerList = () => {
               </label>
               <input 
                 type="text" 
-                className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm font-bold focus:border-orange-500 outline-none"
+                className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm font-semibold focus:border-orange-500 outline-none"
                 placeholder="رقم الشيك"
                 value={editData.cheque?.chequeNumber || ""} 
                 onChange={(e) => setEditData({ 
@@ -327,7 +327,7 @@ const CustomerList = () => {
               </label>
               <input 
                 type="text" 
-                className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm font-bold focus:border-orange-500 outline-none"
+                className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm font-semibold focus:border-orange-500 outline-none"
                 placeholder="اسم البنك"
                 value={editData.cheque?.bankName || ""} 
                 onChange={(e) => setEditData({ 
@@ -344,7 +344,7 @@ const CustomerList = () => {
               </label>
               <input 
                 type="date" 
-                className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm font-bold focus:border-orange-500 outline-none"
+                className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm font-semibold focus:border-orange-500 outline-none"
                 value={editData.cheque?.receiveDate || ""} 
                 onChange={(e) => setEditData({ 
                   ...editData, 
@@ -358,7 +358,7 @@ const CustomerList = () => {
               </label>
               <input 
                 type="date" 
-                className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm font-bold focus:border-orange-500 outline-none"
+                className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm font-semibold focus:border-orange-500 outline-none"
                 value={editData.cheque?.dueDate || ""} 
                 onChange={(e) => setEditData({ 
                   ...editData, 
@@ -371,7 +371,7 @@ const CustomerList = () => {
             <div className="text-right">
               <label className="text-[11px] font-black text-slate-500 block mb-1">نوع الشيك</label>
               <select
-                className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm font-bold focus:border-orange-500 outline-none"
+                className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm font-semibold focus:border-orange-500 outline-none"
                 value={editData.cheque?.chequeType || "normal"}
                 onChange={(e) => setEditData({ 
                   ...editData, 
@@ -385,7 +385,7 @@ const CustomerList = () => {
             <div className="text-right">
               <label className="text-[11px] font-black text-slate-500 block mb-1">حالة الشيك</label>
               <select
-                className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm font-bold focus:border-orange-500 outline-none"
+                className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm font-semibold focus:border-orange-500 outline-none"
                 value={editData.cheque?.status || "under_collection"}
                 onChange={(e) => setEditData({ 
                   ...editData, 
@@ -414,7 +414,7 @@ const CustomerList = () => {
               </label>
               <input 
                 type="text" 
-                className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm font-bold focus:border-orange-500 outline-none"
+                className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm font-semibold focus:border-orange-500 outline-none"
                 placeholder={method === "instapay" ? "إنستا باي" : "اسم البنك"}
                 value={editData.bankInfo?.bankName || ""} 
                 onChange={(e) => setEditData({ 
@@ -429,7 +429,7 @@ const CustomerList = () => {
               </label>
               <input 
                 type="text" 
-                className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm font-bold focus:border-orange-500 outline-none"
+                className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm font-semibold focus:border-orange-500 outline-none"
                 placeholder="رقم التحويل أو العملية"
                 value={editData.bankInfo?.transactionReference || ""} 
                 onChange={(e) => setEditData({ 
@@ -457,7 +457,7 @@ const CustomerList = () => {
               })}
               className="w-4 h-4 text-orange-500 rounded focus:ring-orange-500"
             />
-            <label htmlFor="linkWallet" className="text-sm font-bold text-dark">
+            <label htmlFor="linkWallet" className="text-sm font-semibold text-dark">
               <Link size={14} className="inline ml-1" /> ربط العملية بنظام المحافظ
             </label>
           </div> */}
@@ -467,7 +467,7 @@ const CustomerList = () => {
               <label className="text-[11px] font-black text-slate-500 block mb-1">رقم الراسل</label>
               <input
                 type="text"
-                className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm font-bold focus:border-orange-500 outline-none"
+                className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm font-semibold focus:border-orange-500 outline-none"
                 placeholder="رقم هاتف الراسل"
                 value={editData.walletInfo?.senderPhone || ""}
                 onChange={(e) => setEditData({ 
@@ -480,7 +480,7 @@ const CustomerList = () => {
               <label className="text-[11px] font-black text-slate-500 block mb-1">اسم الراسل</label>
               <input
                 type="text"
-                className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm font-bold focus:border-orange-500 outline-none"
+                className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm font-semibold focus:border-orange-500 outline-none"
                 placeholder="اسم الراسل"
                 value={editData.walletInfo?.senderName || ""}
                 onChange={(e) => setEditData({ 
@@ -497,7 +497,7 @@ const CustomerList = () => {
                 <label className="text-[11px] font-black text-slate-500 block mb-1">رقم المستلم</label>
                 <input
                   type="text"
-                  className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm font-bold focus:border-orange-500 outline-none"
+                  className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm font-semibold focus:border-orange-500 outline-none"
                   placeholder="رقم هاتف المستلم"
                   value={editData.walletInfo?.receiverPhone || ""}
                   onChange={(e) => setEditData({ 
@@ -510,7 +510,7 @@ const CustomerList = () => {
                 <label className="text-[11px] font-black text-slate-500 block mb-1">اسم المستلم</label>
                 <input
                   type="text"
-                  className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm font-bold focus:border-orange-500 outline-none"
+                  className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm font-semibold focus:border-orange-500 outline-none"
                   placeholder="اسم المستلم"
                   value={editData.walletInfo?.receiverName || ""}
                   onChange={(e) => setEditData({ 
@@ -527,7 +527,7 @@ const CustomerList = () => {
               <label className="text-[11px] font-black text-slate-500 block mb-1">المحفظة المستلمة</label>
               <input
                 type="text"
-                className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm font-bold focus:border-orange-500 outline-none"
+                className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm font-semibold focus:border-orange-500 outline-none"
                 placeholder="ابحث بالاسم أو رقم المحفظة..."
                 value={walletSearch}
                 onFocus={() => setShowWalletList(true)}
@@ -579,7 +579,7 @@ const CustomerList = () => {
                 <input
                   readOnly
                   value={editData.walletInfo.receiverName || ""}
-                  className="w-full p-2 bg-slate-50 rounded-lg text-sm font-bold border border-slate-100"
+                  className="w-full p-2 bg-slate-50 rounded-lg text-sm font-semibold border border-slate-100"
                 />
               </div>
               <div className="text-right">
@@ -587,7 +587,7 @@ const CustomerList = () => {
                 <input
                   readOnly
                   value={editData.walletInfo.receiverPhone || ""}
-                  className="w-full p-2 bg-slate-50 rounded-lg text-sm font-bold border border-slate-100"
+                  className="w-full p-2 bg-slate-50 rounded-lg text-sm font-semibold border border-slate-100"
                 />
               </div>
               <div className="text-right">
@@ -595,7 +595,7 @@ const CustomerList = () => {
                 <input
                   readOnly
                   value={editData.walletInfo.provider || ""}
-                  className="w-full p-2 bg-slate-50 rounded-lg text-sm font-bold border border-slate-100"
+                  className="w-full p-2 bg-slate-50 rounded-lg text-sm font-semibold border border-slate-100"
                 />
               </div>
             </div>
@@ -614,7 +614,7 @@ const CustomerList = () => {
     const badges = {
       debt: { label:"استلام من تاجر", color: "bg-emerald-50 text-emerald-600" },
       delivery: { label: "نقلة بضاعة", color: "bg-blue-50 text-blue-600" },
-      pay: { label: "تقليل مديونية", color: "bg-red-50 text-red-600" },
+      pay: { label: "زياده مديونية", color: "bg-red-50 text-red-600" },
 
     };
 
@@ -667,13 +667,13 @@ const CustomerList = () => {
               }`}
             >
               <div className="flex items-center gap-3">
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold ${
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-semibold ${
                   selectedSupplier?._id === s._id ? "bg-dark -500 text-white" : "bg-slate-100 text-slate-500"
                 }`}>
                   {i + 1}
                 </div>
                 <div>
-                  <h4 className="font-bold text-dark text-lg">{s.name}</h4>
+                  <h4 className="font-semibold text-dark text-lg">{s.name}</h4>
                 </div>
               </div>
               <div className="text-left">
@@ -704,66 +704,134 @@ const CustomerList = () => {
 
               <div className="relative flex flex-col md:flex-row justify-between items-start gap-6">
                 <div>
-                  <h2 className="text-3xl font-black text-dark">{selectedSupplier.name}</h2>
+                  <h2 className="text-2xl font-black text-dark">{selectedSupplier.name}</h2>
                   <div className="flex flex-wrap gap-x-6 gap-y-2 mt-3">
-                    <span className="flex items-center gap-2 text-slate-500 font-bold text-sm">
+                    <span className="flex items-center gap-2 text-slate-500 font-semibold text-sm">
                       <Phone size={16} className="text-dark -500" /> {selectedSupplier.phone || "---"}
                     </span>
-                    <span className="flex items-center gap-2 text-slate-500 font-bold text-sm">
+                    <span className="flex items-center gap-2 text-slate-500 font-semibold text-sm">
                       <Calendar size={16} className="text-dark -500" /> انضم {new Date(selectedSupplier.createdAt || Date.now()).toLocaleDateString('ar-EG')}
                     </span>
                     {selectedSupplier.notes && (
-                      <span className="flex items-center gap-2 text-slate-500 font-bold text-sm">
+                      <span className="flex items-center gap-2 text-slate-500 font-semibold text-sm">
                         <span className="text-dark -500">●</span> ملاحظات: {selectedSupplier.notes}
                       </span>
                     )}
                   </div>
                 </div>
+<div className="w-full md:w-auto flex flex-col gap-3">
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4  w-full md:w-auto justify-end">
-                  <button
-                    onClick={() => navigate(`/customer/SupplierPrintManager/${selectedSupplier?._id}`)}
-                    className="flex items-center gap-2 px-4 py-3 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-600 hover:text-white transition-all font-bold text-sm"
-                  >
-                    <Printer size={18} /> كشف حساب
-                  </button>
-{/* 
-                                    <button
-                    onClick={() => navigate(`/customer/CustomerAccountSummary/${selectedSupplier?._id}`)}
-                    className="flex items-center gap-2 px-4 py-3 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-600 hover:text-white transition-all font-bold text-sm"
-                  >
-                    <Printer size={18} /> ملخص الحساب
-                  </button> */}
+  {/* أزرار التقارير */}
+  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
+
+    <button
+      onClick={() =>
+        navigate(`/customer/printSupplierDetails/${selectedSupplier?._id}`)
+      }
+      className="
+        flex items-center justify-center gap-2
+        px-5 py-3
+        bg-emerald-50 text-emerald-600
+        border border-emerald-100
+        rounded-xl
+        hover:bg-emerald-600 hover:text-white
+        transition-all duration-200
+        font-semibold text-sm
+        shadow-sm
+      "
+    >
+      <Printer size={18} />
+      <span>كشف حساب</span>
+    </button>
+
+    <button
+      onClick={() =>
+        navigate(`/customer/CustomerPaymentsPrintPage/${selectedSupplier?._id}`)
+      }
+      className="
+        flex items-center justify-center gap-2
+        px-5 py-3
+        bg-emerald-50 text-emerald-600
+        border border-emerald-100
+        rounded-xl
+        hover:bg-emerald-600 hover:text-white
+        transition-all duration-200
+        font-semibold text-sm
+        shadow-sm
+      "
+    >
+      <Printer size={18} />
+      <span>كشف المعاملات </span>
+    </button>
+
+  </div>
+
+  {/* أزرار التحكم */}
+  <div className="flex items-center justify-end gap-3">
+
+
+        <button
+      onClick={() =>
+        navigate(`/customer/SupplierPrintManager/${selectedSupplier?._id}`)
+      }
+      className="
+        flex items-center justify-center gap-2
+        px-5 py-3
+        bg-slate-50 text-slate-600
+        border border-emerald-100
+        rounded-xl
+        hover:bg-emerald-600 hover:text-white
+        transition-all duration-200
+        font-semibold text-sm
+        shadow-sm
+      "
+    >
+      <Printer size={18} />
+    
+    </button>
+    <button
+      onClick={() => navigate(`/customer/edit/${selectedSupplier._id}`)}
+      className="
+        flex items-center justify-center
+        w-12 h-12
+        bg-slate-100
+        text-slate-700
+        rounded-xl
+        hover:bg-slate-700 hover:text-white
+        transition-all duration-200
+        border border-slate-200
+        shadow-sm
+      "
+      title="تعديل البيانات"
+    >
+      <Edit size={20} />
+    </button>
+
+    <button
+      onClick={() =>
+        handleDelete(selectedSupplier._id, selectedSupplier.name)
+      }
+      className="
+        flex items-center justify-center
+        w-12 h-12
+        bg-red-50
+        text-red-500
+        rounded-xl
+        hover:bg-red-500 hover:text-white
+        transition-all duration-200
+        border border-red-100
+        shadow-sm
+      "
+      title="حذف المورد"
+    >
+      <Trash2 size={20} />
+    </button>
 
 
 
-                  <button
-                    onClick={() => navigate(`/customer/CustomerPaymentsPrintPage/${selectedSupplier?._id}`)}
-                    className="flex items-center gap-2 px-4 py-3 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-600 hover:text-white transition-all font-bold text-sm"
-                  >
-                    <Printer size={18} /> كشف التحصيلات والمدفوعات
-                  </button>
+  </div>
 
-                  
-
-                 <div className="flex  gap-10 md:gap-2">
-                  <button
-                    onClick={() => navigate(`/customer/edit/${selectedSupplier._id}`)}
-                    className="p-3 bg-slate-100 text-dark rounded-xl hover:bg-dark hover:text-white transition-all border border-slate-100"
-                    title="تعديل البيانات"
-                  >
-                    <Edit size={20} />
-                  </button>
-
-                  <button
-                    onClick={() => handleDelete(selectedSupplier._id, selectedSupplier.name)}
-                    className="p-3 bg-red-50 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all"
-                    title="حذف المورد"
-                  >
-                    <Trash2 size={20} />
-                  </button>
-                 </div>
-                </div>
+</div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-10">
@@ -797,7 +865,7 @@ const CustomerList = () => {
   </p>
 
   <h3
-    className={`text-3xl font-black flex items-baseline gap-2 ${
+    className={`text-2xl font-black flex items-baseline gap-2 ${
       (selectedSupplier.balance || selectedSupplier.remainingBalance || 0) >= 0
         ? "text-emerald-600"
         : "text-red-600"
@@ -807,28 +875,28 @@ const CustomerList = () => {
       selectedSupplier.balance || selectedSupplier.remainingBalance || 0
     ).toLocaleString()}
 
-    <span className="text-sm font-bold opacity-60">
+    <span className="text-sm font-semibold opacity-60">
       ج.م
     </span>
   </h3>
 </div>
-
+{/* 
                 <div className="bg-dark p-6 rounded-lg text-white relative overflow-hidden group">
                   <div className="relative z-10">
                     <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2">رصيد التاجر الافتتاحي</p>
-                    <h3 className="text-3xl font-black flex items-baseline gap-2">
+                    <h3 className="text-2xl font-black flex items-baseline gap-2">
                       {selectedSupplier?.openningBalance || 0}
-                      <span className="text-sm font-bold opacity-40 uppercase">ج.م</span>
+                      <span className="text-sm font-semibold opacity-40 uppercase">ج.م</span>
                     </h3>
                   </div>
-                </div>
+                </div> */}
 
                 <div className="bg-slate-900 p-6 rounded-lg text-white relative overflow-hidden group">
                   <div className="relative z-10">
                     <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2">إجمالي المعاملات الماليّة</p>
-                    <h3 className="text-3xl font-black flex items-baseline gap-2">
+                    <h3 className="text-2xl font-black flex items-baseline gap-2">
                       {operations?.length || 0}
-                      <span className="text-sm font-bold opacity-40 uppercase">عملية مسجلة</span>
+                      <span className="text-sm font-semibold opacity-40 uppercase">عملية مسجلة</span>
                     </h3>
                   </div>
                   <div className="absolute right-[-10%] bottom-[-20%] opacity-10 group-hover:scale-110 transition-transform">
@@ -874,7 +942,7 @@ const CustomerList = () => {
                             {t.amount?.toLocaleString()} ج.م
                           </td>
 
-                          <td className="p-3 sm:p-5 text-sm text-slate-600 font-bold">
+                          <td className="p-3 sm:p-5 text-sm text-slate-600 font-semibold">
                             {t.paymentMethod === "cash" && "نقدي"}
                             {t.paymentMethod === "wallet" && "محفظة"}
                             {t.paymentMethod === "bank" && "تحويل بنكي"}
@@ -952,7 +1020,7 @@ const CustomerList = () => {
               ) : (
                 <div className="flex flex-col items-center justify-center h-full text-slate-300 py-20">
                   <Info size={48} className="mb-2 opacity-20" />
-                  <p className="font-bold">لا توجد عمليات ماليّة مسجلة بعد</p>
+                  <p className="font-semibold">لا توجد عمليات ماليّة مسجلة بعد</p>
                 </div>
               )}
             </div>
@@ -960,11 +1028,11 @@ const CustomerList = () => {
         ) : (
           <div className="flex flex-col items-center justify-center h-full bg-white rounded-[15px] border border-dashed border-slate-200 text-slate-400">
             {subLoading ? (
-              <p className="text-xl font-bold text-dark -500">جاري تحميل بيانات التاجر...</p>
+              <p className="text-xl font-semibold text-dark -500">جاري تحميل بيانات التاجر...</p>
             ) : (
               <>
                 <User size={64} className="mb-4 opacity-10" />
-                <p className="text-lg font-bold">اختر تاجر من القائمة لعرض التفاصيل</p>
+                <p className="text-lg font-semibold">اختر تاجر من القائمة لعرض التفاصيل</p>
               </>
             )}
           </div>
@@ -975,11 +1043,11 @@ const CustomerList = () => {
       {showEditModal && (
         <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50 overflow-y-auto py-8">
           <div className="bg-white rounded-xl w-[600px] max-w-[95vw] p-6 shadow-xl max-h-[90vh] overflow-y-auto">
-            <h2 className="text-xl font-bold mb-6 text-slate-800">تعديل العملية المالية</h2>
+            <h2 className="text-xl font-semibold mb-6 text-slate-800">تعديل العملية المالية</h2>
 
             <div className="space-y-4">
               {/* <div>
-                <label className="block text-sm font-bold mb-1">تدفق الأموال</label>
+                <label className="block text-sm font-semibold mb-1">تدفق الأموال</label>
                 <select
                   className="w-full border rounded-lg p-2 outline-none focus:border-dark -500"
                   value={editData.moneyFlow}
@@ -991,7 +1059,7 @@ const CustomerList = () => {
               </div> */}
 
               <div>
-                <label className="block text-sm font-bold mb-1">الوحدة</label>
+                <label className="block text-sm font-semibold mb-1">الوحدة</label>
                 <select
                   className="w-full border rounded-lg p-2 outline-none focus:border-dark -500"
                   value={editData.module}
@@ -1004,7 +1072,7 @@ const CustomerList = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-bold mb-1">المبلغ</label>
+                <label className="block text-sm font-semibold mb-1">المبلغ</label>
                 <input
                   type="number"
                   className="w-full border rounded-lg p-2 outline-none focus:border-dark -500"
@@ -1014,7 +1082,7 @@ const CustomerList = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-bold mb-1">طريقة الدفع</label>
+                <label className="block text-sm font-semibold mb-1">طريقة الدفع</label>
                 <select
                   className="w-full border rounded-lg p-2 outline-none focus:border-dark -500"
                   value={editData.paymentMethod}
@@ -1031,7 +1099,7 @@ const CustomerList = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-bold mb-1">التاريخ</label>
+                <label className="block text-sm font-semibold mb-1">التاريخ</label>
                 <input
                   type="datetime-local"
                   className="w-full border rounded-lg p-2 outline-none focus:border-dark -500"
@@ -1041,7 +1109,7 @@ const CustomerList = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-bold mb-1">ملاحظات</label>
+                <label className="block text-sm font-semibold mb-1">ملاحظات</label>
                 <textarea
                   className="w-full border rounded-lg p-2 outline-none focus:border-dark -500"
                   rows={2}
@@ -1056,13 +1124,13 @@ const CustomerList = () => {
               <div className="flex justify-end gap-3 mt-6">
                 <button
                   onClick={() => setShowEditModal(false)}
-                  className="px-5 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 font-bold"
+                  className="px-5 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 font-semibold"
                 >
                   إلغاء
                 </button>
                 <button
                   onClick={updatePaymentHistory}
-                  className="px-5 py-2 rounded-lg bg-dark -500 text-white hover:bg-dark -600 font-bold"
+                  className="px-5 py-2 rounded-lg bg-dark -500 text-white hover:bg-dark -600 font-semibold"
                 >
                   حفظ
                 </button>

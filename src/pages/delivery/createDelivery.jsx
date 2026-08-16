@@ -227,7 +227,7 @@ const [showWalletList, setShowWalletList] = useState(false);
               <input
                 type="text"
                 className="w-full p-3 pr-10 bg-ligth/20 border border-brown/10 rounded-xl outline-none font-bold text-dark focus:border-brown focus:ring-1 focus:ring-brown"
-                placeholder="ابحث عن اسم التاجر للربط المالي..."
+                placeholder="ابحث عن اسم التاجر ..."
                 value={supSearch}
                 onFocus={() => setShowSupList(true)}
                 onChange={(e) => {setSupSearch(e.target.value)}}
@@ -297,7 +297,7 @@ const [showWalletList, setShowWalletList] = useState(false);
         <div className="space-y-4">
           <div className="sticky top-0 z-30 bg-ligth/10 backdrop-blur py-2 flex justify-between items-center border-b border-brown/10 mb-4">
             <h3 className="text-lg font-black text-dark flex items-center gap-2">
-              <Truck size={22} className="text-brown" /> أصناف النقلة الحالية
+              <Truck size={22} className="text-brown" /> أصناف النقلة 
             </h3>
             <button 
               type="button" 
@@ -315,7 +315,8 @@ const [showWalletList, setShowWalletList] = useState(false);
                 <div key={idx} className="bg-white p-5 rounded-2xl border border-brwonLight shadow-sm relative space-y-4 flex flex-col justify-between">
                   
                   <div className="space-y-3">
-                    <div className="relative text-right">
+                    <div className="grid grid-cols-2 gap-2">
+                   <div className="relative text-right">
                       <label className="text-xs font-black text-dark">اسم الصنف</label>
                       <input
                         type="text"
@@ -354,6 +355,7 @@ const [showWalletList, setShowWalletList] = useState(false);
                         value={item.pricePerKg === 0 ? "" : item.pricePerKg}
                         onChange={(e) => handleItemChange(idx, "pricePerKg", Number(e.target.value))}
                       />
+                    </div>
                     </div>
 
                     {/* موازين البسكول داخل كارت الصنف */}
