@@ -891,7 +891,7 @@ const CustomerBalanceAutocomplete = () => {
                         : "text-slate-400 hover:text-dark"
                     }`}
                   >
-                   سداد للتاجر(-)
+                   سداد للتاجر(+)
                   </button>
                   <button
                     onClick={() => {setTransactionType("payment")
@@ -903,7 +903,7 @@ const CustomerBalanceAutocomplete = () => {
                         : "text-slate-400 hover:text-dark"
                     }`}
                   >
-                     استلام دفعه(+)
+                     استلام دفعه(-)
                   </button>
                 </div>
 

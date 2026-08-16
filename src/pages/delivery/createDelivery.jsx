@@ -109,7 +109,7 @@ const [showWalletList, setShowWalletList] = useState(false);
 
   const grandTotal = calculateGrandTotal();
   const netDue = grandTotal - totalPaidAmount;
-  const newBalance = oldBalance - netDue;
+  const newBalance = oldBalance + netDue;
 
   const handleItemChange = (index, field, value) => {
     const newItems = [...formData.items];
@@ -139,7 +139,7 @@ const [showWalletList, setShowWalletList] = useState(false);
           paidAmount: 0, 
           paymentMethod: unusedMethod,
           bankInfo: { bankName: "", transactionReference: "" },
-          walletInfo: { provider: "", senderName: "", senderPhone: "", receiverName: "", receiverPhone: "", transactionReference: "" },
+          walletInfo: { provider: "", senderName: "", senderPhone: "", receiverName: "", receiverPhone: "", transactionReference: "" ,linkWallet: true },
           cheque: { chequeNumber: "", chequeType: "normal", bankName: "", receiveDate: "", dueDate: "" }
         }
       ]
@@ -401,7 +401,7 @@ const [showWalletList, setShowWalletList] = useState(false);
 
                   {/* إحصائيات ومرتجع الصنف الكلية */}
                   <div className="pt-2 border-t border-brown/5 space-y-2">
-                    <div className="grid grid-cols-2 gap-2 text-center text-xs">
+                    {/* <div className="grid grid-cols-2 gap-2 text-center text-xs">
                       <div className="p-1.5 bg-red-50 rounded-lg border border-red-100">
                         <span className="text-[10px] block font-black text-red-500">وزن المرتجع الحالي</span>
                         <input type="number" className="w-full bg-transparent text-center font-black text-red-700 outline-none" value={item.returnWeight || ""} onChange={(e)=>handleItemChange(idx, "returnWeight", Number(e.target.value))} />
@@ -410,17 +410,17 @@ const [showWalletList, setShowWalletList] = useState(false);
                         <span className="text-[10px] block font-black text-red-500">وزن المرتجع القديم</span>
                         <input type="number" className="w-full bg-transparent text-center font-black text-red-700 outline-none" value={item.oldReturnWeight || ""} onChange={(e)=>handleItemChange(idx, "oldReturnWeight", Number(e.target.value))} />
                       </div>
-                    </div>
+                    </div> */}
 
-                    <div className="grid grid-cols-3 gap-1 bg-ligth/20 p-2 rounded-xl text-center text-[11px] font-bold text-dark">
+                    <div className="grid grid-cols-2 gap-1 bg-ligth/20 p-2 rounded-xl text-center text-[11px] font-bold text-dark">
                       <div>
                         <span className="opacity-70 block">الوزن الكلي</span>
                         <span className="font-black text-xs text-dark">{stats.totalWeight}</span>
                       </div>
-                      <div>
+                      {/* <div>
                         <span className="opacity-70 block">الصافي</span>
                         <span className="font-black text-xs text-dark">{stats.netWeight.toFixed(2)}</span>
-                      </div>
+                      </div> */}
                       <div>
                         <span className="font-black text-brown block">إجمالي السعر</span>
                         <span className="font-black text-xs text-brown">{stats.finalPrice.toLocaleString()}</span>

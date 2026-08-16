@@ -4,6 +4,7 @@ import BackupButton from "../pages/backup/backup"
 import DevSphereChatBot from "../services/chatbot"
 import ReportsChatbot from "../services/chatbot"
 import ReportsAiChatbot from "../services/chatbot"
+import LogsCleanupModal from "../pages/activationLog/LogsCleanupModal"
 
 export default function SuperAdminLayout() {
   return (
@@ -22,6 +23,7 @@ export default function SuperAdminLayout() {
   
     </div>
     <BackupButton/>
+           <LogsCleanupModal />
 {/* 
     <ReportsAiChatbot/> */}
 

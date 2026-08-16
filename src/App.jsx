@@ -306,7 +306,7 @@ return (
         <FaAngleUp className="text-2xl text-light font-black relative z-10" />
        
       </div>
-       <LogsCleanupModal />
+
       <Footer />
     </BrowserRouter>
   </div>

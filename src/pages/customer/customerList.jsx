@@ -677,8 +677,16 @@ const CustomerList = () => {
                 </div>
               </div>
               <div className="text-left">
-                <p className={`text-lg font-black ${(s.balance || s.remainingBalance || 0) >= 0 ? "text-red-500" : "text-emerald-500"}`}>
-                  {Math.abs(s.balance || s.remainingBalance || 0).toLocaleString()}
+                <p
+                  className={`text-lg font-black ${
+                    (s.balance || s.remainingBalance || 0) >= 0
+                      ? "text-emerald-500"
+                      : "text-red-500"
+                  }`}
+                >
+                  {Math.abs(
+                    s.balance || s.remainingBalance || 0
+                  ).toLocaleString()}
                 </p>
               </div>
             </div>
@@ -759,27 +767,51 @@ const CustomerList = () => {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-10">
-                <div className={`p-6 rounded-lg border transition-all ${
-                  (selectedSupplier.balance || selectedSupplier.remainingBalance || 0) >= 0 
-                    ? "bg-red-50/50 border-red-100 hover:border-red-200" 
-                    : "bg-emerald-50/50 border-emerald-100 hover:border-emerald-200"
-                }`}>
-                  <p className="text-[11px] font-black uppercase tracking-widest mb-2 flex items-center gap-2">
-                    <span className={`w-2 h-2 rounded-full animate-pulse ${
-                      (selectedSupplier.balance || selectedSupplier.remainingBalance || 0) >= 0 ? "bg-red-500" : "bg-emerald-500"
-                    }`} />
-                    <span className={(selectedSupplier.balance || selectedSupplier.remainingBalance || 0) >= 0 ? "text-red-600" : "text-emerald-600"}>
-                      {(selectedSupplier.balance || selectedSupplier.remainingBalance || 0) >= 0 ? "الرصيد المتبقي للتاجر (علينا)" : "رصيد مستحق (لنا)"}
-                    </span>
-                  </p>
+ <div
+  className={`p-6 rounded-lg border transition-all ${
+    (selectedSupplier.balance || selectedSupplier.remainingBalance || 0) >= 0
+      ? "bg-emerald-50/50 border-emerald-100 hover:border-emerald-200"
+      : "bg-red-50/50 border-red-100 hover:border-red-200"
+  }`}
+>
+  <p className="text-[11px] font-black uppercase tracking-widest mb-2 flex items-center gap-2">
+    <span
+      className={`w-2 h-2 rounded-full animate-pulse ${
+        (selectedSupplier.balance || selectedSupplier.remainingBalance || 0) >= 0
+          ? "bg-emerald-500"
+          : "bg-red-500"
+      }`}
+    />
 
-                  <h3 className={`text-3xl font-black flex items-baseline gap-2 ${
-                    (selectedSupplier.balance || selectedSupplier.remainingBalance || 0) >= 0 ? "text-red-600" : "text-emerald-600"
-                  }`}>
-                    {Math.abs(selectedSupplier.balance || selectedSupplier.remainingBalance || 0).toLocaleString()}
-                    <span className="text-sm font-bold opacity-60">ج.م</span>
-                  </h3>
-                </div>
+    <span
+      className={
+        (selectedSupplier.balance || selectedSupplier.remainingBalance || 0) >= 0
+          ? "text-emerald-600"
+          : "text-red-600"
+      }
+    >
+      {(selectedSupplier.balance || selectedSupplier.remainingBalance || 0) >= 0
+        ? "لينا فلوس عند التاجر"
+        : "علينا فلوس للتاجر"}
+    </span>
+  </p>
+
+  <h3
+    className={`text-3xl font-black flex items-baseline gap-2 ${
+      (selectedSupplier.balance || selectedSupplier.remainingBalance || 0) >= 0
+        ? "text-emerald-600"
+        : "text-red-600"
+    }`}
+  >
+    {Math.abs(
+      selectedSupplier.balance || selectedSupplier.remainingBalance || 0
+    ).toLocaleString()}
+
+    <span className="text-sm font-bold opacity-60">
+      ج.م
+    </span>
+  </h3>
+</div>
 
                 <div className="bg-dark p-6 rounded-lg text-white relative overflow-hidden group">
                   <div className="relative z-10">

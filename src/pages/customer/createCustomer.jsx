@@ -12,7 +12,7 @@ const AddSupplierForm = () => {
     name: "",
     phone: "",
     openBalance: 0,
-    balanceType: "lena", // "lena" = لينا (-)  |  "aleina" = علينا (+)
+    balanceType: "aleina", // "lena" = لينا (-)  |  "aleina" = علينا (+)
     notes: "",
   });
 
@@ -65,7 +65,7 @@ const AddSupplierForm = () => {
         name: "",
         phone: "",
         openBalance: 0,
-        balanceType: "lena",
+        balanceType: "aleina",
         notes: "",
       });
 
@@ -162,7 +162,7 @@ const AddSupplierForm = () => {
                     : "bg-ligth/20 text-brown/70 border-brown/10 hover:border-brown/40"
                 }`}
               >
-                لينا (-)
+                 علينا(-)
               </button>
               <button
                 type="button"
@@ -173,13 +173,13 @@ const AddSupplierForm = () => {
                     : "bg-ligth/20 text-brown/70 border-brown/10 hover:border-brown/40"
                 }`}
               >
-                علينا (+)
+                  لينا(+)
               </button>
             </div>
 
-            <p className="text-[11px] text-brown/70 font-bold">
-              * لينا: التاجر مدين لنا (يُسجَّل بالسالب) — علينا: مستحقات للتاجر لدينا (يُسجَّل بالموجب).
-            </p>
+              <p className="text-[11px] text-brown/70 font-bold">
+                * الموجب (+): لينا فلوس عند التاجر — السالب (-): علينا فلوس للتاجر.
+              </p>
           </div>
 
           {/* حقل ملاحظات التاجر */}

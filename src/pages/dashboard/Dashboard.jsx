@@ -149,7 +149,7 @@ const Dashboard = () => {
         <p className="font-bold text-dark">{summaryLine}</p>
       </div>
 
-      {/* Main Stats Grid - بنفس تصميم كروت النقلات والتجار الموحد */}
+      {/* Main Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <StatCard
           title="تجار تم التعامل معهم"
@@ -167,56 +167,72 @@ const Dashboard = () => {
         />
         <StatCard
           title="تجار لهم فلوس"
-          value={loadingMoney ? "..." : `${customers?.haveMoneyCount || 0} تجار (${(customers?.haveMoneyAmount || 0).toLocaleString()} ج.م)`}
+          value={loadingMoney ? "..." : `${(customers?.haveMoneyAmount || 0).toLocaleString()} ج.م`}
+          count={loadingMoney ? null : `${customers?.haveMoneyCount || 0} تجار`}
           icon={<TrendingUp className="text-white" />}
           bgColor="bg-green-600"
           subtitle="إجمالي مستحقات التجار"
         />
         <StatCard
           title="تجار عليهم فلوس"
-          value={loadingMoney ? "..." : `${customers?.debtCount || 0} تجار (${(customers?.debtAmount || 0).toLocaleString()} ج.م)`}
+          value={loadingMoney ? "..." : `${(customers?.debtAmount || 0).toLocaleString()} ج.م`}
+          count={loadingMoney ? null : `${customers?.debtCount || 0} تجار`}
           icon={<TrendingDown className="text-white" />}
           bgColor="bg-red-500"
           subtitle="إجمالي المديونيات"
         />
       </div>
 
-      {/* Notifications Section */}
+      {/* Notifications Section - Compact & Side-by-side */}
       <div className="mb-8">
-        <h2 className="text-xl font-black text-dark mb-4">التنبيهات</h2>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <h2 className="text-lg font-black text-dark mb-3">التنبيهات</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <NotificationList
             title="شيكات مستحقة اليوم"
-            icon={<Receipt size={20} />}
+            icon={<Receipt size={16} />}
             color="amber"
             items={notifications.chequesDueToday}
             emptyText="لا توجد شيكات مستحقة اليوم"
             renderItem={(c) => (
               <>
-                <span className="font-bold text-dark">شيك رقم {c.chequeNumber}</span>
-                <span className="text-gray-500">{c.ownerName || 'غير محدد'}</span>
-                <span className="font-black">{c.amount?.toLocaleString()} ج.م</span>
-                <span className='text-blue-400 cursor-pointer' onClick={() => navigate(`/cheque/${c.id}`)}>
-                  <EyeIcon className="text-blue-700" />
-                </span>
+                <div className="flex items-center gap-2 truncate">
+                  <span className="font-bold text-dark whitespace-nowrap">شيك #{c.chequeNumber}</span>
+                  <span className="text-gray-400 text-xs truncate">({c.ownerName || 'غير محدد'})</span>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="font-black text-dark text-xs">{c.amount?.toLocaleString()} ج.م</span>
+                  <button 
+                    onClick={() => navigate(`/cheque/${c.id}`)}
+                    className="p-1 text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                  >
+                    <EyeIcon size={16} />
+                  </button>
+                </div>
               </>
             )}
           />
 
           <NotificationList
             title="شيكات متأخرة"
-            icon={<AlertTriangle size={20} />}
+            icon={<AlertTriangle size={16} />}
             color="red"
             items={notifications.chequesOverdue}
             emptyText="لا توجد شيكات متأخرة"
             renderItem={(c) => (
               <>
-                <span className="font-bold text-dark">شيك رقم {c.chequeNumber}</span>
-                <span className="text-gray-500">{c.ownerName || 'غير محدد'}</span>
-                <span className="font-black">{c.amount?.toLocaleString()} ج.م</span>
-                <span className='text-blue-400 cursor-pointer' onClick={() => navigate(`/cheque/${c.id}`)}>
-                  <EyeIcon className="text-blue-700" />
-                </span>
+                <div className="flex items-center gap-2 truncate">
+                  <span className="font-bold text-dark whitespace-nowrap">شيك #{c.chequeNumber}</span>
+                  <span className="text-gray-400 text-xs truncate">({c.ownerName || 'غير محدد'})</span>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="font-black text-dark text-xs">{c.amount?.toLocaleString()} ج.م</span>
+                  <button 
+                    onClick={() => navigate(`/cheque/${c.id}`)}
+                    className="p-1 text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                  >
+                    <EyeIcon size={16} />
+                  </button>
+                </div>
               </>
             )}
           />
@@ -281,7 +297,7 @@ const Dashboard = () => {
 };
 
 // Sub-component for main stats
-const StatCard = ({ title, value, icon, bgColor, subtitle }) => (
+const StatCard = ({ title, value, count, icon, bgColor, subtitle }) => (
   <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-300 flex items-center gap-5 hover:translate-y-[-2px] transition-all duration-300">
     <div className={`p-4 ${bgColor} rounded-xl shadow-lg shrink-0`}>
       {React.cloneElement(icon, { size: 28 })}
@@ -289,12 +305,13 @@ const StatCard = ({ title, value, icon, bgColor, subtitle }) => (
     <div className="text-right">
       <p className="text-gray-400 font-bold text-xs mb-1">{title}</p>
       <h3 className="text-xl font-black text-dark">{typeof value === 'number' ? value.toLocaleString() : value}</h3>
+      {count && <p className="text-xs font-black text-accent mt-0.5">{count}</p>}
       {subtitle && <p className="text-[10px] text-brown font-bold mt-1">{subtitle}</p>}
     </div>
   </div>
 );
 
-// Sub-component for notification lists
+// Sub-component for notification lists - Compact Version
 const COLOR_MAP = {
   amber: { bg: 'bg-amber-50', text: 'text-amber-600', badge: 'bg-amber-100 text-amber-700' },
   red: { bg: 'bg-red-50', text: 'text-red-600', badge: 'bg-red-100 text-red-700' },
@@ -306,26 +323,30 @@ const NotificationList = ({ title, icon, color, items = [], emptyText, renderIte
   const c = COLOR_MAP[color] || COLOR_MAP.amber;
 
   return (
-    <div className="bg-white h-64 overflow-auto rounded-xl shadow-sm border border-gray-300 p-5">
-      <div className="flex items-center justify-between mb-4">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-300 p-3.5 flex flex-col h-44">
+      <div className="flex items-center justify-between mb-2.5 pb-2 border-b border-gray-100 shrink-0">
         <div className="flex items-center gap-2">
-          <div className={`p-2 ${c.bg} rounded-lg ${c.text}`}>{icon}</div>
-          <h4 className="font-black text-dark">{title}</h4>
+          <div className={`p-1.5 ${c.bg} rounded-md ${c.text}`}>{icon}</div>
+          <h4 className="font-black text-dark text-sm">{title}</h4>
         </div>
-        <span className={`px-3 py-1 rounded-full text-xs font-black ${c.badge}`}>{items.length}</span>
+        <span className={`px-2 py-0.5 rounded-full text-[11px] font-black ${c.badge}`}>{items.length}</span>
       </div>
 
-      {items.length === 0 ? (
-        <p className="text-gray-400 font-bold text-sm text-center py-4">{emptyText}</p>
-      ) : (
-        <div className="space-y-2 max-h-64 overflow-y-auto">
-          {items.map((item, idx) => (
-            <div key={item.id || idx} className="flex items-center justify-between bg-ligth rounded-lg p-3 text-sm gap-2">
-              {renderItem(item)}
-            </div>
-          ))}
-        </div>
-      )}
+      <div className="flex-1 overflow-y-auto pr-1">
+        {items.length === 0 ? (
+          <div className="h-full flex items-center justify-center">
+            <p className="text-gray-400 font-bold text-xs">{emptyText}</p>
+          </div>
+        ) : (
+          <div className="space-y-1.5">
+            {items.map((item, idx) => (
+              <div key={item.id || idx} className="flex items-center justify-between bg-ligth rounded-lg px-2.5 py-1.5 text-xs gap-2">
+                {renderItem(item)}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

@@ -4,7 +4,7 @@ import api from '../../services/api';
 import html2pdf from 'html2pdf.js';
 import { useSystemSettings } from '../../context/shareInfo';
 
-const PrintItemPage = () => {
+const PrintDeliveryPage = () => {
   const { id } = useParams();
   const [delivery, setDelivery] = useState(null);
   const [supplier, setSupplier] = useState(null);
@@ -187,7 +187,7 @@ const PrintItemPage = () => {
                 <th className="p-2 border-r border-black text-right">الصنف</th>
                 <th className="p-2 border-r border-black text-center">الباتشات / الأوزان</th>
                 <th className="p-2 border-r border-black text-center">الوزن القائم</th>
-                <th className="p-2 border-r border-black text-center">راجع حالي</th>
+                {/* <th className="p-2 border-r border-black text-center">راجع حالي</th> */}
                 <th className="p-2 border-r border-black text-center">الصافي</th>
                 <th className="p-2 border-r border-black text-center">سعر الكيلو</th>
                 <th className="p-2 border-r border-black text-left">إجمالي الصنف</th>
@@ -228,9 +228,9 @@ const PrintItemPage = () => {
             {item.totalWeight.toLocaleString()} كجم
           </td>
 
-          <td className="p-2 border-r border-black text-center font-bold">
+          {/* <td className="p-2 border-r border-black text-center font-bold">
             {item.returnWeight > 0 ? `-${item.returnWeight}` : "0"} كجم
-          </td>
+          </td> */}
 
           <td className="p-2 border-r border-black text-center font-normal">
             {itemNetWeight.toLocaleString()} كجم
@@ -250,7 +250,7 @@ const PrintItemPage = () => {
           </table>
 
           {/* ملخص أوزان الأصناف */}
-          <div className="grid grid-cols-4 gap-2 my-3 text-xs">
+          {/* <div className="grid grid-cols-4 gap-2 my-3 text-xs">
             <div className="border border-black p-2 text-center">
               <div className="font-bold text-black text-[10px]">إجمالي الوزن القائم</div>
               <div className="font-normal text-black text-sm mt-0.5">{totalWeight.toLocaleString()} كجم</div>
@@ -267,7 +267,7 @@ const PrintItemPage = () => {
               <div className="font-bold text-black text-[10px]">صافي قيمة النقلة</div>
               <div className="font-normal text-black text-sm mt-0.5">{currentNetItemsTotal.toLocaleString()} ج.م</div>
             </div>
-          </div>
+          </div> */}
         </div>
 
         {/* جدول الراجع القديم - يظهر فقط إن وجد */}
@@ -325,4 +325,4 @@ const PrintItemPage = () => {
   );
 };
 
-export default PrintItemPage;
+export default PrintDeliveryPage;

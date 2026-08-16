@@ -187,7 +187,7 @@ const PrintDeliveryPage = () => {
                 <th className="p-2 border-r border-black text-right">الصنف</th>
                 <th className="p-2 border-r border-black text-center">الباتشات / الأوزان</th>
                 <th className="p-2 border-r border-black text-center">الوزن القائم</th>
-                <th className="p-2 border-r border-black text-center">راجع حالي</th>
+                {/* <th className="p-2 border-r border-black text-center">راجع حالي</th> */}
                 <th className="p-2 border-r border-black text-center">الصافي</th>
                 <th className="p-2 border-r border-black text-center">سعر الكيلو</th>
                 <th className="p-2 border-r border-black text-left">إجمالي الصنف</th>
@@ -228,9 +228,9 @@ const PrintDeliveryPage = () => {
             {item.totalWeight.toLocaleString()} كجم
           </td>
 
-          <td className="p-2 border-r border-black text-center font-bold">
+          {/* <td className="p-2 border-r border-black text-center font-bold">
             {item.returnWeight > 0 ? `-${item.returnWeight}` : "0"} كجم
-          </td>
+          </td> */}
 
           <td className="p-2 border-r border-black text-center font-normal">
             {itemNetWeight.toLocaleString()} كجم
@@ -250,7 +250,7 @@ const PrintDeliveryPage = () => {
           </table>
 
           {/* ملخص أوزان الأصناف */}
-          <div className="grid grid-cols-4 gap-2 my-3 text-xs">
+          {/* <div className="grid grid-cols-4 gap-2 my-3 text-xs">
             <div className="border border-black p-2 text-center">
               <div className="font-bold text-black text-[10px]">إجمالي الوزن القائم</div>
               <div className="font-normal text-black text-sm mt-0.5">{totalWeight.toLocaleString()} كجم</div>
@@ -267,7 +267,7 @@ const PrintDeliveryPage = () => {
               <div className="font-bold text-black text-[10px]">صافي قيمة النقلة</div>
               <div className="font-normal text-black text-sm mt-0.5">{currentNetItemsTotal.toLocaleString()} ج.م</div>
             </div>
-          </div>
+          </div> */}
         </div>
 
         {/* جدول الراجع القديم - يظهر فقط إن وجد */}
@@ -328,16 +328,16 @@ const PrintDeliveryPage = () => {
                           </tr>
                           <tr>
                             <td className="text-black font-bold py-1.5">صافي قيمة النقلة الحالية:</td>
-                            <td className="font-normal text-black text-left py-1.5">-{currentNetItemsTotal.toLocaleString()} ج.م</td>
+                            <td className="font-normal text-black text-left py-1.5">+{currentNetItemsTotal.toLocaleString()} ج.م</td>
                           </tr>
                           <tr className='border-t-2'>
                             <td className="text-black font-bold py-1.5">المجموع (القديم + النقلة):</td>
-                            <td className="font-normal text-black text-left py-1.5">{(oldBalance - currentNetItemsTotal).toLocaleString()} ج.م</td>
+                            <td className="font-normal text-black text-left py-1.5">{(oldBalance + currentNetItemsTotal).toLocaleString()} ج.م</td>
                           </tr>
                           {totalOldReturnValue > 0 && (
                             <tr>
                               <td className="text-black font-bold py-1.5">اجمالي  راجع قديم:</td>
-                              <td className="font-normal text-black text-left py-1.5">+{totalOldReturnValue.toLocaleString()} ج.م</td>
+                              <td className="font-normal text-black text-left py-1.5">-{totalOldReturnValue.toLocaleString()} ج.م</td>
                             </tr>
                           )}
                           {teaForWorkers > 0 && (
@@ -348,7 +348,7 @@ const PrintDeliveryPage = () => {
                           )}
                           <tr>
                             <td className="text-black font-bold py-1.5">إجمالي المدفوع الآن:</td>
-                            <td className="font-normal text-black text-left py-1.5">+{paidAmount.toLocaleString()} ج.م</td>
+                            <td className="font-normal text-black text-left py-1.5">-{paidAmount.toLocaleString()} ج.م</td>
                           </tr>
                         </tbody>
                       </table>
@@ -357,7 +357,7 @@ const PrintDeliveryPage = () => {
                     <div className="bg-gray-100 p-3 text-black border-t-2 border-black">
                       <div className="flex justify-between items-center">
                         <span className="font-normal underline">الرصيد المتبقي النهائي:</span>
-                        <span className="text-sm font-normal">{((oldBalance - currentNetItemsTotal)+totalOldReturnValue +paidAmount).toLocaleString()} ج.م</span>
+                        <span className="text-sm font-normal">{((oldBalance + currentNetItemsTotal)-totalOldReturnValue -paidAmount).toLocaleString()} ج.م</span>
                       </div>
                     </div>
                   </div>

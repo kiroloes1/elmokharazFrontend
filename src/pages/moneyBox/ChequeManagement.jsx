@@ -227,9 +227,9 @@ const [isViewModalOpen, setIsViewModalOpen] = useState(false);
  if (!confirmDelete.isConfirmed) return;
 
       try {
-            if (!isCollected) {
-      await api.put(`/cheque/${cheque._id}`, { status: "cancelled" });
-    }
+    //         if (!isCollected) {
+    //   await api.put(`/cheque/${cheque._id}`, { status: "cancelled" });
+    // }
 
 
         await api.delete(

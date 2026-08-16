@@ -338,20 +338,20 @@ const SupplierPrintManager = () => {
     supplierData?.balance ?? 
     (operationsWithBalance.length > 0 ? operationsWithBalance[operationsWithBalance.length - 1].balance : 0);
 
-  const isOwedToUs = finalBalance < 0; // إذا كان سالب -> فلوس لينا (مطلوب من التاجر)
-  const isOwedToSupplier = finalBalance > 0; // إذا كان موجب -> فلوس علينا (مستحق للتاجر)
+  const isOwedToUs = finalBalance > 0;
+  const isOwedToSupplier = finalBalance < 0; 
 
   return (
     <div className="flex justify-end pt-6 border-t-2 border-black border-dashed">
       <div className="text-left">
-        <p className="text-sm font-black mb-1 italic">
+        {/* <p className="text-sm font-black mb-1 italic">
           {isOwedToUs && "إجمالي المبلغ المطلوب من التاجر (فلوس لينا):"}
           {isOwedToSupplier && "إجمالي الرصيد المستحق للتاجر (فلوس علينا):"}
           {!isOwedToUs && !isOwedToSupplier && "إجمالي الحساب (الحساب متخلص):"}
-        </p>
+        </p> */}
 
         <div className={`text-5xl font-black tracking-tighter text-black`}>
-          {Math.abs(finalBalance).toLocaleString()}{" "}
+          {(finalBalance).toLocaleString()}{" "}
           <span className="text-xl font-normal">ج.م</span>
         </div>
 

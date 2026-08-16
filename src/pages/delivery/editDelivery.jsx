@@ -448,7 +448,7 @@ const [supRes, itemRes, deliveryRes, walletRes] = await Promise.all([
 
                   {/* المرتجعات والإحصائيات */}
                   <div className="pt-2 border-t border-brown/5 space-y-2">
-                    <div className="grid grid-cols-2 gap-2 text-center text-xs">
+                    {/* <div className="grid grid-cols-2 gap-2 text-center text-xs">
                       <div className="p-1.5 bg-red-50 rounded-lg border border-red-100">
                         <span className="text-[10px] block font-black text-red-500">وزن المرتجع الحالي</span>
                         <input type="number" className="w-full bg-transparent text-center font-black text-red-700 outline-none" value={item.returnWeight || ""} onChange={(e)=>handleItemChange(idx, "returnWeight", Number(e.target.value))} />
@@ -457,17 +457,17 @@ const [supRes, itemRes, deliveryRes, walletRes] = await Promise.all([
                         <span className="text-[10px] block font-black text-red-500">وزن المرتجع القديم</span>
                         <input type="number" className="w-full bg-transparent text-center font-black text-red-700 outline-none" value={item.oldReturnWeight || ""} onChange={(e)=>handleItemChange(idx, "oldReturnWeight", Number(e.target.value))} />
                       </div>
-                    </div>
+                    </div> */}
 
-                    <div className="grid grid-cols-3 gap-1 bg-ligth/20 p-2 rounded-xl text-center text-[11px] font-bold text-dark">
+                    <div className="grid grid-cols-2 gap-1 bg-ligth/20 p-2 rounded-xl text-center text-[11px] font-bold text-dark">
                       <div>
                         <span className="opacity-70 block">الوزن الكلي</span>
                         <span className="font-black text-xs text-dark">{stats.totalWeight}</span>
                       </div>
-                      <div>
+                      {/* <div>
                         <span className="opacity-70 block">الصافي</span>
                         <span className="font-black text-xs text-dark">{stats.netWeight}</span>
-                      </div>
+                      </div> */}
                       <div>
                         <span className="font-black text-brown block">إجمالي السعر</span>
                         <span className="font-black text-xs text-brown">{stats.finalPrice.toLocaleString()}</span>
@@ -573,6 +573,7 @@ const [supRes, itemRes, deliveryRes, walletRes] = await Promise.all([
     <div className="flex gap-3 items-center p-3 rounded-lg bg-light/20">
       <input
         type="checkbox"
+        disabled={true}
         checked={pay.walletInfo?.linkWallet || false}
         onChange={(e) =>
           handlePaymentChange(
