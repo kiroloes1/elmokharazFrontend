@@ -177,10 +177,10 @@ const DeliveriesList = () => {
   }, 0) || 0;
 
 return (
-    <div className="w-full min-h-screen bg-ligth text-dark flex flex-col overflow-x-hidden" dir="rtl">
+    <div className="w-96 px-1 md:w-full min-h-screen bg-ligth text-dark flex flex-col overflow-x-hidden" dir="rtl">
 
       {/* ================= 1. NAVBAR العلوي ================= */}
-      <header className="bg-white border-b border-brown/20 px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm sticky top-0 z-30">
+      <header className="w-86 md:w-full bg-white border-b border-brown/20 px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm sticky top-0 z-30">
         <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
           <div className="flex items-center gap-2">
             <Truck className="text-brown" size={24} />
