@@ -4,8 +4,8 @@ import axios from "axios";
 const SERVERS = [
   // "http://localhost:5000/v1",
   "https://elmokharaz-production.up.railway.app/v1",
-  // "https://elmokharaz.vercel.app/v1",
-  //  "https://elmokharaz-sand.vercel.app/v1",
+  "https://elmokharaz.vercel.app/v1",
+   "https://elmokharaz-sand.vercel.app/v1",
 ];
 let currentServer = 0;
 
