@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import html2pdf from "html2pdf.js";
-import { Share2, Eye, X } from "lucide-react";
+import { Share2, Eye, X, Printer, RefreshCw, Search } from "lucide-react";
 import { useSystemSettings } from '../../context/shareInfo';
 
 // دالة مساعدة للحصول على التاريخ الحالي بصيغة YYYY-MM-DD
@@ -12,14 +12,25 @@ const getLocalDateString = (date) => {
     return `${year}-${month}-${day}`;
 };
 
+// الحالات اللي معناها إن الشيك لسه معلق (متحصلش/متلغاش/مترجعش)
+const PENDING_STATUSES = ['under_collection', 'due_today'];
+
 const ChequeBoxAuditPrint = () => {
     const [cheques, setCheques] = useState([]);
     const [loading, setLoading] = useState(false);
     const [sharing, setSharing] = useState(false);
     const [currState, setCurrState] = useState("يومي");
     const [openingBalance, setOpeningBalance] = useState(0);
-    
-    // حالة للتحكم في النافذة الممتدة (Modal) لتفاصيل الحركة
+    const [openingBalanceLoading, setOpeningBalanceLoading] = useState(false);
+
+    // إحصائيات الباك إند
+    const [backendStats, setBackendStats] = useState({
+        pending: { amount: 0, count: 0 },
+        returnedCancelled: { amount: 0, count: 0 },
+        collected: { amount: 0, count: 0 }
+    });
+
+    // التحكم في modal تفاصيل الحركة
     const [selectedCheque, setSelectedCheque] = useState(null);
 
     const today = new Date();
@@ -27,8 +38,8 @@ const ChequeBoxAuditPrint = () => {
     tomorrow.setDate(tomorrow.getDate() + 1);
 
     const [filters, setFilters] = useState({
-        moneyFlow: '', // 'incoming' أو 'outgoing'
-        status: '',    // 'under_collection', 'due_today', 'collected', 'returned', 'cancelled'
+        moneyFlow: '',
+        status: '',
         dueFrom: getLocalDateString(today),
         dueTo: getLocalDateString(tomorrow),
         chequeNumber: '',
@@ -47,15 +58,17 @@ const ChequeBoxAuditPrint = () => {
                 chequeNumber: filters.chequeNumber || undefined,
                 bankName: filters.bankName || undefined,
                 page: 1,
-                limit: 1000 // جلب كل الشيكات الخاصة بالتقرير
+                limit: 1000
             };
 
             const res = await api.get('/cheque', { params });
             const fetchedCheques = res.data.cheques || [];
-            
+
             setCheques(fetchedCheques);
-            // رصيد الشيكات السابق
-            setOpeningBalance(res.data.openingBalance || 0);
+
+            if (res.data.totalAmounts) {
+                setBackendStats(res.data.totalAmounts);
+            }
         } catch (err) {
             console.error("خطأ في جلب بيانات خزنة الشيكات:", err);
         } finally {
@@ -63,60 +76,103 @@ const ChequeBoxAuditPrint = () => {
         }
     };
 
+    // -------------------------------------------------------------
+    // الرصيد السابق (رصيد قديم)
+    // = إجمالي قيمة الشيكات اللي لسه معلقة (تحت التحصيل / مستحقة اليوم)
+    //   وتاريخ استحقاقها كان قبل بداية الفترة المختارة (dueFrom)
+    // بنعمل نداء منفصل لأن جدول الشيكات المعروض بيجيب بس الشيكات
+    // اللي استحقاقها جوه الفترة (dueFrom -> dueTo)
+    // -------------------------------------------------------------
+    const fetchOpeningBalance = async () => {
+        if (!filters.dueFrom) {
+            setOpeningBalance(0);
+            return;
+        }
+
+        setOpeningBalanceLoading(true);
+        try {
+            const dayBeforePeriod = new Date(filters.dueFrom);
+            dayBeforePeriod.setDate(dayBeforePeriod.getDate() - 1);
+
+            const params = {
+                dueTo: getLocalDateString(dayBeforePeriod),
+                page: 1,
+                limit: 5000
+            };
+
+            const res = await api.get('/cheque', { params });
+            const oldCheques = res.data.cheques || [];
+
+            const total = oldCheques
+                .filter(c => PENDING_STATUSES.includes(c.status))
+                .reduce((acc, c) => acc + (c.amount || 0), 0);
+
+            setOpeningBalance(total);
+        } catch (err) {
+            console.error("خطأ في جلب الرصيد السابق لخزنة الشيكات:", err);
+        } finally {
+            setOpeningBalanceLoading(false);
+        }
+    };
+
     useEffect(() => {
         fetchCheques();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [filters.moneyFlow, filters.status, filters.dueFrom, filters.dueTo, filters.chequeNumber, filters.bankName]);
+
+    useEffect(() => {
+        fetchOpeningBalance();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [filters.dueFrom]);
 
     const handleFilterChange = (e) => {
         setFilters({ ...filters, [e.target.name]: e.target.value });
     };
 
     const setTimeRange = (range) => {
-        const currentToday = new Date();
-        let fromDate = new Date();
+        const now = new Date();
+        let fromDate, toDate;
 
         if (range === 'today') {
-            fromDate = new Date(currentToday);
+            fromDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            toDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
             setCurrState("يومي");
         } else if (range === 'month') {
-            fromDate = new Date(currentToday.getFullYear(), currentToday.getMonth(), 1);
+            fromDate = new Date(now.getFullYear(), now.getMonth(), 1);
+            toDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
             setCurrState("شهري");
         } else if (range === 'year') {
-            fromDate = new Date(currentToday.getFullYear(), 0, 1);
+            fromDate = new Date(now.getFullYear(), 0, 1);
+            toDate = new Date(now.getFullYear(), 11, 31);
             setCurrState("سنوي");
         }
 
-        const toDate = new Date(currentToday);
-        toDate.setDate(toDate.getDate() + 1);
-
-        setFilters({
-            ...filters,
+        setFilters(prev => ({
+            ...prev,
             dueFrom: getLocalDateString(fromDate),
             dueTo: getLocalDateString(toDate)
-        });
+        }));
     };
 
     const handleResetFilters = () => {
-        const rToday = new Date();
-        const rTomorrow = new Date(rToday);
+        const now = new Date();
         setCurrState("يومي");
-        rTomorrow.setDate(rTomorrow.getDate() + 1);
 
         setFilters({
             moneyFlow: '',
             status: '',
-            dueFrom: getLocalDateString(rToday),
-            dueTo: getLocalDateString(rTomorrow),
+            dueFrom: getLocalDateString(now),
+            dueTo: getLocalDateString(now),
             chequeNumber: '',
             bankName: '',
             searchTerm: ''
         });
     };
 
-    // التصفية المحلية بالبحث السريع
+    // فلترة محلية لنص البحث
     const filteredCheques = cheques.filter(c => {
         const search = filters.searchTerm.toLowerCase();
-        const partyName = (c.customer?.name || c.supplier?.name || "").toLowerCase();
+        const partyName = (c.customer?.name || c.supplier?.name || c.name || "").toLowerCase();
         const chequeNum = (c.chequeNumber || "").toLowerCase();
         const bank = (c.bankName || "").toLowerCase();
         const notes = (c.notes || "").toLowerCase();
@@ -124,21 +180,21 @@ const ChequeBoxAuditPrint = () => {
         return partyName.includes(search) || chequeNum.includes(search) || bank.includes(search) || notes.includes(search);
     });
 
-    // حساب إجمالي الشيكات الداخلة والخارجة في الفترة
-    const totalIncoming = filteredCheques.reduce((acc, curr) => {
-        return curr.moneyFlow === "incoming" ? acc + curr.amount : acc;
-    }, 0);
+    // 1. حساب (تحت التحصيل + مستحق)
+    const pendingCheques = filteredCheques.filter(c => PENDING_STATUSES.includes(c.status));
+    const totalPendingFiltered = pendingCheques.reduce((acc, curr) => acc + (curr.amount || 0), 0);
 
-    const totalOutgoing = filteredCheques.reduce((acc, curr) => {
-        return curr.moneyFlow === "outgoing" ? acc + curr.amount : acc;
-    }, 0);
+    // 2. حساب (تم التحصيل منفصلًا)
+    const collectedCheques = filteredCheques.filter(c => c.status === 'collected');
+    const totalCollectedFiltered = collectedCheques.reduce((acc, curr) => acc + (curr.amount || 0), 0);
 
-    // رصيد خزنة الشيكات الحالي
-    const activeChequesBalance = filteredCheques.reduce((acc, curr) => {
-        const isPending = ["under_collection", "due_today"].includes(curr.status);
-        if (!isPending) return acc;
-        return curr.moneyFlow === "incoming" ? acc + curr.amount : acc - curr.amount;
-    }, 0);
+    // 3. حساب (مرتجع + ملغي)
+    const returnedCancelledStatuses = ['returned', 'cancelled'];
+    const returnedCancelledCheques = filteredCheques.filter(c => returnedCancelledStatuses.includes(c.status));
+    const totalReturnedCancelledFiltered = returnedCancelledCheques.reduce((acc, curr) => acc + (curr.amount || 0), 0);
+
+    // 4. الرصيد الحالي الصافي = الرصيد السابق (شيكات معلقة قبل الفترة) + شيكات معلقة داخل الفترة
+    const currentNetBalance = openingBalance + totalPendingFiltered;
 
     const { settings } = useSystemSettings();
 
@@ -180,7 +236,6 @@ const ChequeBoxAuditPrint = () => {
         }
     };
 
-    // مصفوفة مترجمة لحالات الشيك
     const statusMap = {
         under_collection: "تحت التحصيل",
         due_today: "مستحق اليوم",
@@ -190,14 +245,14 @@ const ChequeBoxAuditPrint = () => {
     };
 
     return (
-        <div id='invoice' className="p-4 md:p-8 min-h-screen bg-gray-50" dir="rtl">
+        <div id='invoice' className="p-4 md:p-8 min-h-screen bg-gray-50 text-right" dir="rtl">
             <style>{`
                 @media print {
                     @page { margin: 1cm; size: A4; }
                     body { background: white !important; color: black !important; }
                     .no-print { display: none !important; }
                     .print-only { display: block !important; }
-                    .printable-area { width: 100% !important; border: none !important; }
+                    .printable-area { width: 100% !important; border: none !important; box-shadow: none !important; }
                     table { width: 100% !important; border-collapse: collapse !important; margin-top: 20px; }
                     th, td { border: 1px solid #000 !important; padding: 8px !important; color: #000 !important; font-size: 12px !important; }
                     th { background-color: #f2f2f2 !important; -webkit-print-color-adjust: exact; }
@@ -205,17 +260,17 @@ const ChequeBoxAuditPrint = () => {
                 .print-only { display: none; }
             `}</style>
 
-            {/* الجزء العلوي - الأزرار الهيدر */}
+            {/* الهيدر والأزرار */}
             <div className="no-print flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
                 <div>
-                    <h2 className="text-2xl font-normal">خزنة الشيكات</h2>
-                    <p className="text-gray-500">عرض حركة وخزنة الشيكات والتحكم بالطباعة</p>
+                    <h2 className="text-2xl font-bold text-gray-800">خزنة الشيكات</h2>
+                    <p className="text-gray-500 text-sm">عرض حركة وخزنة الشيكات والتحكم بالطباعة والمشاركة</p>
                 </div>
                 <div className="flex gap-3">
                     <button
                         onClick={handleSharePDF}
                         disabled={sharing}
-                        className="flex items-center gap-2 bg-emerald-600 text-white p-2 rounded-md shadow-md text-xl font-bold disabled:opacity-50 hover:bg-emerald-700 cursor-pointer"
+                        className="flex items-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-lg shadow-md text-base font-semibold disabled:opacity-50 hover:bg-emerald-700 transition-colors cursor-pointer"
                     >
                         <Share2 className="w-5 h-5" />
                         {sharing ? "جارٍ المشاركة..." : "مشاركة PDF"}
@@ -223,45 +278,53 @@ const ChequeBoxAuditPrint = () => {
 
                     <button
                         onClick={handleManualPrint}
-                        className="flex text-white bg-slate-800 p-2 rounded-md shadow-md hover:bg-slate-700 cursor-pointer items-center gap-x-2 text-xl font-bold"
+                        className="flex text-white bg-slate-800 px-4 py-2 rounded-lg shadow-md hover:bg-slate-700 transition-colors cursor-pointer items-center gap-2 text-base font-semibold"
                     >
-                        🖨️ طباعة الجدول
+                        <Printer className="w-5 h-5" />
+                        طباعة الجدول
                     </button>
                 </div>
             </div>
 
-            {/* أزرار الفلترة السريعة والبحث */}
-            <div className="no-print bg-white p-4 rounded-xl shadow-sm mb-6 border border-gray-200">
+            {/* شريط الفلترة */}
+            <div className="no-print bg-white p-5 rounded-xl shadow-sm mb-6 border border-gray-200">
                 <div className="flex flex-wrap gap-2 mb-4 border-b pb-4 items-center justify-between">
-                    <div className='flex gap-3'>
-                        <button onClick={() => setTimeRange('today')} className="px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-800 rounded-lg text-sm font-bold">يومي (اليوم)</button>
-                        <button onClick={() => setTimeRange('month')} className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-bold">شهري</button>
-                        <button onClick={() => setTimeRange('year')} className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-bold">سنوي</button>
-                        <button onClick={handleResetFilters} className="px-4 py-2 bg-red-50 text-red-600 rounded-lg text-sm font-bold">إعادة ضبط اليوم</button>
+                    <div className='flex flex-wrap gap-2'>
+                        <button onClick={() => setTimeRange('today')} className="px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-800 rounded-lg text-sm font-bold transition-colors">يومي (اليوم)</button>
+                        <button onClick={() => setTimeRange('month')} className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg text-sm font-bold transition-colors">شهري</button>
+                        <button onClick={() => setTimeRange('year')} className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg text-sm font-bold transition-colors">سنوي</button>
+                        <button onClick={handleResetFilters} className="px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg text-sm font-bold transition-colors flex items-center gap-1">
+                            <RefreshCw className="w-4 h-4" />
+                            إعادة ضبط اليوم
+                        </button>
                     </div>
 
                     <div>
-                        <span className="px-4 py-2 bg-blue-100 text-blue-800 rounded-lg text-sm font-bold">
-                            {currState} البحث الآن
+                        <span className="px-4 py-2 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg text-sm font-bold">
+                            الوضع الحالي: {currState}
                         </span>
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="flex flex-col gap-1">
                         <label className="text-xs font-bold text-gray-600 mr-1">البحث السريع</label>
-                        <input
-                            type="text"
-                            name="searchTerm"
-                            placeholder="اسم العميل/المورد، رقم الشيك..."
-                            value={filters.searchTerm}
-                            onChange={handleFilterChange}
-                            className="border p-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-400"
-                        />
+                        <div className="relative">
+                            <input
+                                type="text"
+                                name="searchTerm"
+                                placeholder="اسم العميل/المورد، رقم الشيك..."
+                                value={filters.searchTerm}
+                                onChange={handleFilterChange}
+                                className="w-full border border-gray-300 p-2 pr-8 rounded-lg outline-none focus:ring-2 focus:ring-blue-400 text-sm"
+                            />
+                            <Search className="w-4 h-4 text-gray-400 absolute left-2.5 top-3" />
+                        </div>
                     </div>
+
                     <div className="flex flex-col gap-1">
                         <label className="text-xs font-bold text-gray-600 mr-1">حالة الشيك</label>
-                        <select name="status" value={filters.status} onChange={handleFilterChange} className="border p-2 rounded-lg outline-none">
+                        <select name="status" value={filters.status} onChange={handleFilterChange} className="border border-gray-300 p-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-400 text-sm">
                             <option value="">كل الحالات</option>
                             <option value="under_collection">تحت التحصيل</option>
                             <option value="due_today">مستحق اليوم</option>
@@ -270,100 +333,123 @@ const ChequeBoxAuditPrint = () => {
                             <option value="cancelled">ملغي</option>
                         </select>
                     </div>
+
                     <div className="flex flex-col gap-1">
                         <label className="text-xs font-bold text-blue-700 mr-1">استحقاق من تاريخ</label>
-                        <input type="date" name="dueFrom" value={filters.dueFrom} onChange={handleFilterChange} className="border p-2 rounded-lg border-blue-300 bg-blue-50/30" />
+                        <input type="date" name="dueFrom" value={filters.dueFrom} onChange={handleFilterChange} className="border p-2 rounded-lg border-blue-300 bg-blue-50/30 text-sm" />
                     </div>
+
                     <div className="flex flex-col gap-1">
                         <label className="text-xs font-bold text-blue-700 mr-1">استحقاق إلى تاريخ</label>
-                        <input type="date" name="dueTo" value={filters.dueTo} onChange={handleFilterChange} className="border p-2 rounded-lg border-blue-300 bg-blue-50/30" />
+                        <input type="date" name="dueTo" value={filters.dueTo} onChange={handleFilterChange} className="border p-2 rounded-lg border-blue-300 bg-blue-50/30 text-sm" />
                     </div>
                 </div>
             </div>
 
-            {/* منطقة الطباعة والتقرير */}
-            <div className="printable-area bg-white p-4 rounded-xl shadow-sm">
-                
-                {/* ترويسة التقرير (تظهر فقط عند الطباعة) */}
+            {/* منطقة التقرير والطباعة */}
+            <div className="printable-area bg-white p-4 md:p-6 rounded-xl shadow-sm border border-gray-200">
                 <div className="print-only text-center mb-6">
-                    <h1 className="text-3xl font-normal text-black mb-3">{settings?.invoiceFactoryName || "المنشأة"}</h1>
-                    <div className='border-b-2 border-black my-3'></div>
-                    <h3 className="text-2xl font-bold pb-2">تقرير حركة خزنة الشيكات</h3>
-                    <div className="flex justify-between mt-4 font-bold">
+                    <h1 className="text-3xl font-bold text-black mb-2">{settings?.invoiceFactoryName || "المنشأة"}</h1>
+                    <div className='border-b-2 border-black my-2'></div>
+                    <h3 className="text-xl font-bold pb-2">تقرير حركة خزنة الشيكات</h3>
+                    <div className="flex justify-between mt-4 text-sm font-bold">
                         <span>استحقاق من: {filters.dueFrom}</span>
                         <span>إلى: {filters.dueTo}</span>
                     </div>
                 </div>
 
                 <div id="invoice-capture" dir="rtl" className="p-2">
-                    {/* كروت الملخص */}
-                    <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                        <div className="border p-4 rounded-lg text-center bg-blue-50 print:bg-white print:border-black">
-                            <p className="text-xs font-bold text-gray-500 print:text-black">رصيد الشيكات السابق</p>
-                            <p className="text-lg font-normal text-blue-700 print:text-black">{openingBalance?.toLocaleString()} ج.م</p>
+                    {/* كروت الملخص المالي */}
+                    <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
+                        <div className="border p-4 rounded-xl text-center bg-blue-50/50 print:bg-white print:border-black">
+                            <p className="text-xs font-bold text-gray-500 print:text-black mb-1">الرصيد السابق</p>
+                            <p className="text-lg font-bold text-blue-700 print:text-black">
+                                {openingBalanceLoading ? "..." : `${openingBalance.toLocaleString()} ج.م`}
+                            </p>
                         </div>
-                        <div className="border p-4 rounded-lg text-center bg-emerald-50 print:bg-white print:border-black">
-                            <p className="text-xs font-bold text-gray-500 print:text-black">شيكات داخلة بالفترة</p>
-                            <p className="text-lg font-normal text-emerald-700 print:text-black">{totalIncoming?.toLocaleString()} ج.م</p>
+
+                        <div className="border p-4 rounded-xl text-center bg-amber-50/50 print:bg-white print:border-black">
+                            <p className="text-xs font-bold text-gray-500 print:text-black mb-1">تحت التحصيل ومستحق</p>
+                            <p className="text-lg font-bold text-amber-700 print:text-black">
+                                {totalPendingFiltered.toLocaleString()} ج.م
+                            </p>
+                            <span className="text-[10px] text-gray-400">
+                                ({pendingCheques.length} شيكات)
+                            </span>
                         </div>
-                        <div className="border p-4 rounded-lg text-center bg-red-50 print:bg-white print:border-black">
-                            <p className="text-xs font-bold text-gray-500 print:text-black">شيكات خارجة بالفترة</p>
-                            <p className="text-lg font-normal text-red-700 print:text-black">{totalOutgoing?.toLocaleString()} ج.م</p>
+
+                        <div className="border p-4 rounded-xl text-center bg-emerald-50/50 print:bg-white print:border-black">
+                            <p className="text-xs font-bold text-gray-500 print:text-black mb-1">تم التحصيل</p>
+                            <p className="text-lg font-bold text-emerald-700 print:text-black">
+                                {totalCollectedFiltered.toLocaleString()} ج.م
+                            </p>
+                            <span className="text-[10px] text-gray-400">
+                                ({collectedCheques.length} شيكات)
+                            </span>
                         </div>
-                        <div className="border p-4 rounded-lg text-center bg-gray-800 text-white print:bg-white print:text-black print:border-black">
-                            <p className="text-xs font-bold opacity-80">رصيد خزنة الشيكات الحالي</p>
-                            <p className="text-lg font-normal">{activeChequesBalance?.toLocaleString()} ج.م</p>
+
+                        <div className="border p-4 rounded-xl text-center bg-rose-50/50 print:bg-white print:border-black">
+                            <p className="text-xs font-bold text-gray-500 print:text-black mb-1">راجع وملغي</p>
+                            <p className="text-lg font-bold text-rose-700 print:text-black">
+                                {totalReturnedCancelledFiltered.toLocaleString()} ج.م
+                            </p>
+                            <span className="text-[10px] text-gray-400">
+                                ({returnedCancelledCheques.length} شيكات)
+                            </span>
+                        </div>
+
+                        <div className="border p-4 rounded-xl text-center bg-slate-800 text-white print:bg-white print:text-black print:border-black col-span-2 lg:col-span-1">
+                            <p className="text-xs font-bold opacity-80 mb-1">الرصيد الحالي الصافي</p>
+                            <p className="text-lg font-bold">
+                                {currentNetBalance.toLocaleString()} ج.م
+                            </p>
                         </div>
                     </div>
 
-                    {/* جدول الشيكات الرئيسي */}
+                    {/* جدول عرض الشيكات */}
                     <div className="overflow-x-auto">
-                        <table className="w-full text-right border">
-                            <thead className="bg-gray-800 text-white print:bg-gray-200 print:text-black">
+                        <table className="w-full text-right border border-gray-200 rounded-lg">
+                            <thead className="bg-slate-800 text-white print:bg-gray-200 print:text-black">
                                 <tr>
-                                    <th className="p-3 border">تاريخ الاستلام</th>
-                                    <th className="p-3 border">رقم الشيك</th>
-                                    <th className="p-3 border">التاجر</th>
-                                    <th className="p-3 border">البنك</th>
-                                    <th className="p-3 border">تاريخ الاستحقاق</th>
-                                    <th className="p-3 border">النوع</th>
-                                    <th className="p-3 border">القيمة</th>
-                                    <th className="p-3 border">الحالة</th>
-                                    <th className="p-3 border">ملاحظات</th>
-                                    <th className="p-3 border no-print">تفاصيل الحركه</th>
+                                    <th className="p-3 border text-xs font-bold">تاريخ الاستلام</th>
+                                    <th className="p-3 border text-xs font-bold">رقم الشيك</th>
+                                    <th className="p-3 border text-xs font-bold">التاجر</th>
+                                    <th className="p-3 border text-xs font-bold">البنك</th>
+                                    <th className="p-3 border text-xs font-bold">تاريخ الاستحقاق</th>
+                                    <th className="p-3 border text-xs font-bold">القيمة</th>
+                                    <th className="p-3 border text-xs font-bold">الحالة</th>
+                                    <th className="p-3 border text-xs font-bold">ملاحظات</th>
+                                    <th className="p-3 border text-xs font-bold no-print">تفاصيل الحركة</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {loading ? (
                                     <tr>
-                                        <td colSpan="10" className="text-center p-4">جاري تحميل البيانات...</td>
+                                        <td colSpan="9" className="text-center p-6 text-gray-500">جاري تحميل البيانات...</td>
                                     </tr>
                                 ) : filteredCheques.length === 0 ? (
                                     <tr>
-                                        <td colSpan="10" className="text-center p-4">لا توجد شيكات تطابق الفلاتر المحددة لهذه الفترة</td>
+                                        <td colSpan="9" className="text-center p-6 text-gray-500">لا توجد شيكات تطابق الفلاتر المحددة لهذه الفترة</td>
                                     </tr>
                                 ) : (
                                     filteredCheques.map((cheque, index) => (
-                                        <tr key={cheque._id || index} className="border hover:bg-gray-50">
-                                            <td className="p-3 border text-sm font-bold">{new Date(cheque.receiveDate || cheque.createdAt)?.toLocaleDateString('ar-EG')}</td>
-                                            <td className="p-3 border text-sm font-bold">{cheque.chequeNumber}</td>
+                                        <tr key={cheque._id || index} className="border hover:bg-gray-50/80 transition-colors">
+                                            <td className="p-3 border text-sm font-medium">
+                                                {cheque.receiveDate ? new Date(cheque.receiveDate).toLocaleDateString('ar-EG') : '-'}
+                                            </td>
+                                            <td className="p-3 border text-sm font-bold text-gray-800">{cheque.chequeNumber || '-'}</td>
                                             <td className="p-3 border text-sm font-semibold text-gray-900">
-                                                {cheque.customer?.name || cheque.supplier?.name || cheque.name || "غير محدد"}
+                                                {cheque.customer?.name || cheque.supplier?.name || "غير محدد"}
                                             </td>
-                                            <td className="p-3 border text-sm">{cheque.bankName}</td>
+                                            <td className="p-3 border text-sm text-gray-700">{cheque.bankName || '-'}</td>
                                             <td className="p-3 border text-sm">
-                                                {new Date(cheque.dueDate).toLocaleDateString('ar-EG')}
+                                                {cheque.dueDate ? new Date(cheque.dueDate).toLocaleDateString('ar-EG') : '-'}
                                             </td>
-                                            <td className="p-3 border text-sm font-bold">
-                                                <span className={cheque.moneyFlow === 'incoming' ? 'text-emerald-600' : 'text-red-600 print:text-black'}>
-                                                    {cheque.moneyFlow === 'incoming' ? 'داخل' : 'خارج'}
-                                                </span>
-                                            </td>
-                                            <td className="p-3 border text-sm font-normal text-blue-900 print:text-black">
-                                                {cheque.amount?.toLocaleString()} ج
+                                            <td className="p-3 border text-sm font-bold text-blue-900 print:text-black">
+                                                {cheque.amount?.toLocaleString()} ج.م
                                             </td>
                                             <td className="p-3 border text-xs font-semibold">
-                                                <span className={`px-2 py-1 rounded-md ${
+                                                <span className={`px-2.5 py-1 rounded-full text-xs ${
                                                     cheque.status === 'collected' ? 'bg-emerald-100 text-emerald-800' :
                                                     cheque.status === 'returned' ? 'bg-red-100 text-red-800' :
                                                     cheque.status === 'cancelled' ? 'bg-gray-200 text-gray-800' :
@@ -372,14 +458,14 @@ const ChequeBoxAuditPrint = () => {
                                                     {statusMap[cheque.status] || cheque.status}
                                                 </span>
                                             </td>
-                                            <td className="p-3 border text-xs text-gray-600 print:text-black min-w-[130px]">
+                                            <td className="p-3 border text-xs text-gray-600 print:text-black max-w-[150px] truncate" title={cheque.notes}>
                                                 {cheque.notes || "-"}
                                             </td>
                                             <td className="p-3 border text-center no-print">
                                                 <button
                                                     onClick={() => setSelectedCheque(cheque)}
                                                     title="تفاصيل الحركة"
-                                                    className="p-1.5 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors cursor-pointer"
+                                                    className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
                                                 >
                                                     <Eye className="w-5 h-5" />
                                                 </button>
@@ -393,15 +479,14 @@ const ChequeBoxAuditPrint = () => {
                 </div>
             </div>
 
-            {/* Modal: تفاصيل الحركة */}
+            {/* Modal تفاصيل الحركة */}
             {selectedCheque && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex justify-center items-center p-4 no-print">
-                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden border border-gray-100 animate-in fade-in zoom-in duration-200">
-                        {/* الهيدر */}
+                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden border border-gray-100">
                         <div className="bg-slate-800 text-white p-4 flex justify-between items-center">
                             <div className="flex items-center gap-2">
-                                {/* <Eye className="w-5 h-5 text-blue-400" /> */}
-                                <h3 className="text-xl font-bold">تفاصيل الحركة</h3>
+                                <Eye className="w-5 h-5 text-blue-400" />
+                                <h3 className="text-lg font-bold">تفاصيل حركة الشيك</h3>
                             </div>
                             <button
                                 onClick={() => setSelectedCheque(null)}
@@ -411,7 +496,6 @@ const ChequeBoxAuditPrint = () => {
                             </button>
                         </div>
 
-                        {/* محتوى التفاصيل */}
                         <div className="p-6 space-y-4 max-h-[80vh] overflow-y-auto text-sm">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="bg-gray-50 p-3 rounded-lg border">
@@ -425,22 +509,12 @@ const ChequeBoxAuditPrint = () => {
                                 <div className="bg-gray-50 p-3 rounded-lg border">
                                     <span className="text-gray-500 block text-xs">التاجر</span>
                                     <span className="font-bold text-gray-800 text-base">
-                                        {selectedCheque.customer?.name || selectedCheque.supplier?.name || selectedCheque.name || "غير محدد"}
+                                        {selectedCheque.customer?.name || selectedCheque.supplier?.name || "غير محدد"}
                                     </span>
                                 </div>
                                 <div className="bg-gray-50 p-3 rounded-lg border">
                                     <span className="text-gray-500 block text-xs">القيمة المالية</span>
                                     <span className="font-bold text-blue-700 text-base">{selectedCheque.amount?.toLocaleString()} ج.م</span>
-                                </div>
-                                <div className="bg-gray-50 p-3 rounded-lg border">
-                                    <span className="text-gray-500 block text-xs">نوع التدفق (اتجاه الشيك)</span>
-                                    <span className={`font-bold ${selectedCheque.moneyFlow === 'incoming' ? 'text-emerald-600' : 'text-red-600'}`}>
-                                        {selectedCheque.moneyFlow === 'incoming' ? 'داخل (وارد)' : 'خارج (صادر)'}
-                                    </span>
-                                </div>
-                                <div className="bg-gray-50 p-3 rounded-lg border">
-                                    <span className="text-gray-500 block text-xs">نوع الشيك</span>
-                                    <span className="font-semibold text-gray-800">{selectedCheque.chequeType=="normal"? "عادي" :"مقاصه" || "عادي"}</span>
                                 </div>
                                 <div className="bg-gray-50 p-3 rounded-lg border">
                                     <span className="text-gray-500 block text-xs">حالة الشيك الحالية</span>
@@ -449,37 +523,25 @@ const ChequeBoxAuditPrint = () => {
                                     </span>
                                 </div>
                                 <div className="bg-gray-50 p-3 rounded-lg border">
-                                    <span className="text-gray-500 block text-xs">مكان الشيك (الموقع)</span>
-                                    <span className="font-semibold text-gray-800">
-                                        {selectedCheque.location === 'with_me' ? 'في الخزنة (معي)' : selectedCheque.location || "-"}
-                                    </span>
-                                </div>
-                                <div className="bg-gray-50 p-3 rounded-lg border">
-                                    <span className="text-gray-500 block text-xs">تاريخ الاستلام</span>
-                                    <span className="font-semibold text-gray-800">
-                                        {new Date(selectedCheque.receiveDate || selectedCheque.createdAt)?.toLocaleDateString('ar-EG')}
-                                    </span>
-                                </div>
-                                <div className="bg-gray-50 p-3 rounded-lg border">
                                     <span className="text-gray-500 block text-xs">تاريخ الاستحقاق</span>
                                     <span className="font-semibold text-gray-800">
-                                        {new Date(selectedCheque.dueDate)?.toLocaleDateString('ar-EG')}
+                                        {selectedCheque.dueDate ? new Date(selectedCheque.dueDate).toLocaleDateString('ar-EG') : '-'}
                                     </span>
                                 </div>
                             </div>
 
-                            {/* الملاحظات */}
-                            <div className="bg-gray-50 p-3 rounded-lg border">
-                                <span className="text-gray-500 block text-xs">الملاحظات</span>
-                                <p className="text-gray-800 font-medium mt-1">{selectedCheque.notes || "لا توجد ملاحظات مدونة."}</p>
-                            </div>
+                            {selectedCheque.notes && (
+                                <div className="bg-gray-50 p-3 rounded-lg border">
+                                    <span className="text-gray-500 block text-xs mb-1">ملاحظات</span>
+                                    <p className="text-gray-800 font-medium whitespace-pre-line">{selectedCheque.notes}</p>
+                                </div>
+                            )}
                         </div>
 
-                        {/* الفوتر */}
-                        <div className="bg-gray-100 p-4 flex justify-end">
+                        <div className="bg-gray-50 p-4 border-t flex justify-end">
                             <button
                                 onClick={() => setSelectedCheque(null)}
-                                className="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-bold transition-colors cursor-pointer"
+                                className="px-5 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-700 text-sm font-semibold transition-colors"
                             >
                                 إغلاق
                             </button>

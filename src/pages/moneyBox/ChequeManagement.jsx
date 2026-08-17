@@ -14,7 +14,7 @@ import {
 } from "react-icons/fi";
 import api from "../../services/api";
 import { FaMoneyBill } from "react-icons/fa";
- import { FiPrinter } from "react-icons/fi";
+import { FiPrinter } from "react-icons/fi";
 import { Eye, EyeIcon, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { showAlert } from "../../services/alert";
@@ -29,12 +29,20 @@ const ChequeManagement = () => {
     notifications: { dueToday: [], lateCheques: [], upcoming: [] },
   });
 
-const [viewCheque, setViewCheque] = useState(null);
-const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [viewCheque, setViewCheque] = useState(null);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
 
-  const [totalAmounts,setTotalAmounts]=useState(0)
+  const [totalAmounts, setTotalAmounts] = useState(0);
 
-  const navigation=useNavigate()
+  // === مودال تفاصيل الكروت (مستحقة اليوم / متأخرة / قادمة / إجمالي القائم) ===
+  const [detailsModal, setDetailsModal] = useState({
+    isOpen: false,
+    title: "",
+    list: [],
+  });
+  const [pendingDetailsLoading, setPendingDetailsLoading] = useState(false);
+
+  const navigation = useNavigate();
   // الترقيم الصفحي
   const [pagination, setPagination] = useState({
     currentPage: 1,
@@ -71,10 +79,44 @@ const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
 
   const handleOpenModal = (cheque) => {
-    console.log(cheque)
     setViewCheque(cheque);
     setIsViewModalOpen(true);
-};
+  };
+
+  // === مودال التفاصيل العام ===
+  const openDetailsModal = (title, list) => {
+    setDetailsModal({ isOpen: true, title, list: list || [] });
+  };
+
+  const closeDetailsModal = () => {
+    setDetailsModal({ isOpen: false, title: "", list: [] });
+  };
+
+  // كارت "إجمالي الشيكات القائمة" — تفاصيل الشيكات المكوّنة للإجمالي
+  // عبر نفس /cheque الموجود بالفعل (بدون أي تعديل بالباك):
+  // under_collection + due_today فقط، وده هو تعريف "القائمة" المطلوب.
+  const fetchPendingDetails = async () => {
+    setPendingDetailsLoading(true);
+    try {
+      const [res1, res2] = await Promise.all([
+        api.get("/cheque", { params: { status: "under_collection", limit: 1000 } }),
+        api.get("/cheque", { params: { status: "due_today", limit: 1000 } }),
+      ]);
+
+      const merged = [
+        ...(res1.data.cheques || []),
+        ...(res2.data.cheques || []),
+      ].sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+
+      openDetailsModal("الشيكات القائمة (تحت التحصيل)", merged);
+    } catch (err) {
+      console.error("خطأ في جلب تفاصيل الإجمالي:", err);
+      showAlert({ title: "حدث خطأ أثناء جلب التفاصيل", icon: "error" });
+    } finally {
+      setPendingDetailsLoading(false);
+    }
+  };
+
   // === Fetch Notifications ===
   const fetchNotifications = async () => {
     try {
@@ -102,7 +144,7 @@ const [isViewModalOpen, setIsViewModalOpen] = useState(false);
 
       const res = await api.get("/cheque", { params });
       setCheques(res.data.cheques);
-      setTotalAmounts(res.data.totalAmounts)
+      setTotalAmounts(res.data.totalAmounts.pending.amount);
       setPagination(res.data.pagination);
     } catch (err) {
       console.error("خطأ في جلب الشيكات:", err);
@@ -114,7 +156,6 @@ const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   useEffect(() => {
     fetchNotifications();
   }, []);
-  
 
   useEffect(() => {
     fetchCheques();
@@ -164,7 +205,7 @@ const [isViewModalOpen, setIsViewModalOpen] = useState(false);
     try {
       const res = await api.put(`/cheque/${selectedCheque._id}`, updateForm);
       setSuccessMessage(res.data.message || "تم التحديث بنجاح");
-      
+
       // تحديث البيانات في الجدول والتنبيهات
       fetchCheques();
       fetchNotifications();
@@ -183,12 +224,10 @@ const [isViewModalOpen, setIsViewModalOpen] = useState(false);
 
   const Info = ({ title, value }) => (
     <div className="border rounded-lg p-3 bg-gray-50">
-        <div className="text-xs text-gray-500">{title}</div>
-        <div className="font-semibold">{value || "-"}</div>
+      <div className="text-xs text-gray-500">{title}</div>
+      <div className="font-semibold">{value || "-"}</div>
     </div>
-);
-
-
+  );
 
   // === Dictionaries & Helpers ===
   const statusBadges = {
@@ -207,51 +246,42 @@ const [isViewModalOpen, setIsViewModalOpen] = useState(false);
     archived: "مؤرشف",
   };
 
+  // حذف عملية ماليّة
+  const deletePaymentHistory = async (cheque, paymentId, supplierId) => {
+    const isCollected = cheque.status === "collected";
 
-    // حذف عملية ماليّة
-    const deletePaymentHistory = async (cheque,paymentId,supplierId) => {
- const isCollected = cheque.status === "collected";
+    // 1. تأكيد الحذف الأساسي
+    const confirmDelete = await showAlertConfirm({
+      title: "حذف الشيك",
+      text: isCollected
+        ? "هل أنت متأكد من حذف هذا الشيك؟"
+        : "هذا الشيك ليس محصّلاً بعد. سيتم إلغاؤه أولاً ثم حذفه. هل تريد المتابعة؟",
+      icon: "warning",
+      confirmButtonText: "نعم",
+      cancelButtonText: "إلغاء",
+    });
 
-        // 1. تأكيد الحذف الأساسي
-        const confirmDelete = await showAlertConfirm({
-          title: "حذف الشيك",
-          text: isCollected
-            ? "هل أنت متأكد من حذف هذا الشيك؟"
-            : "هذا الشيك ليس محصّلاً بعد. سيتم إلغاؤه أولاً ثم حذفه. هل تريد المتابعة؟",
-          icon: "warning",
-          confirmButtonText: "نعم",
-          cancelButtonText: "إلغاء",
-        });
+    if (!confirmDelete.isConfirmed) return;
 
-  
- if (!confirmDelete.isConfirmed) return;
+    try {
+      await api.delete(
+        `/customers/deletePaymentHistory/${paymentId}/${supplierId}`
+      );
 
-      try {
-    //         if (!isCollected) {
-    //   await api.put(`/cheque/${cheque._id}`, { status: "cancelled" });
-    // }
+      showAlert({ title: "تم حذف الشيك بنجاح", icon: "success" });
 
+      fetchCheques();
+      fetchNotifications();
+    } catch (err) {
+      showAlert({
+        title: err.response?.data?.message || "حدث خطأ أثناء الحذف",
+        icon: "error",
+      });
+    }
+  };
 
-        await api.delete(
-          `/customers/deletePaymentHistory/${paymentId}/${supplierId}`
-        );
-  
-    showAlert({ title: "تم حذف الشيك بنجاح", icon: "success" });
-  
-   
-        fetchCheques();
-    fetchNotifications();
-  
-      } catch (err) {
-        showAlert({
-          title: err.response?.data?.message || "حدث خطأ أثناء الحذف",
-          icon: "error"
-        });
-      }
-    };
   return (
     <div id="invoice" className="p-4 md:p-6 bg-ligth min-h-screen text-dark " dir="rtl">
-      
       <style>{`
                 @media print {
                     @page { margin: 1cm; size: A4; }
@@ -275,28 +305,27 @@ const [isViewModalOpen, setIsViewModalOpen] = useState(false);
             </p>
           </div>
 
-         
-
-       <div className="flex gap-2 no-print">
-                  <button
-            onClick={() => window.print()}
-            className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg"
-          >
-            <FiPrinter />
-            طباعة
-          </button>
-          <button
-            onClick={() => { fetchCheques(); fetchNotifications(); }}
-            className="flex no-print items-center gap-2 bg-dark text-ligth px-4 py-2 rounded-lg hover:opacity-90 transition shadow"
-          >
-            <FiRefreshCw className={loading ? "animate-spin" : ""} />
-            تحديث البيانات
-          </button>
-       </div>
+          <div className="flex gap-2 no-print">
+            <button
+              onClick={() => window.print()}
+              className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg"
+            >
+              <FiPrinter />
+              طباعة
+            </button>
+            <button
+              onClick={() => { fetchCheques(); fetchNotifications(); }}
+              className="flex no-print items-center gap-2 bg-dark text-ligth px-4 py-2 rounded-lg hover:opacity-90 transition shadow"
+            >
+              <FiRefreshCw className={loading ? "animate-spin" : ""} />
+              تحديث البيانات
+            </button>
+          </div>
         </div>
 
         {/* Notification Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-4 gap-4">
+          {/* مستحقة اليوم */}
           <div className="bg-white p-4 rounded-lg border-2 border-dark -500 flex items-center justify-between">
             <div>
               <p className="text-xs text-gray-500 font-medium">مستحقة اليوم</p>
@@ -304,11 +333,23 @@ const [isViewModalOpen, setIsViewModalOpen] = useState(false);
                 {notifications.summary.dueToday}
               </h3>
             </div>
-            <div className="p-3 bg-amber-50 rounded-full text-amber-600">
-              <FiClock size={24} />
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() =>
+                  openDetailsModal("الشيكات المستحقة اليوم", notifications.notifications.dueToday)
+                }
+                title="عرض التفاصيل"
+                className="p-1.5 text-gray-400 hover:text-dark hover:bg-gray-100 rounded-full transition"
+              >
+                <Eye size={18} />
+              </button>
+              <div className="p-3 bg-amber-50 rounded-full text-amber-600">
+                <FiClock size={24} />
+              </div>
             </div>
           </div>
 
+          {/* متأخرة عن الموعد */}
           <div className="bg-white p-4 rounded-lg border-2 border-rose-500 flex items-center justify-between">
             <div>
               <p className="text-xs text-gray-500 font-medium">متأخرة عن الموعد</p>
@@ -316,11 +357,23 @@ const [isViewModalOpen, setIsViewModalOpen] = useState(false);
                 {notifications.summary.late}
               </h3>
             </div>
-            <div className="p-3 bg-rose-50 rounded-full text-rose-600">
-              <FiAlertCircle size={24} />
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() =>
+                  openDetailsModal("الشيكات المتأخرة", notifications.notifications.lateCheques)
+                }
+                title="عرض التفاصيل"
+                className="p-1.5 text-gray-400 hover:text-rose-600 hover:bg-gray-100 rounded-full transition"
+              >
+                <Eye size={18} />
+              </button>
+              <div className="p-3 bg-rose-50 rounded-full text-rose-600">
+                <FiAlertCircle size={24} />
+              </div>
             </div>
           </div>
 
+          {/* قادمة خلال 3 أيام */}
           <div className="bg-white p-4 rounded-lg border-2 border-accent flex items-center justify-between">
             <div>
               <p className="text-xs text-gray-500 font-medium">قادمة (خلال 3 أيام)</p>
@@ -328,20 +381,46 @@ const [isViewModalOpen, setIsViewModalOpen] = useState(false);
                 {notifications.summary.upcoming}
               </h3>
             </div>
-            <div className="p-3 bg-blue-50 rounded-full text-accent">
-              <FiCheckCircle size={24} />
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() =>
+                  openDetailsModal("الشيكات القادمة (خلال 3 أيام)", notifications.notifications.upcoming)
+                }
+                title="عرض التفاصيل"
+                className="p-1.5 text-gray-400 hover:text-accent hover:bg-gray-100 rounded-full transition"
+              >
+                <Eye size={18} />
+              </button>
+              <div className="p-3 bg-blue-50 rounded-full text-accent">
+                <FiCheckCircle size={24} />
+              </div>
             </div>
           </div>
 
-            <div className="bg-white p-4 rounded-lg border-2 border-green-500 flex items-center justify-between">
+          {/* اجمالي الشيكات القائمة فقط */}
+          <div className="bg-white p-4 rounded-lg border-2 border-green-500 flex items-center justify-between">
             <div>
               <p className="text-xs text-gray-500 font-medium"> اجمالي الشيكات</p>
               <h3 className="text-2xl font-bold text-dark mt-1">
                 {totalAmounts}ج.م
               </h3>
             </div>
-            <div className="p-3 bg-green-50 rounded-full text-green-600">
-              <FaMoneyBill size={24} />
+            <div className="flex items-center gap-2">
+              <button
+                onClick={fetchPendingDetails}
+                disabled={pendingDetailsLoading}
+                title="عرض التفاصيل"
+                className="p-1.5 text-gray-400 hover:text-green-600 hover:bg-gray-100 rounded-full transition disabled:opacity-40"
+              >
+                {pendingDetailsLoading ? (
+                  <FiRefreshCw className="animate-spin" size={18} />
+                ) : (
+                  <Eye size={18} />
+                )}
+              </button>
+              <div className="p-3 bg-green-50 rounded-full text-green-600">
+                <FaMoneyBill size={24} />
+              </div>
             </div>
           </div>
         </div>
@@ -420,18 +499,6 @@ const [isViewModalOpen, setIsViewModalOpen] = useState(false);
             <option value="clearing">مقاصة (Clearing)</option>
           </select>
 
-                    {/* اتجاه الشيك */}
-          {/* <select
-            name="moneyFlow"
-            value={filters.moneyFlow}
-            onChange={handleFilterChange}
-            className="w-full px-3 py-2 text-sm bg-ligth border border-gray-200 rounded-lg focus:outline-none focus:border-accent text-dark"
-          >
-            <option value="">كل الاتجاهاات </option>
-            <option value="incoming"> مستلم</option>
-            <option value="outgoing"> مرسل</option>
-          </select> */}
-
           {/* تاريخ الاستحقاق من */}
           <div>
             <label className="text-[10px] text-gray-400 block mb-1">استحقاق من:</label>
@@ -505,7 +572,7 @@ const [isViewModalOpen, setIsViewModalOpen] = useState(false);
                       {item.chequeNumber}
                     </td>
                     <td className="p-3 text-brown">
-                      {item.customer?.name || item.supplier?.name  || "غير محدد"}
+                      {item.customer?.name || item.supplier?.name || "غير محدد"}
                     </td>
                     <td className="p-3">
                       <div className="text-xs font-medium">{item.bankName}</div>
@@ -544,37 +611,25 @@ const [isViewModalOpen, setIsViewModalOpen] = useState(false);
                         <FiEdit size={16} />
                       </button>
 
-                        <button
+                      <button
                         onClick={() => handleOpenModal(item)}
                         title=" الشيك"
                         className="p-1.5 text-dark hover:bg-gray-100 rounded-lg transition"
                       >
                         <Eye size={16} />
                       </button>
-{/* 
-                       <button
-                        onClick={() => navigation(`/cheque/${item._id}`)}
-                        title=" الشيك"
-                        className="p-1 text-white  bg-dark hover:bg-gray-100 rounded-lg transition"
-                      >
-                        <Eye size={16} />
-
-
-                             
-                      </button> */}
 
                       <button
-                                    className="p-1.5 text-dark hover:bg-gray-100 rounded-lg transition"
+                        className="p-1.5 text-dark hover:bg-gray-100 rounded-lg transition"
                       >
-                                                                         <Trash2
-                       size={16}
-                        className="text-red-700 cursor-pointer hover:text-red-500"
+                        <Trash2
+                          size={16}
+                          className="text-red-700 cursor-pointer hover:text-red-500"
                           onClick={() => {
-                            deletePaymentHistory(item,item?._id , item?.customer?._id);
-                                                            
-                                  }}
-                                  title={"حذف"}
-                                                        />
+                            deletePaymentHistory(item, item?._id, item?.customer?._id);
+                          }}
+                          title={"حذف"}
+                        />
                       </button>
                     </td>
                   </tr>
@@ -659,39 +714,39 @@ const [isViewModalOpen, setIsViewModalOpen] = useState(false);
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-{/* الحالة الجديدة */}
-<div>
-  <label className="block text-xs font-medium text-dark mb-1">
-    الحالة الجديدة
-  </label>
-  <select
-    value={updateForm.status}
-    onChange={(e) =>
-      setUpdateForm({ ...updateForm, status: e.target.value })
-    }
-    className="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:border-accent"
-  >
-    {selectedCheque?.moneyFlow === "outgoing" ? (
-      /* خيارات الشيكات الصادرة (المرسلة / مدفوعات) */
-      <>
-        <option value="under_collection">تحت الصرف / الدفع</option>
-        <option value="due_today">مستحق اليوم</option>
-        <option value="collected">تم الصرف / السداد (خصم من الخزنة/البنك)</option>
-        <option value="returned">مرتجع (تعديل رصيد التاجر)</option>
-        <option value="cancelled">ملغى (تعديل رصيد التاجر)</option>
-      </>
-    ) : (
-      /* خيارات الشيكات الواردة (المستلمة / مقبوضات) */
-      <>
-        <option value="under_collection">تحت التحصيل</option>
-        <option value="due_today">مستحق اليوم</option>
-        <option value="collected">تم التحصيل (إيداع بالخزنة/البنك)</option>
-        <option value="returned">مرتجع (تعديل رصيد العميل)</option>
-        <option value="cancelled">ملغى (تعديل رصيد العميل)</option>
-      </>
-    )}
-  </select>
-</div>
+                {/* الحالة الجديدة */}
+                <div>
+                  <label className="block text-xs font-medium text-dark mb-1">
+                    الحالة الجديدة
+                  </label>
+                  <select
+                    value={updateForm.status}
+                    onChange={(e) =>
+                      setUpdateForm({ ...updateForm, status: e.target.value })
+                    }
+                    className="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:border-accent"
+                  >
+                    {selectedCheque?.moneyFlow === "outgoing" ? (
+                      /* خيارات الشيكات الصادرة (المرسلة / مدفوعات) */
+                      <>
+                        <option value="under_collection">تحت الصرف / الدفع</option>
+                        <option value="due_today">مستحق اليوم</option>
+                        <option value="collected">تم الصرف / السداد (خصم من الخزنة/البنك)</option>
+                        <option value="returned">مرتجع (تعديل رصيد التاجر)</option>
+                        <option value="cancelled">ملغى (تعديل رصيد التاجر)</option>
+                      </>
+                    ) : (
+                      /* خيارات الشيكات الواردة (المستلمة / مقبوضات) */
+                      <>
+                        <option value="under_collection">تحت التحصيل</option>
+                        <option value="due_today">مستحق اليوم</option>
+                        <option value="collected">تم التحصيل (إيداع بالخزنة/البنك)</option>
+                        <option value="returned">مرتجع (تعديل رصيد العميل)</option>
+                        <option value="cancelled">ملغى (تعديل رصيد العميل)</option>
+                      </>
+                    )}
+                  </select>
+                </div>
 
                 {/* المكان */}
                 <div>
@@ -818,29 +873,22 @@ const [isViewModalOpen, setIsViewModalOpen] = useState(false);
         </div>
       )}
 
+      {/* 5. مودال تفاصيل الشيك (زر العين في الجدول) */}
       {isViewModalOpen && viewCheque && (
-<div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex justify-center items-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex justify-center items-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl">
+            {/* Header */}
+            <div className="bg-dark text-white p-4 flex justify-between items-center">
+              <h2 className="font-bold text-lg">تفاصيل الشيك</h2>
 
-    <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl">
+              <button onClick={() => setIsViewModalOpen(false)}>
+                <FiX size={22} />
+              </button>
+            </div>
 
-        {/* Header */}
-        <div className="bg-dark text-white p-4 flex justify-between items-center">
-            <h2 className="font-bold text-lg">
-                تفاصيل الشيك
-            </h2>
-
-            <button
-                onClick={() => setIsViewModalOpen(false)}
-            >
-                <FiX size={22}/>
-            </button>
-        </div>
-
-        {/* Body */}
-        <div className="p-6">
-
-            <div className="grid grid-cols-2 gap-4">
-
+            {/* Body */}
+            <div className="p-6">
+              <div className="grid grid-cols-2 gap-4">
                 <Info title="رقم الشيك" value={viewCheque.chequeNumber} />
 
                 <Info title="العميل" value={viewCheque.customer?.name} />
@@ -848,84 +896,152 @@ const [isViewModalOpen, setIsViewModalOpen] = useState(false);
                 <Info title="البنك" value={viewCheque.bankName} />
 
                 <Info
-                    title="النوع"
-                    value={
-                        viewCheque.chequeType === "clearing"
-                            ? "مقاصة"
-                            : "عادي"
-                    }
+                  title="النوع"
+                  value={viewCheque.chequeType === "clearing" ? "مقاصة" : "عادي"}
                 />
 
                 <Info
-                    title="المبلغ"
-                    value={`${viewCheque.amount?.toLocaleString()} ج.م`}
+                  title="المبلغ"
+                  value={`${viewCheque.amount?.toLocaleString()} ج.م`}
                 />
 
                 <Info
-                    title="الحالة"
-                    value={statusBadges[viewCheque.status]?.label}
+                  title="الحالة"
+                  value={statusBadges[viewCheque.status]?.label}
                 />
 
                 <Info
-                    title="المكان الحالي"
-                    value={locationBadges[viewCheque.location]}
+                  title="المكان الحالي"
+                  value={locationBadges[viewCheque.location]}
                 />
 
                 <Info
-                    title="تاريخ الاستلام"
-                    value={new Date(viewCheque.receiveDate).toLocaleDateString("ar-EG")}
+                  title="تاريخ الاستلام"
+                  value={new Date(viewCheque.receiveDate).toLocaleDateString("ar-EG")}
                 />
 
                 <Info
-                    title="تاريخ الاستحقاق"
-                    value={new Date(viewCheque.dueDate).toLocaleDateString("ar-EG")}
+                  title="تاريخ الاستحقاق"
+                  value={new Date(viewCheque.dueDate).toLocaleDateString("ar-EG")}
                 />
 
                 <Info
-                    title="تاريخ الإنشاء"
-                    value={new Date(viewCheque.createdAt).toLocaleString("ar-EG")}
+                  title="تاريخ الإنشاء"
+                  value={new Date(viewCheque.createdAt).toLocaleString("ar-EG")}
                 />
+              </div>
 
-            </div>
-
-            <div className="mt-5">
-
-                <h3 className="font-bold mb-2">
-                    الملاحظات
-                </h3>
+              <div className="mt-5">
+                <h3 className="font-bold mb-2">الملاحظات</h3>
 
                 <div className="bg-gray-100 rounded-lg p-3 min-h-[70px]">
-                    {viewCheque.notes || "لا توجد ملاحظات"}
+                  {viewCheque.notes || "لا توجد ملاحظات"}
                 </div>
-
+              </div>
             </div>
 
-        </div>
-
-        {/* Footer */}
-        <div className="border-t p-4 flex justify-end">
-
-            <button
+            {/* Footer */}
+            <div className="border-t p-4 flex justify-end">
+              <button
                 onClick={() => setIsViewModalOpen(false)}
                 className="bg-dark text-white px-5 py-2 rounded-lg"
-            >
+              >
                 إغلاق
-            </button>
-
+              </button>
+            </div>
+          </div>
         </div>
+      )}
 
+      {/* 6. مودال تفاصيل الكروت (مستحقة اليوم / متأخرة / قادمة / إجمالي القائم) */}
+      {detailsModal.isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl max-h-[85vh] flex flex-col overflow-hidden">
+            {/* Header */}
+            <div className="bg-dark text-white px-5 py-4 flex justify-between items-center shrink-0">
+              <h2 className="font-bold text-base">
+                {detailsModal.title} ({detailsModal.list.length})
+              </h2>
+              <button onClick={closeDetailsModal}>
+                <FiX size={20} />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-4 overflow-y-auto flex-1">
+              {detailsModal.list.length === 0 ? (
+                <div className="text-center text-gray-400 py-10 text-sm">
+                  لا توجد شيكات لعرضها.
+                </div>
+              ) : (
+                <table className="w-full text-right text-xs border-collapse">
+                  <thead>
+                    <tr className="bg-ligth text-brown">
+                      <th className="p-2">رقم الشيك</th>
+                      <th className="p-2">العميل / المورد</th>
+                      <th className="p-2">البنك</th>
+                      <th className="p-2">المبلغ</th>
+                      <th className="p-2">تاريخ الاستحقاق</th>
+                      <th className="p-2">الحالة</th>
+                      <th className="p-2">المكان</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {detailsModal.list.map((item) => (
+                      <tr key={item._id}>
+                        <td className="p-2 font-semibold">{item.chequeNumber}</td>
+                        <td className="p-2 text-brown">
+                          {item.customer?.name || item.supplier?.name || "غير محدد"}
+                        </td>
+                        <td className="p-2">{item.bankName}</td>
+                        <td className="p-2 font-bold text-accent">
+                          {item.amount?.toLocaleString()} ج.م
+                        </td>
+                        <td className="p-2 text-gray-500">
+                          {new Date(item.dueDate).toLocaleDateString("ar-EG")}
+                        </td>
+                        <td className="p-2">
+                          <span
+                            className={`inline-block px-2 py-0.5 text-[10px] font-semibold rounded-full border ${
+                              statusBadges[item.status]?.bg || "bg-gray-100 text-gray-800"
+                            }`}
+                          >
+                            {statusBadges[item.status]?.label || item.status}
+                          </span>
+                        </td>
+                        <td className="p-2">
+                          {locationBadges[item.location] || item.location}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="border-t p-4 flex justify-between items-center shrink-0 bg-gray-50">
+              <span className="text-xs text-gray-500">
+                الإجمالي:{" "}
+                <span className="font-bold text-dark">
+                  {detailsModal.list
+                    .reduce((acc, c) => acc + (c.amount || 0), 0)
+                    .toLocaleString()}{" "}
+                  ج.م
+                </span>
+              </span>
+              <button
+                onClick={closeDetailsModal}
+                className="bg-dark text-white px-5 py-2 rounded-lg text-sm"
+              >
+                إغلاق
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
-
-</div>
-)}
-    </div>
-
-
-    
   );
-  
 };
-
-
 
 export default ChequeManagement;

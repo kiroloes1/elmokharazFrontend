@@ -91,6 +91,7 @@ import DeliveriesReport from "./pages/advancedReports/DeliveriesReport";
 import ItemsReport from "./pages/advancedReports/ItemsReport";
 import InstallApp from "./services/install";
 import ChequeBoxAuditPrint from "./pages/moneyBox/chequeFilter";
+import ComprehensiveReport from "./pages/normalReport/ComprehensiveReport";
 
 function App() {
    const upToTop = () => {
@@ -235,7 +236,7 @@ return (
          {/*report  */}
 
          
-        <Route path="/report" element={<ReportsApp />} />
+        <Route path="/report" element={<ComprehensiveReport />} />
 
         <Route path="/advancedReport/cheque" element={<ChequesReport />} />
         <Route path="/advancedReport/customer" element={<CustomersReport />} />

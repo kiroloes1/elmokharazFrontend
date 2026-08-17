@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import api from '../../services/api';
 import { showAlert } from "../../services/alert";
 import {
@@ -16,10 +16,13 @@ import {
   Bell,
   TrendingUp,
   TrendingDown,
-  EyeIcon
+  EyeIcon,
+  Volume2,
+  VolumeX
 } from "lucide-react";
 import { isLastBackupValid } from '../../services/lastBackupNotification';
 import { useNavigate } from 'react-router-dom';
+import { playNotificationSound } from '../../services/notificationSound';
 
 // خيارات فترة العرض
 const PERIOD_OPTIONS = [
@@ -35,6 +38,9 @@ const Dashboard = () => {
   const [moneyData, setMoneyData] = useState(null);
   const [loadingMoney, setLoadingMoney] = useState(false);
   const [isLastBackup, setIsLastBackup] = useState(true);
+  const [isMuted, setIsMuted] = useState(false); // حالة كتم الصوت
+  const isMutedRef = useRef(isMuted);
+
   const navigate = useNavigate();
 
   const [filters, setFilters] = useState({
@@ -43,6 +49,95 @@ const Dashboard = () => {
     to: ''
   });
 
+  // تحديث المرجع الخاص بكتم الصوت حتى تصل أحدث قيمة للـ Promises
+  useEffect(() => {
+    isMutedRef.current = isMuted;
+    if (isMuted && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+  }, [isMuted]);
+
+  const toggleMute = () => {
+    setIsMuted((prev) => !prev);
+  };
+
+const speakNotification = (type, cheque) => {
+    return new Promise((resolve) => {
+        if (isMutedRef.current || !('speechSynthesis' in window)) {
+            resolve();
+            return;
+        }
+
+        const customerName = cheque?.customer?.name || "غير محدد";
+
+        // 👈 التعديل هنا: تحويل المبلغ لرقم بدون فواصل وبدون أرقام هندية
+        const amount = Math.round(Number(cheque?.amount || 0));
+
+        const bankName = cheque?.bankName || "غير محدد";
+        const chequeNumber = cheque?.chequeNumber || "غير محدد";
+
+        let text = "";
+
+        switch (type) {
+            case "late":
+                text = `تنبيه، يوجد شيك متأخر. رقم الشيك ${chequeNumber}. قيمة الشيك ${amount} جنيه. التاجر ${customerName}. البنك ${bankName}.`;
+                break;
+
+            case "dueToday":
+                text = `تنبيه، يوجد شيك مستحق اليوم. رقم الشيك ${chequeNumber}. قيمة الشيك ${amount} جنيه. التاجر ${customerName}. البنك ${bankName}.`;
+                break;
+
+            case "upcoming":
+                text = `تنبيه، يوجد شيك مستحق خلال ثلاثة أيام. رقم الشيك ${chequeNumber}. قيمة الشيك ${amount} جنيه. التاجر ${customerName}. البنك ${bankName}.`;
+                break;
+
+            default:
+                resolve();
+                return;
+        }
+
+        window.speechSynthesis.cancel();
+
+        const speech = new SpeechSynthesisUtterance(text);
+        speech.lang = "ar-EG";
+        speech.rate = 0.9;
+        speech.pitch = 1;
+        speech.volume = 1;
+
+        speech.onend = resolve;
+        speech.onerror = resolve;
+
+        window.speechSynthesis.speak(speech);
+    });
+};
+
+
+const getNotificationState = () => {
+  const today = new Date().toISOString().split("T")[0];
+
+  const saved = JSON.parse(
+    localStorage.getItem("chequeNotificationState")
+  );
+
+  // لو مفيش بيانات أو اليوم اتغير
+  if (!saved || saved.date !== today) {
+    const newState = {
+      date: today,
+      late: false,
+      dueToday: false,
+      upcoming: false,
+    };
+
+    localStorage.setItem(
+      "chequeNotificationState",
+      JSON.stringify(newState)
+    );
+
+    return newState;
+  }
+
+  return saved;
+};
   // جلب بيانات الـ Dashboard الرئيسي
   const fetchDashboardData = async () => {
     setLoading(true);
@@ -62,6 +157,75 @@ const Dashboard = () => {
       setLoading(false);
     }
   };
+
+const fetchNotifications = async () => {
+  try {
+    const response = await api.get("/cheque/notification");
+
+    const { notifications } = response.data;
+
+    if (isMutedRef.current) return;
+
+    const state = getNotificationState();
+
+    // =========================
+    // الشيكات المتأخرة
+    // =========================
+    if (
+      notifications.lateCheques?.length > 0 &&
+      !state.late
+    ) {
+      for (const cheque of notifications.lateCheques) {
+        if (isMutedRef.current) break;
+
+        await speakNotification("late", cheque);
+      }
+
+      state.late = true;
+    }
+
+    // =========================
+    // الشيكات المستحقة اليوم
+    // =========================
+    if (
+      notifications.dueToday?.length > 0 &&
+      !state.dueToday
+    ) {
+      for (const cheque of notifications.dueToday) {
+        if (isMutedRef.current) break;
+
+        await speakNotification("dueToday", cheque);
+      }
+
+      state.dueToday = true;
+    }
+
+    // =========================
+    // الشيكات القادمة
+    // =========================
+    if (
+      notifications.upcoming?.length > 0 &&
+      !state.upcoming
+    ) {
+      for (const cheque of notifications.upcoming) {
+        if (isMutedRef.current) break;
+
+        await speakNotification("upcoming", cheque);
+      }
+
+      state.upcoming = true;
+    }
+
+    // حفظ الحالة
+    localStorage.setItem(
+      "chequeNotificationState",
+      JSON.stringify(state)
+    );
+
+  } catch (error) {
+    console.error("Notification error:", error);
+  }
+};
 
   // جلب بيانات الماليات
   const fetchMoneyData = async () => {
@@ -86,6 +250,7 @@ const Dashboard = () => {
   useEffect(() => {
     MakeSureIsLastBackup();
     fetchMoneyData();
+    fetchNotifications();
   }, []);
 
   useEffect(() => {
@@ -102,7 +267,7 @@ const Dashboard = () => {
     </div>
   );
 
-  const { greeting, summaryLine, cards, notifications } = data;
+  const { summaryLine, cards, notifications } = data;
   const customers = moneyData?.customers;
 
   return (
@@ -115,7 +280,22 @@ const Dashboard = () => {
           <p className="text-gray-500 font-bold">مساء الخير، عاطف عطية 💡 نتمنى لك يوم عمل موفق</p>
         </div>
 
-        <div className="flex flex-wrap gap-3 bg-white p-3 rounded-xl shadow-sm border border-[#E0E7D0] w-full lg:w-auto">
+        <div className="flex flex-wrap items-center gap-3 bg-white p-3 rounded-xl shadow-sm border border-[#E0E7D0] w-full lg:w-auto">
+          
+          {/* زر كتم / تشغيل الصوت */}
+          <button
+            onClick={toggleMute}
+            className={`flex items-center gap-2 px-3 py-2 rounded-xl font-bold transition-colors ${
+              isMuted 
+                ? 'bg-red-50 text-red-600 border border-red-200 hover:bg-red-100' 
+                : 'bg-green-50 text-green-700 border border-green-200 hover:bg-green-100'
+            }`}
+            title={isMuted ? "تشغيل التنبيهات الصوتية" : "إيقاف التنبيهات الصوتية"}
+          >
+            {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
+            <span className="text-xs">{isMuted ? "الصوت مكتوم" : "الصوت مفعل"}</span>
+          </button>
+
           <div className="flex items-center gap-2 bg-ligth px-3 rounded-xl border border-gray-300">
             <Calendar className="w-4 h-4 text-brown" />
             <select
@@ -139,50 +319,6 @@ const Dashboard = () => {
             </div>
           )}
         </div>
-      </div>
-
-      {/* Quick summary line */}
-      <div className="bg-white border border-[#E0E7D0] rounded-xl p-4 mb-8 flex items-center gap-3 shadow-sm">
-        <div className="p-2 bg-[#215E6122] rounded-lg text-accent shrink-0">
-          <Bell size={20} />
-        </div>
-        <p className="font-bold text-dark">{summaryLine}</p>
-      </div>
-
-      {/* Main Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6 mb-8">
-        <StatCard
-          title="تجار تم التعامل معهم"
-          value={cards.customersDealtWith}
-          icon={<UsersRound className="text-white" />}
-          bgColor="bg-dark"
-          subtitle="خلال الفترة المختارة"
-        />
-        <StatCard
-          title="النقلات"
-          value={cards.deliveries}
-          icon={<Truck className="text-white" />}
-          bgColor="bg-accent"
-          subtitle="خلال الفترة المختارة"
-        />
-        <StatCard
-          title="علينا للتاجر "
-          value={loadingMoney ? "..." : `${Math.abs(customers?.haveMoneyAmount || 0).toLocaleString()} ج.م`}
-          count={loadingMoney ? null : `${customers?.haveMoneyCount || 0} تجار`}
-          icon={<TrendingDown className="text-white" />}
-          subtitle="إجمالي مستحقات التجار"
-          bgColor="bg-red-500"
-
-        />
-        <StatCard
-          title="لينا عند التاجر"
-          value={loadingMoney ? "..." : `${(customers?.debtAmount || 0).toLocaleString()} ج.م`}
-          count={loadingMoney ? null : `${customers?.debtCount || 0} تجار`}
-          icon={<TrendingUp className="text-white" />}
-          bgColor="bg-green-600"
-
-          subtitle="إجمالي المديونيات"
-        />
       </div>
 
       {/* Notifications Section - Compact & Side-by-side */}
@@ -239,6 +375,48 @@ const Dashboard = () => {
             )}
           />
         </div>
+      </div>
+
+      {/* Quick summary line */}
+      <div className="bg-white border border-[#E0E7D0] rounded-xl p-4 mb-8 flex items-center gap-3 shadow-sm">
+        <div className="p-2 bg-[#215E6122] rounded-lg text-accent shrink-0">
+          <Bell size={20} />
+        </div>
+        <p className="font-bold text-dark">{summaryLine}</p>
+      </div>
+
+      {/* Main Stats Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6 mb-8">
+        <StatCard
+          title="تجار تم التعامل معهم"
+          value={cards.customersDealtWith}
+          icon={<UsersRound className="text-white" />}
+          bgColor="bg-dark"
+          subtitle="خلال الفترة المختارة"
+        />
+        <StatCard
+          title="النقلات"
+          value={cards.deliveries}
+          icon={<Truck className="text-white" />}
+          bgColor="bg-accent"
+          subtitle="خلال الفترة المختارة"
+        />
+        <StatCard
+          title="علينا للتاجر "
+          value={loadingMoney ? "..." : `${Math.abs(customers?.haveMoneyAmount || 0).toLocaleString()} ج.م`}
+          count={loadingMoney ? null : `${customers?.haveMoneyCount || 0} تجار`}
+          icon={<TrendingDown className="text-white" />}
+          subtitle="إجمالي مستحقات التجار"
+          bgColor="bg-red-500"
+        />
+        <StatCard
+          title="لينا عند التاجر"
+          value={loadingMoney ? "..." : `${(customers?.debtAmount || 0).toLocaleString()} ج.م`}
+          count={loadingMoney ? null : `${customers?.debtCount || 0} تجار`}
+          icon={<TrendingUp className="text-white" />}
+          bgColor="bg-green-600"
+          subtitle="إجمالي المديونيات"
+        />
       </div>
 
       {/* Backup Status Card */}

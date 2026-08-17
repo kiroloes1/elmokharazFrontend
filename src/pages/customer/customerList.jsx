@@ -102,45 +102,238 @@ const CustomerList = () => {
   }, []);
 
   // جلب بيانات التاجر المحدد ومدفوعاته
-  const toSelectedSupplier = async (id) => {
-    try {
-      setSubLoading(true);
-      const res = await api.get(`/customers/${id}`);
+  // const toSelectedSupplier = async (id) => {
+  //   try {
+  //     setSubLoading(true);
+  //     const res = await api.get(`/customers/${id}`);
       
-      const supplierData = res.data.data;
-      const paymentsData = res.data.payment || [];
+  //     const supplierData = res.data.data;
+  //     const paymentsData = res.data.payment || [];
 
-      setSelectedSupplier(supplierData);
+  //     setSelectedSupplier(supplierData);
 
-      const mappedOperations = paymentsData.map((item) => ({
-        id: item._id,
-        module: item.module,
-        amount: item.amount,
-        paymentMethod: item.paymentMethod,
-        moneyFlow: item.moneyFlow,
-        date: item.transactionDate || item.createdAt,
-        note: item.notes || "",
-        moduleId: item.moduleId,
-        createdBy: item.createdBy?.username || "---",
-        // حفظ البيانات الكاملة للتعديل
-        bankInfo: item.bankInfo || { bankName: "", transactionReference: "" },
-        walletInfo: item.walletInfo || { 
-          provider: "", senderName: "", senderPhone: "", 
-          receiverName: "", receiverPhone: "", transactionReference: "",
-          linkWallet: false, walletId: ""
-        },
-        cheque: item.cheque || null
-      }));
+  //     const mappedOperations = paymentsData.map((item) => ({
+  //       id: item._id,
+  //       module: item.module,
+  //       amount: item.amount,
+  //       paymentMethod: item.paymentMethod,
+  //       moneyFlow: item.moneyFlow,
+  //       date: item.transactionDate || item.createdAt,
+  //       note: item.notes || "",
+  //       moduleId: item.moduleId,
+  //       createdBy: item.createdBy?.username || "---",
+  //       // حفظ البيانات الكاملة للتعديل
+  //       bankInfo: item.bankInfo || { bankName: "", transactionReference: "" },
+  //       walletInfo: item.walletInfo || { 
+  //         provider: "", senderName: "", senderPhone: "", 
+  //         receiverName: "", receiverPhone: "", transactionReference: "",
+  //         linkWallet: false, walletId: ""
+  //       },
+  //       cheque: item.cheque || null
+  //     }));
 
-      mappedOperations.sort((a, b) => new Date(a.date) - new Date(b.date));
-      setOperations(mappedOperations);
+  //     mappedOperations.sort((a, b) => new Date(a.date) - new Date(b.date));
+  //     setOperations(mappedOperations);
 
-    } catch (err) {
-      showAlert({ title: "فشل في جلب تفاصيل التاجر", icon: "error" });
-    } finally {
-      setSubLoading(false);
-    }
-  };
+  //   } catch (err) {
+  //     showAlert({ title: "فشل في جلب تفاصيل التاجر", icon: "error" });
+  //   } finally {
+  //     setSubLoading(false);
+  //   }
+  // };
+
+  // حذف نقلة
+const deleteDelivery = async (deliveryId) => {
+  const confirm = await showAlertConfirm({
+    title: "حذف النقلة",
+    text: "هل أنت متأكد من حذف هذه النقلة؟ سيتم حذف النقلة وتأثيرها المالي من حساب التاجر.",
+    icon: "warning",
+    confirmButtonText: "نعم، احذف",
+    cancelButtonText: "إلغاء"
+  });
+
+  if (!confirm.isConfirmed) return;
+
+  try {
+    await api.delete(`/delivery/${deliveryId}`);
+
+    showAlert({
+      title: "تم حذف النقلة بنجاح",
+      icon: "success"
+    });
+
+    // إعادة تحميل بيانات التاجر والعمليات
+    await toSelectedSupplier(selectedSupplier._id);
+    await fetchSuppliers();
+
+  } catch (err) {
+    console.error("Delete delivery error:", err);
+
+    showAlert({
+      title: err.response?.data?.message || "فشل حذف النقلة",
+      icon: "error"
+    });
+  }
+};
+
+  const toSelectedSupplier = async (id) => {
+  try {
+    setSubLoading(true);
+
+    // جلب بيانات التاجر + العمليات المالية
+    const [supplierRes, deliveryRes] = await Promise.all([
+      api.get(`/customers/${id}`),
+      api.get(`/delivery/getDeliveryByCustomer/${id}`)
+    ]);
+
+    const supplierData = supplierRes.data.data;
+    const paymentsData = supplierRes.data.payment || [];
+
+    // =========================
+    // 1. العمليات المالية
+    // =========================
+    // const paymentOperations = paymentsData.map((item) => ({
+    //   id: item._id,
+    //   module: item.module,
+    //   amount: item.amount,
+    //   paymentMethod: item.paymentMethod,
+    //   moneyFlow: item.moneyFlow,
+    //   date: item.transactionDate || item.createdAt,
+    //   note: item.notes || "",
+    //   moduleId: item.moduleId,
+    //   createdBy: item.createdBy?.username || "---",
+
+    //   bankInfo: item.bankInfo || {
+    //     bankName: "",
+    //     transactionReference: ""
+    //   },
+
+    //   walletInfo: item.walletInfo || {
+    //     provider: "",
+    //     senderName: "",
+    //     senderPhone: "",
+    //     receiverName: "",
+    //     receiverPhone: "",
+    //     transactionReference: "",
+    //     linkWallet: false,
+    //     walletId: ""
+    //   },
+
+    //   cheque: item.cheque || null,
+
+    //   // مهم علشان نميزها عن النقل
+    //   operationType: "payment"
+    // }));
+    const paymentOperations = paymentsData
+  .filter(item => item.module !== "delivery")
+  .map((item) => ({
+    id: item._id,
+    module: item.module,
+    amount: item.amount,
+    paymentMethod: item.paymentMethod,
+    moneyFlow: item.moneyFlow,
+    date: item.transactionDate || item.createdAt,
+    note: item.notes || "",
+    moduleId: item.moduleId,
+    createdBy: item.createdBy?.username || "---",
+
+    bankInfo: item.bankInfo || {
+      bankName: "",
+      transactionReference: ""
+    },
+
+    walletInfo: item.walletInfo || {
+      provider: "",
+      senderName: "",
+      senderPhone: "",
+      receiverName: "",
+      receiverPhone: "",
+      transactionReference: "",
+      linkWallet: false,
+      walletId: ""
+    },
+
+    cheque: item.cheque || null,
+
+    operationType: "payment"
+  }));
+
+    // =========================
+    // 2. النقل
+    // =========================
+    const deliveries = deliveryRes.data.deliveries || [];
+
+    const deliveryOperations = deliveries.map((delivery) => ({
+      id: `delivery-${delivery._id}`,
+
+      // مهم جدًا
+      module: "delivery",
+
+      // قيمة النقل الأساسية
+      amount: delivery.totalAmount || 0,
+
+      // النقل مش عملية دفع مستقلة
+      paymentMethod: null,
+
+      // ممكن نعتبرها حسب اتجاه حسابك
+      moneyFlow: "incoming",
+
+      // تاريخ النقل
+      date: delivery.deliveryDate || delivery.createdAt,
+
+      // الملاحظات
+      note: delivery.notes || "",
+
+      // ID النقل
+      moduleId: delivery._id,
+
+      createdBy: delivery.receivedBy?.username || "---",
+
+      bankInfo: null,
+      walletInfo: null,
+      cheque: null,
+
+      // بيانات إضافية للنقل
+      deliveryNumber: delivery.delveryNumber,
+      carName: delivery.carName,
+      paidAmount: delivery.paidAmount || 0,
+      remainingAmount: delivery.remainingAmount || 0,
+      oldBalance: delivery.oldBalance || 0,
+      items: delivery.items || [],
+      teaForWorkers: delivery.teaForWorkers || 0,
+      carPayment: delivery.carPayment || 0,
+
+      operationType: "delivery"
+    }));
+
+    // =========================
+    // 3. دمج العمليات
+    // =========================
+    const allOperations = [
+      ...paymentOperations,
+      ...deliveryOperations
+    ];
+
+    // ترتيب من الأقدم للأحدث
+    allOperations.sort(
+      (a, b) => new Date(a.date) - new Date(b.date)
+    );
+
+    setSelectedSupplier(supplierData);
+    setOperations(allOperations);
+
+  } catch (err) {
+    console.error("Customer details error:", err);
+
+    showAlert({
+      title: "فشل في جلب تفاصيل التاجر",
+      text: err.response?.data?.message || "حدث خطأ أثناء تحميل البيانات",
+      icon: "error"
+    });
+  } finally {
+    setSubLoading(false);
+  }
+};
 
   // تصفية التجار أثناء البحث
   useEffect(() => {
@@ -608,25 +801,67 @@ const CustomerList = () => {
   };
 
   // ترجمة أنواع الوحدات (Modules)
-  const renderModuleBadge = (module, moneyFlow) => {
-    const isIncoming = moneyFlow === "incoming";
+  // const renderModuleBadge = (module, moneyFlow) => {
+  //   const isIncoming = moneyFlow === "incoming";
     
-    const badges = {
-      debt: { label:"استلام من تاجر", color: "bg-emerald-50 text-emerald-600" },
-      delivery: { label: "نقلة بضاعة", color: "bg-blue-50 text-blue-600" },
-      pay: { label: "زياده مديونية", color: "bg-red-50 text-red-600" },
+  //   const badges = {
+  //     debt: { label:"استلام من تاجر", color: "bg-emerald-50 text-emerald-600" },
+  //     delivery: { label: "نقلة بضاعة", color: "bg-blue-50 text-blue-600" },
+  //     pay: { label: "زياده مديونية", color: "bg-red-50 text-red-600" },
 
-    };
+  //   };
 
-    const target = badges[module] || { label: module, color: "bg-slate-100 text-slate-600" };
+  //   const target = badges[module] || { label: module, color: "bg-slate-100 text-slate-600" };
 
-    return (
-      <span className={`flex items-center gap-1 w-fit px-3 py-1 rounded-full text-[10px] font-black uppercase ${target.color}`}>
-        {isIncoming ? <ArrowDownLeft size={10} /> : <ArrowUpRight size={10} />}
-        {target.label}
-      </span>
-    );
+  //   return (
+  //     <span className={`flex items-center gap-1 w-fit px-3 py-1 rounded-full text-[10px] font-black uppercase ${target.color}`}>
+  //       {isIncoming ? <ArrowDownLeft size={10} /> : <ArrowUpRight size={10} />}
+  //       {target.label}
+  //     </span>
+  //   );
+  // };
+
+  const renderModuleBadge = (module, moneyFlow) => {
+  const isIncoming = moneyFlow === "incoming";
+
+  const badges = {
+    debt: {
+      label: "استلام من تاجر",
+      color: "bg-emerald-50 text-emerald-600"
+    },
+
+    delivery: {
+      label: "نقلة بضاعة",
+      color: "bg-blue-50 text-blue-600"
+    },
+
+    pay: {
+      label: "زياده مديونية",
+      color: "bg-red-50 text-red-600"
+    }
   };
+
+  const target = badges[module] || {
+    label: module,
+    color: "bg-slate-100 text-slate-600"
+  };
+
+  return (
+    <span
+      className={`flex items-center gap-1 w-fit px-3 py-1 rounded-full text-[10px] font-black uppercase ${target.color}`}
+    >
+      {module === "delivery" ? (
+        <ArrowUpRight size={10} />
+      ) : isIncoming ? (
+        <ArrowDownLeft size={10} />
+      ) : (
+        <ArrowUpRight size={10} />
+      )}
+
+      {target.label}
+    </span>
+  );
+};
 
   if (loading) return (
     <div className="flex h-screen items-center justify-center bg-light">
@@ -684,7 +919,7 @@ const CustomerList = () => {
                       : "text-red-500"
                   }`}
                 >
-                  {Math.abs(
+                  {(
                     s.balance || s.remainingBalance || 0
                   ).toLocaleString()}
                 </p>
@@ -871,7 +1106,7 @@ const CustomerList = () => {
         : "text-red-600"
     }`}
   >
-    {Math.abs(
+    {(
       selectedSupplier.balance || selectedSupplier.remainingBalance || 0
     ).toLocaleString()}
 
@@ -939,9 +1174,47 @@ const CustomerList = () => {
                           </td>
 
                           <td className="p-3 sm:p-5 font-black text-dark">
-                            {t.amount?.toLocaleString()} ج.م
+                            <div>
+                              {t.amount?.toLocaleString()} ج.م
+                            </div>
+
+                            {t.module === "delivery" && (
+                              <div className="text-[10px] text-slate-400 mt-1">
+                                مدفوع: {t.paidAmount?.toLocaleString()} ج.م
+                              </div>
+                            )}
                           </td>
 
+                          <td className="p-3 sm:p-5 text-sm text-slate-600 font-semibold">
+  {t.module === "delivery" ? (
+    <div className="flex flex-col gap-1">
+      <span className="text-blue-600 font-black">
+        نقلة رقم {t.deliveryNumber}
+      </span>
+
+      {t.carName && (
+        <span className="text-[11px] text-slate-400">
+          السيارة: {t.carName}
+        </span>
+      )}
+    </div>
+  ) : (
+    <>
+      {t.paymentMethod === "cash" && "نقدي"}
+      {t.paymentMethod === "wallet" && "محفظة"}
+      {t.paymentMethod === "bank" && "تحويل بنكي"}
+      {t.paymentMethod === "instapay" && "أنستا باي"}
+      {t.paymentMethod === "mail" && "بريد"}
+      {t.paymentMethod === "cheque" && "شيك"}
+      {t.paymentMethod === "work" && "شغل"}
+
+      {t.paymentMethod === "wallet" &&
+        t.walletInfo?.linkWallet &&
+        " | ربط سيستمات"}
+    </>
+  )}
+</td>
+{/* 
                           <td className="p-3 sm:p-5 text-sm text-slate-600 font-semibold">
                             {t.paymentMethod === "cash" && "نقدي"}
                             {t.paymentMethod === "wallet" && "محفظة"}
@@ -951,7 +1224,7 @@ const CustomerList = () => {
                             {t.paymentMethod === "cheque" && "شيك"}
                             {t.paymentMethod === "work" && "شغل"}
                              {t.paymentMethod  === "wallet"  && t.walletInfo.linkWallet && " | ربط سيستمات" }
-                          </td>
+                          </td> */}
 
                           <td className="p-3 sm:p-5 text-sm text-slate-400 font-medium">
                             {new Date(t.date).toLocaleString('ar-EG', {
@@ -998,19 +1271,18 @@ const CustomerList = () => {
                                   title="حذف"
                                 />
                               )} */}
-
-                                <Trash2
-                                  size={20}
-                                  className="text-red-700 cursor-pointer hover:text-red-500"
-                                  onClick={() => {
-                                    if (t.module === "delivery") {
-                                      navigate(`/deliveries/edit/${t.moduleId}`);
-                                    } else {
-                                      deletePaymentHistory(t.id);
-                                    }
-                                  }}
-                                  title={t.module === "delivery" ? "تعديل النقلة" : "حذف"}
-                                />
+<Trash2
+  size={20}
+  className="text-red-700 cursor-pointer hover:text-red-500"
+  onClick={() => {
+    if (t.module === "delivery") {
+      deleteDelivery(t.moduleId);
+    } else {
+      deletePaymentHistory(t.id);
+    }
+  }}
+  title={t.module === "delivery" ? "حذف النقلة" : "حذف"}
+/>
                             </div>
                           </td>
                         </tr>
