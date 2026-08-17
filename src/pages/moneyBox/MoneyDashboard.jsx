@@ -1096,6 +1096,21 @@ const MoneyDashboard = () => {
             <span className="text-red-600">ارسال: {formatCurrency(stats.cash?.outgoing || 0)}</span>
           </div>
         </div>
+
+              <div className="bg-white p-5 rounded-2xl border border-brown/20 shadow-sm">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center">
+              <Banknote size={20} className="text-emerald-700" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-dark/60">شغل</p>
+            </div>
+          </div>
+          <div className="flex justify-between text-xs">
+            <span className="text-emerald-600">استلام: {formatCurrency(stats.work?.incoming || 0)}</span>
+            <span className="text-red-600">ارسال: {formatCurrency(stats.work?.outgoing || 0)}</span>
+          </div>
+        </div>
       </div>
 
       {/* ===== Cheques Summary ===== */}
@@ -1308,13 +1323,13 @@ const MoneyDashboard = () => {
                               <Trash2 size={18} />
                             </button>
                           )}
-                          <button
+{ p.paymentMethod !=="wallet"     &&                    <button
                             onClick={() => editPaymentHistory(p)}
                             className="p-2 bg-slate-100 text-dark rounded-xl hover:bg-dark hover:text-white transition-all border border-slate-100"
                             title="تعديل البيانات"
                           >
                             <Edit size={18} />
-                          </button>
+                          </button>}
                           <button
                             onClick={() => showPaymentHistory(p)}
                             className="p-2 bg-slate-100 text-dark rounded-xl hover:bg-dark hover:text-white transition-all border border-slate-100"
@@ -1376,7 +1391,7 @@ const MoneyDashboard = () => {
                   onChange={(e) => setEditData({ ...editData, module: e.target.value })}
                 >
                   <option value="pay">دفع (استلام فلوس من تاجر )</option>
-                  <option value="debt">مديونية (دفع فلوس للتاجر )</option>
+                { editData.paymentMethod  !=="cheque" && <option value="debt">مديونية (دفع فلوس للتاجر )</option>}
                 </select>
               </div>
 

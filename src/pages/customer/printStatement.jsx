@@ -18,7 +18,7 @@ const DeliveryStatement = () => {
   // 🔹 دالة تنسيق المبالغ طبقًا للقاعدة الموحدة
   const formatAmount = (amount) => {
     if (amount === undefined || amount === null || isNaN(amount)) return "-";
-    if (Number(amount) === 0) return "-";
+    // if (Number(amount) === 0) return "-";
     const absValue = Math.abs(amount).toLocaleString();
     if (amount < 0) {
       return `${absValue} -ج.م`;
@@ -465,7 +465,7 @@ const DeliveryStatement = () => {
               <p className="text-md text-slate-800">
                 <span className="font-semibold">الرصيد الحالي: </span>
                 <span className="font-semibold text-black">
-                  {formatAmount(currentBalance)}
+                  {(currentBalance).toLocaleString()}
                 </span>
               </p>
             );
@@ -833,7 +833,7 @@ const DeliveryStatement = () => {
                       إجمالي قيمة النقلات
                     </span>
                     <span className="font-semibold">
-                      {formatAmount(totals.totalDeliveries)}
+                      {(totals.totalDeliveries).toLocaleString()}
                     </span>
                   </div>
 
@@ -842,7 +842,7 @@ const DeliveryStatement = () => {
                       إجمالي الفلوس المستلمة
                     </span>
                     <span className="font-semibold">
-                      {formatAmount(-totalReceived)}
+                      {(-totalReceived).toLocaleString()}
                     </span>
                   </div>
 
@@ -852,7 +852,7 @@ const DeliveryStatement = () => {
                         {openingBalance < 0 ? "إجمالي السداد" : "إجمالي المديونية"}
                       </span>
                       <span className="font-semibold">
-                        {formatAmount(openingBalance < 0 ? -totalPayment : totalDebt)}
+                        {(openingBalance < 0 ? -totalPayment : totalDebt).toLocaleString()}
                       </span>
                     </div>
                   )}
@@ -862,7 +862,7 @@ const DeliveryStatement = () => {
                       المتبقي النهائي
                     </span>
                     <span className="font-semibold text-black">
-                      {formatAmount(finalBalance)}
+                      {(finalBalance).toLocaleString()}
                     </span>
                   </div>
 
