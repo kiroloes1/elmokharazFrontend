@@ -357,6 +357,7 @@ const Sidebar = ({ role }) => {
         window.location.href = '/login'; 
       }, 500);
       await api.post('/users/logout'); 
+      localStorage.clear()
     } catch (err) {
       console.error("Logout Error:", err);
       localStorage.clear();
