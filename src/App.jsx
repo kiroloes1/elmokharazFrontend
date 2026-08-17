@@ -92,6 +92,7 @@ import ItemsReport from "./pages/advancedReports/ItemsReport";
 import InstallApp from "./services/install";
 import ChequeBoxAuditPrint from "./pages/moneyBox/chequeFilter";
 import ComprehensiveReport from "./pages/normalReport/ComprehensiveReport";
+import BackButton from "./services/backButton";
 
 function App() {
    const upToTop = () => {
@@ -118,6 +119,7 @@ return (
 
 
     <BrowserRouter>
+     <BackButton />
       <ScrollToTop />
       <InstallApp />
 
@@ -316,6 +318,7 @@ return (
 
       <Footer />
     </BrowserRouter>
+   
   </div>
 );
 }
