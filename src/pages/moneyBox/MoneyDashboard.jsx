@@ -1032,8 +1032,8 @@ const MoneyDashboard = () => {
             </div>
           </div>
           <div className="flex justify-between text-xs">
-            <span className="text-emerald-600">استلام: {formatCurrency(stats.cheques?.incoming || 0)}</span>
-            <span className="text-red-600">ارسال: {formatCurrency(stats.cheques?.outgoing || 0)}</span>
+            <span className="text-emerald-600">استلام: {formatCurrency(stats.cheque?.incoming || 0)}</span>
+            <span className="text-red-600">ارسال: {formatCurrency(stats.cheque?.outgoing || 0)}</span>
           </div>
         </div>
 

@@ -722,7 +722,7 @@ const CustomerList = () => {
 <div className="w-full md:w-auto flex flex-col gap-3">
 
   {/* أزرار التقارير */}
-  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
+  <div className="grid grid-cols-1 sm:grid-cols-1 gap-3 w-full">
 
     <button
       onClick={() =>
@@ -744,7 +744,7 @@ const CustomerList = () => {
       <span>كشف حساب</span>
     </button>
 
-    <button
+    {/* <button
       onClick={() =>
         navigate(`/customer/CustomerPaymentsPrintPage/${selectedSupplier?._id}`)
       }
@@ -762,7 +762,7 @@ const CustomerList = () => {
     >
       <Printer size={18} />
       <span>كشف المعاملات </span>
-    </button>
+    </button> */}
 
   </div>
 

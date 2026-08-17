@@ -603,7 +603,7 @@ const DeliveryStatement = () => {
                             return (
                               <div>
                                 <div className="font-semibold text-md">
-                                  {paymentDisplay.title} - {paymentDisplay.methodName}: {formatAmount(op.amount)}
+                                  {paymentDisplay.title} - {paymentDisplay.methodName}
                                 </div>
                                 {paymentDisplay.details && (
                                   <div className="text-sm font-semibold mt-0.5">
@@ -628,7 +628,7 @@ const DeliveryStatement = () => {
                             return (
                               <div>
                                 <div className="font-semibold text-md">
-                                  {paymentDisplay.title} - {paymentDisplay.methodName}: {formatAmount(op.amount)}
+                                  {paymentDisplay.title} - {paymentDisplay.methodName}
                                 </div>
                                 {paymentDisplay.details && (
                                   <div className="text-sm font-semibold mt-0.5">
@@ -657,7 +657,7 @@ const DeliveryStatement = () => {
                       {(isDelivery || isDebt || isOpening || isPay) ? (
                         <div className="space-y-1 text-right">
                           <div className="text-[12px] font-semibold text-black">
-                            {isDelivery && <b>رصيد السابق: </b>}
+                            {isDelivery && <b>رصيد سابق : </b>}
                             {isDelivery && formatAmount(op.previousBalance)}
                           </div>
                           <div className="text-[12px] font-semibold text-black">
@@ -723,13 +723,18 @@ const DeliveryStatement = () => {
                                     className="text-[13px] text-slate-700 text-center py-1"
                                   >
                                     <div className="font-semibold">
-                                      {paymentDisplay.methodName}: {formatAmount(amount)}
+                                      {formatAmount(amount)}: {paymentDisplay.methodName}
                                     </div>
+                                    
                                     {paymentDisplay.details && (
                                       <div className="text-[12px]">
                                         {paymentDisplay.details}
                                       </div>
+
+                                  
                                     )}
+
+                                        <span>------------</span>
                                   </div>
                                 );
                               })}
@@ -748,7 +753,7 @@ const DeliveryStatement = () => {
                       {isPay && Number(op.amount) !== 0 && (
                         <div className="flex flex-col items-center gap-0.5">
                           <span className="font-semibold text-md text-700">
-                            {translatePaymentMethod(op.paymentMethod)}: {formatAmount(-op.amount)}
+                           {formatAmount(-op.amount)}: {translatePaymentMethod(op.paymentMethod)}
                           </span>
                         </div>
                       )}
@@ -757,7 +762,7 @@ const DeliveryStatement = () => {
                       {isDebt && Number(op.amount) !== 0 && (
                         <div className="flex flex-col items-center gap-0.5">
                           <span className="font-semibold text-md text-700">
-                            {translatePaymentMethod(op.paymentMethod)}: {formatAmount(op.amount)}
+                         {formatAmount(op.amount)}  :  {translatePaymentMethod(op.paymentMethod)}
                           </span>
                         </div>
                       )}
