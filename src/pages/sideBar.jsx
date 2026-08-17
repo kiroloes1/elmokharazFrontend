@@ -156,8 +156,11 @@ const Sidebar = ({ role }) => {
       icon: <Users size={20} />, 
       roles: ["admin", "manager", "superadmin"], 
       sub: [ 
-        { id: "ChequeManagement", label: "إدارة الشيكات", roles: ["admin", "manager", "superadmin"] },
         { id: "addCheque", label: "اضافه شيك", roles: ["admin", "manager", "superadmin"] },
+        { id: "ChequeManagement", label: "إدارة الشيكات", roles: ["admin", "manager", "superadmin"] },
+
+        { id: "chequeFilter", label: " خزنه الشيكات", roles: ["admin", "manager", "superadmin"] },
+
       ] 
     },
 
