@@ -123,7 +123,7 @@ const DeliveriesList = () => {
 
   if (loading && page === 1) {
     return (
-      <div className="h-screen flex flex-col items-center justify-center bg-ligth font-[cairo] space-y-3">
+      <div className="h-screen flex flex-col items-center justify-center bg-ligth  space-y-3">
         <Loader2 className="animate-spin text-brown" size={48} />
         <span className="text-dark/70 font-bold">جاري تحميل سجل النقلات...</span>
       </div>
@@ -154,7 +154,7 @@ const DeliveriesList = () => {
   }, 0) || 0;
 
   return (
-    <div className="w-full min-h-screen font-[cairo] bg-ligth text-dark flex flex-col" dir="rtl">
+    <div className="w-full min-h-screen  bg-ligth text-dark flex flex-col" dir="rtl">
 
       {/* ================= 1. NAVBAR العلوي ================= */}
       <header className="bg-white border-b border-brown/20 px-4 lg:px-8 py-3.5 flex items-center justify-between shadow-sm sticky top-0 z-30">
