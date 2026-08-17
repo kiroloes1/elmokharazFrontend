@@ -94,7 +94,7 @@ const [supRes, itemRes, deliveryRes, walletRes] = await Promise.all([
             paymentMethod: p.paymentMethod || "cash",
             bankInfo: p.bankInfo || { bankName: "", transactionReference: "" },
             walletInfo: {
-      linkWallet: p.walletInfo?.linkWallet || false,
+      linkWallet: p.walletInfo?.linkWallet || true,
       walletId: p.walletInfo?.walletId || "",
       provider: p.walletInfo?.provider || "",
       senderName: p.walletInfo?.senderName || "",
@@ -113,7 +113,7 @@ const [supRes, itemRes, deliveryRes, walletRes] = await Promise.all([
               paidAmount: 0, 
               paymentMethod: "cash",
               bankInfo: { bankName: "", transactionReference: "" },
-              walletInfo: { provider: "", senderName: "", senderPhone: "", receiverName: "", receiverPhone: "", transactionReference: "", linkWallet: false },
+              walletInfo: { provider: "", senderName: "", senderPhone: "", receiverName: "", receiverPhone: "", transactionReference: "", linkWallet: true },
               cheque: { chequeNumber: "", chequeType: "normal", bankName: "", receiveDate: "", dueDate: "", status: "under_collection" }
             });
           }
@@ -183,10 +183,10 @@ const [supRes, itemRes, deliveryRes, walletRes] = await Promise.all([
   };
 
   const addPaymentField = () => {
-    if (formData.payment.length >= 7) {
-      showAlert({ title: "الحد الأقصى لطرق الدفع المدمجة هي 7 طرق", icon: "error" });
-      return;
-    }
+    // if (formData.payment.length >= 7) {
+    //   showAlert({ title: "الحد الأقصى لطرق الدفع المدمجة هي 7 طرق", icon: "error" });
+    //   return;
+    // }
     const allMethods = ["cash", "wallet", "instapay", "bank", "mail", "cheque", "work"];
     const unusedMethod = allMethods.find(method => !formData.payment.some(m => m.paymentMethod === method)) || "cash";
 
@@ -198,7 +198,7 @@ const [supRes, itemRes, deliveryRes, walletRes] = await Promise.all([
           paidAmount: 0, 
           paymentMethod: unusedMethod,
           bankInfo: { bankName: "", transactionReference: "" },
-          walletInfo: { provider: "", senderName: "", senderPhone: "", receiverName: "", receiverPhone: "", transactionReference: ""  , linkWallet: false},
+          walletInfo: { provider: "", senderName: "", senderPhone: "", receiverName: "", receiverPhone: "", transactionReference: ""  , linkWallet: true},
           cheque: { chequeNumber: "", chequeType: "normal", bankName: "", receiveDate: "", dueDate: "", status: "under_collection" }
         }
       ]
@@ -221,10 +221,10 @@ const [supRes, itemRes, deliveryRes, walletRes] = await Promise.all([
     } else {
       if (field === "paymentMethod") {
         const isDuplicate = formData.payment.some((m, i) => i !== idx && m.paymentMethod === value);
-        if (isDuplicate) {
-          showAlert({ title: "لا يمكن تكرار طريقة الدفع في نفس النقلة", icon: "error" });
-          return;
-        }
+        // if (isDuplicate) {
+        //   showAlert({ title: "لا يمكن تكرار طريقة الدفع في نفس النقلة", icon: "error" });
+        //   return;
+        // }
       }
       newPayments[idx][field] = field === "paidAmount" ? Number(value) : value;
     }

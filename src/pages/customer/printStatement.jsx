@@ -21,9 +21,9 @@ const DeliveryStatement = () => {
     // if (Number(amount) === 0) return "-";
     const absValue = Math.abs(amount).toLocaleString();
     if (amount < 0) {
-      return `${absValue} -ج.م`;
+      return `${absValue} `;
     }
-    return `${absValue} ج.م`;
+    return `${absValue} `;
   };
 
   useEffect(() => {
@@ -514,7 +514,7 @@ const DeliveryStatement = () => {
                     )}
 
                     <td className="border border-black p-2 text-center font-semibold text-black bg-gray-50/50">
-                      {isOpening ? "0 ج.م" : formatAmount(op.previousBalance)}
+                      {isOpening ? "0 " : formatAmount(op.previousBalance)}
                     </td>
 
                     <td className="border border-black p-2">
@@ -723,7 +723,7 @@ const DeliveryStatement = () => {
                                     className="text-[13px] text-slate-700 text-center py-1"
                                   >
                                     <div className="font-semibold">
-                                      {formatAmount(amount)}: {paymentDisplay.methodName}
+                                      {formatAmount(amount)} ({paymentDisplay.methodName})
                                     </div>
                                     
                                     {paymentDisplay.details && (
@@ -753,7 +753,10 @@ const DeliveryStatement = () => {
                       {isPay && Number(op.amount) !== 0 && (
                         <div className="flex flex-col items-center gap-0.5">
                           <span className="font-semibold text-md text-700">
-                           {formatAmount(-op.amount)}: {translatePaymentMethod(op.paymentMethod)}
+                           {formatAmount(-op.amount)}
+                           <div>
+                            ({translatePaymentMethod(op.paymentMethod)})
+                           </div>
                           </span>
                         </div>
                       )}
@@ -762,7 +765,10 @@ const DeliveryStatement = () => {
                       {isDebt && Number(op.amount) !== 0 && (
                         <div className="flex flex-col items-center gap-0.5">
                           <span className="font-semibold text-md text-700">
-                         {formatAmount(op.amount)}  :  {translatePaymentMethod(op.paymentMethod)}
+                         {formatAmount(op.amount)} 
+                         <div>
+                            ({translatePaymentMethod(op.paymentMethod)})
+                         </div>
                           </span>
                         </div>
                       )}

@@ -268,7 +268,7 @@ const CustomerChequeAutocomplete = () => {
 
       const endpoint = transactionType === "debt" ? "addDebt" : "paySupplier";
       
-      await api.patch(`/customers/${endpoint}/${supplier._id}`, payload);
+      await api.patch(`/customers/addDebt/${supplier._id}`, payload);
       
       showAlert({ title: "تمت العملية بنجاح", icon: "success" });
 

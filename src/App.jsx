@@ -90,6 +90,7 @@ import CustomerChequeAutocomplete from "./pages/moneyBox/addCheque";
 import DeliveriesReport from "./pages/advancedReports/DeliveriesReport";
 import ItemsReport from "./pages/advancedReports/ItemsReport";
 import InstallApp from "./services/install";
+import ChequeBoxAuditPrint from "./pages/moneyBox/chequeFilter";
 
 function App() {
    const upToTop = () => {
@@ -263,6 +264,7 @@ return (
            <Route path="cheque/:chequeId" element={<Cheque/>} ></Route>
            <Route path="addCheque" element={<CustomerChequeAutocomplete/>} ></Route>
 
+           <Route path="chequeFilter" element={<ChequeBoxAuditPrint/>} ></Route>
 
 
           {/* admin */}
