@@ -177,10 +177,10 @@ const DeliveriesList = () => {
   }, 0) || 0;
 
 return (
-    <div className="w-96 px-1 md:w-full min-h-screen bg-ligth text-dark flex flex-col overflow-x-hidden" dir="rtl">
+    <div className=" px-1 md:w-full min-h-screen bg-ligth text-dark flex flex-col overflow-x-hidden " dir="rtl">
 
       {/* ================= 1. NAVBAR العلوي ================= */}
-      <header className="w-86 md:w-full bg-white border-b border-brown/20 px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm sticky top-0 z-30">
+      <header className="w-full bg-white border-b border-brown/20 px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm sticky top-0 z-30">
         <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
           <div className="flex items-center gap-2">
             <Truck className="text-brown" size={24} />
@@ -205,7 +205,7 @@ return (
       <main className="flex-1 p-3 sm:p-5 lg:p-6 space-y-5 lg:space-y-6 max-w-[1600px] w-full mx-auto">
 
 {/* ================= 2. الكروت العلوية الأفقية (اختر النقلة) ================= */}
-<div className="bg-white p-3.5 sm:p-4 w-96 md:w-full rounded-2xl border border-brown/20 shadow-sm space-y-3">
+<div className="bg-white p-3.5 sm:p-4 w-[95vw] rounded-2xl border border-brown/20 shadow-sm space-y-3">
   <div className="flex justify-between items-center text-xs">
     <span className="font-black text-dark flex items-center gap-1.5">
       <Truck size={16} className="text-brown" /> سجل النقلات
