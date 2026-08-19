@@ -9,11 +9,11 @@ import LogsCleanupModal from "../pages/activationLog/LogsCleanupModal"
 export default function SuperAdminLayout() {
   return (
 <>
-    <div dir="rtl" className="dashboard flex">
+    <div dir="rtl"  className="dashboard flex min-h-screen w-full min-w-0 overflow-x-hidden">
 
-      <div className="min-h-screen bg-dark "> <Sidebar role={"superadmin"}/></div>
+      <div className="shrink-0 min-h-screen bg-dark"><Sidebar role={"superadmin"}/></div>
 
-      <div className="content flex-1">
+          <div className="content flex-1 min-w-0 w-0 overflow-x-hidden">
         <Outlet />
       </div>
 
