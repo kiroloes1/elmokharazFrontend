@@ -177,7 +177,7 @@ const DeliveriesList = () => {
   }, 0) || 0;
 
 return (
-    <div className=" px-1 md:w-full min-h-screen bg-ligth text-dark flex flex-col overflow-x-hidden " dir="rtl">
+<div className="w-full min-w-0 min-h-screen bg-ligth text-dark flex flex-col overflow-x-hidden" dir="rtl">
 
       {/* ================= 1. NAVBAR العلوي ================= */}
       <header className="w-full bg-white border-b border-brown/20 px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm sticky top-0 z-30">
@@ -205,7 +205,7 @@ return (
       <main className="flex-1 p-3 sm:p-5 lg:p-6 space-y-5 lg:space-y-6 max-w-[1600px] w-full mx-auto">
 
 {/* ================= 2. الكروت العلوية الأفقية (اختر النقلة) ================= */}
-<div className="bg-white p-3.5 sm:p-4 w-[95vw] rounded-2xl border border-brown/20 shadow-sm space-y-3">
+<div className="bg-white p-3.5 sm:p-4 w-full min-w-0 rounded-2xl border border-brown/20 shadow-sm space-y-3">
   <div className="flex justify-between items-center text-xs">
     <span className="font-black text-dark flex items-center gap-1.5">
       <Truck size={16} className="text-brown" /> سجل النقلات
@@ -304,7 +304,7 @@ return (
               </div>
 
               {/* أزرار الإجراءات */}
-              <div className="flex items-center gap-2 w-86 md:w-full md:w-auto justify-end flex-wrap ">
+              <div className="flex items-center gap-2 w-96 xl:w-full md:w-auto justify-end flex-wrap ">
                 <button
                   onClick={() => handleToDelete(selectedDelivery._id)}
                   className="p-2.5 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-xl border border-rose-200 transition-colors"
@@ -371,7 +371,7 @@ return (
             </div>
 
 {/* ================= 4. جدول الأصناف والتفاصيل ================= */}
-<div className="bg-white rounded-2xl border border-brown/20 shadow-sm overflow-auto overflow-x-auto w-96 md:w-full">
+<div className="bg-white rounded-2xl border border-brown/20 shadow-sm overflow-hidden w-full min-w-0">
   <div className="p-4 bg-ligth/40 border-b border-brown/10 flex justify-between items-center">
     <h3 className="font-black text-dark text-xs sm:text-sm flex items-center gap-2">
       <Package size={18} className="text-brown" /> تفاصيل الشحنة والأصناف
