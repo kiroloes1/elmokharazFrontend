@@ -812,8 +812,8 @@ const DeliveryStatement = () => {
           const openingBalance = totals.openingBalance || 0;
           const debts = totals.totalDebts || 0;
 
-          const totalDebt = openingBalance > 0 ? openingBalance + debts : debts;
-          const totalPayment = openingBalance < 0 ? Math.abs(openingBalance) : 0;
+          const totalDebt = debts;
+          const totalPayment = 0;
 
           const totalReceived = (totals.totalDeliveryPayment || 0) + (totals.totalPayments || 0);
 
@@ -834,6 +834,17 @@ const DeliveryStatement = () => {
 
                 <div className="p-4 space-y-3">
 
+          
+         
+
+               <div className="flex justify-between border-b pb-2">
+                    <span className="font-semibold">
+                    الرصيد الافتتاحي 
+                    </span>
+                    <span className="font-semibold">
+                      {openingBalance.toLocaleString()}
+                    </span>
+                  </div>
                   <div className="flex justify-between border-b pb-2">
                     <span className="font-semibold">
                       إجمالي قيمة النقلات
@@ -854,6 +865,7 @@ const DeliveryStatement = () => {
 
                   {(totalDebt > 0 || totalPayment > 0) && (
                     <div className="flex justify-between border-b pb-2">
+
                       <span className="font-semibold">
                         {openingBalance < 0 ? "إجمالي السداد" : "إجمالي المديونية"}
                       </span>
